@@ -155,10 +155,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.inputBg, borderRadius: 8,
     paddingHorizontal: 16, height: 52,
-    borderBottomWidth: 0, // Base state
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   inputWrapFocused: {
-    borderBottomWidth: 2,
     borderBottomColor: COLORS.primaryBlue,
   },
   input: {

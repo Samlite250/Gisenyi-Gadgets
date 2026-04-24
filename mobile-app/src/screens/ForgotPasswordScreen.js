@@ -248,10 +248,10 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: SIZES.md,
     height: 54,
-    borderBottomWidth: 0,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   inputContainerFocused: {
-    borderBottomWidth: 2,
     borderBottomColor: COLORS.primaryBlue,
   },
   inputIcon: {

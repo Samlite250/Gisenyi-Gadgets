@@ -9,6 +9,26 @@ import Svg, { Path } from 'react-native-svg';
 import { useAuth } from '../context/AuthContext';
 import { COLORS } from '../constants/theme';
 
+// Move Field component outside to prevent focus loss on re-render
+const Field = ({ icon: Icon, value, onChangeText, onFocus, onBlur, isFocused, placeholder, secureEntry, keyType }) => (
+  <View style={[styles.inputWrap, isFocused && styles.inputWrapFocused]}>
+    <Icon size={20} color="#9AA0A6" style={styles.icon} />
+    <TextInput
+      style={styles.input}
+      placeholder={placeholder}
+      placeholderTextColor="#9AA0A6"
+      value={value}
+      onChangeText={onChangeText}
+      secureTextEntry={secureEntry}
+      keyboardType={keyType || 'default'}
+      autoCapitalize={keyType === 'email-address' ? 'none' : 'words'}
+      autoCorrect={false}
+      onFocus={onFocus}
+      onBlur={onBlur}
+    />
+  </View>
+);
+
 export default function RegisterScreen({ navigation }) {
   const { signUp } = useAuth();
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
@@ -40,8 +60,6 @@ export default function RegisterScreen({ navigation }) {
         fullName: form.fullName.trim(),
       });
 
-      // If Supabase auto-confirms, data.session will exist and RootNavigator will auto-switch
-      // If not, we show the manual alert
       if (!data.session) {
         Alert.alert(
           'Check your email! 📧',
@@ -55,25 +73,6 @@ export default function RegisterScreen({ navigation }) {
       setLoading(false);
     }
   };
-
-  const Field = ({ icon: Icon, field, placeholder, secureEntry, keyType }) => (
-    <View style={[styles.inputWrap, focusedField === field && styles.inputWrapFocused]}>
-      <Icon size={20} color="#9AA0A6" style={styles.icon} />
-      <TextInput
-        style={styles.input}
-        placeholder={placeholder}
-        placeholderTextColor="#9AA0A6"
-        value={form[field]}
-        onChangeText={set(field)}
-        secureTextEntry={secureEntry}
-        keyboardType={keyType || 'default'}
-        autoCapitalize={field === 'email' ? 'none' : 'words'}
-        autoCorrect={false}
-        onFocus={() => setFocusedField(field)}
-        onBlur={() => setFocusedField(null)}
-      />
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -97,10 +96,45 @@ export default function RegisterScreen({ navigation }) {
           ) : null}
 
           <View style={styles.form}>
-            <Field icon={User} field="fullName" placeholder="Full Name" />
-            <Field icon={Mail} field="email" placeholder="Email" keyType="email-address" />
-            <Field icon={Lock} field="password" placeholder="Password" secureEntry />
-            <Field icon={Lock} field="confirmPassword" placeholder="Confirm Password" secureEntry />
+            <Field 
+              icon={User} 
+              value={form.fullName} 
+              onChangeText={set('fullName')} 
+              placeholder="Full Name" 
+              isFocused={focusedField === 'fullName'}
+              onFocus={() => setFocusedField('fullName')}
+              onBlur={() => setFocusedField(null)}
+            />
+            <Field 
+              icon={Mail} 
+              value={form.email} 
+              onChangeText={set('email')} 
+              placeholder="Email" 
+              keyType="email-address" 
+              isFocused={focusedField === 'email'}
+              onFocus={() => setFocusedField('email')}
+              onBlur={() => setFocusedField(null)}
+            />
+            <Field 
+              icon={Lock} 
+              value={form.password} 
+              onChangeText={set('password')} 
+              placeholder="Password" 
+              secureEntry 
+              isFocused={focusedField === 'password'}
+              onFocus={() => setFocusedField('password')}
+              onBlur={() => setFocusedField(null)}
+            />
+            <Field 
+              icon={Lock} 
+              value={form.confirmPassword} 
+              onChangeText={set('confirmPassword')} 
+              placeholder="Confirm Password" 
+              secureEntry 
+              isFocused={focusedField === 'confirmPassword'}
+              onFocus={() => setFocusedField('confirmPassword')}
+              onBlur={() => setFocusedField(null)}
+            />
 
             {/* Terms Checkbox */}
             <TouchableOpacity style={styles.checkboxRow} onPress={() => setAgreed(!agreed)} activeOpacity={0.7}>
@@ -149,11 +183,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#F5F5F5', borderRadius: 8,
     paddingHorizontal: 16, height: 52,
-    borderBottomWidth: 0,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
   },
   inputWrapFocused: {
-    borderBottomWidth: 2,
-    borderColor: '#4285F4',
+    borderBottomColor: '#4285F4',
   },
   icon: { marginRight: 12 },
   input: {

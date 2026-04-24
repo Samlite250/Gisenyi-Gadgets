@@ -64,17 +64,22 @@ export default function UsersPage() {
       {/* Summary Cards */}
       <div className="stats-grid" style={{ marginBottom: 16 }}>
         {[
-          { label: 'Total Users',     value: users.length,                   color: '#4285F4', bg: 'rgba(66,133,244,0.15)'  },
-          { label: 'Customers',       value: roleCounts.customer || 0,        color: '#34A853', bg: 'rgba(52,168,83,0.15)'   },
-          { label: 'Vendors',         value: roleCounts.vendor   || 0,        color: '#FBBC04', bg: 'rgba(251,188,4,0.15)'   },
-          { label: 'Active',          value: users.filter(u => u.is_active).length, color: '#34A853', bg: 'rgba(52,168,83,0.15)' },
+          { label: 'Total Users',     value: users.length,                   color: '#4285F4', bg: 'rgba(66,133,244,0.1)'  },
+          { label: 'Customers',       value: roleCounts.customer || 0,        color: '#34A853', bg: 'rgba(52,168,83,0.1)'   },
+          { label: 'Vendors',         value: roleCounts.vendor   || 0,        color: '#FBBC04', bg: 'rgba(251,188,4,0.1)'   },
+          { label: 'Active',          value: users.filter(u => u.is_active).length, color: '#34A853', bg: 'rgba(52,168,83,0.1)' },
         ].map((s) => (
           <div className="stat-card" key={s.label}>
             <div className="stat-icon" style={{ background: s.bg }}>
-              <span style={{ fontSize: 20 }}>👤</span>
+              <div style={{ color: s.color, fontWeight: 800, fontSize: 18 }}>
+                {s.label === 'Total Users' ? '👥' : s.label === 'Vendors' ? '🏪' : s.label === 'Active' ? '✅' : '👤'}
+              </div>
             </div>
             <div className="stat-label">{s.label}</div>
             <div className="stat-value">{s.value}</div>
+            <div className="stat-change up">
+              <span style={{ fontSize: 11, fontWeight: 600 }}>Overview</span>
+            </div>
           </div>
         ))}
       </div>

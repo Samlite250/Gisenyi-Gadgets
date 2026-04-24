@@ -10,28 +10,28 @@ export const COLORS = {
   warning: '#FBBC04',
 
   // Backgrounds
-  darkBg: '#0F172A',
-  cardBg: '#1E293B',
+  darkBg: '#FFFFFF', // Now Light
+  cardBg: '#FFFFFF', // Now Light
   inputBg: '#F5F5F5',
-  surfaceBg: '#253347',
+  surfaceBg: '#F8F9FA', // Light surface
 
   // Text
-  textPrimary: '#FFFFFF',
-  textSecondary: '#94A3B8',
-  textMuted: '#64748B',
-  textDark: '#0F172A',
+  textPrimary: '#202124',
+  textSecondary: '#5F6368',
+  textMuted: '#9AA0A6',
+  textDark: '#202124',
 
   // Borders
-  border: '#334155',
-  borderLight: '#475569',
+  border: '#E8EAED',
+  borderLight: '#F1F3F4',
 
   // Status
   success: '#34A853',
   info: '#4285F4',
 
   // Overlay
-  overlay: 'rgba(15, 23, 42, 0.85)',
-  cardOverlay: 'rgba(30, 41, 59, 0.95)',
+  overlay: 'rgba(255, 255, 255, 0.85)',
+  cardOverlay: 'rgba(255, 255, 255, 0.95)',
 };
 
 export const FONTS = {

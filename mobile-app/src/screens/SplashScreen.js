@@ -1,35 +1,6 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Rect } from 'react-native-svg';
-
-// Custom Gisenyi Gadgets Logo matching the design
-const GisenyiLogo = ({ size = 120 }) => (
-  <Svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-    {/* The Blue Bag Body */}
-    <Rect x="20" y="45" width="60" height="45" rx="8" fill="#4285F4" />
-    
-    {/* The White Line inside the bag */}
-    <Path d="M 20 60 L 80 60" stroke="#FFFFFF" strokeWidth="4" />
-
-    {/* The Green 'G' Handle */}
-    <Path 
-      d="M 65 45 V 30 C 65 18.954 56.046 10 45 10 C 33.954 10 25 18.954 25 30 V 45" 
-      stroke="#34A853" 
-      strokeWidth="12" 
-      strokeLinecap="round"
-      fill="none"
-    />
-    {/* Inner part of G */}
-    <Path 
-      d="M 50 30 H 65 V 45" 
-      stroke="#34A853" 
-      strokeWidth="12" 
-      strokeLinejoin="round"
-      fill="none"
-    />
-  </Svg>
-);
 
 export default function SplashScreen({ navigation, onFinish }) {
   useEffect(() => {
@@ -39,19 +10,29 @@ export default function SplashScreen({ navigation, onFinish }) {
       } else {
         navigation.replace('Onboarding');
       }
-    }, 2500);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [navigation, onFinish]);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <GisenyiLogo size={100} />
+        <Image 
+          source={require('../../assets/logo.png')} 
+          style={{ width: 120, height: 120 }} 
+          resizeMode="contain"
+        />
         <View style={styles.textWrapper}>
           <Text style={styles.title}>GISENYI</Text>
           <Text style={styles.subtitle}>GADGETS</Text>
         </View>
+        
+        {/* Rolling Loading Item */}
+        <View style={styles.loaderContainer}>
+          <ActivityIndicator size="large" color="#4285F4" />
+        </View>
       </View>
+
       <View style={styles.footer}>
         <Text style={styles.tagline}>Shop Smart. Live Better.</Text>
       </View>
@@ -88,8 +69,12 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     marginTop: -8,
   },
+  loaderContainer: {
+    marginTop: 40,
+  },
   footer: {
     marginBottom: 40,
+    alignItems: 'center',
   },
   tagline: {
     fontSize: 16,

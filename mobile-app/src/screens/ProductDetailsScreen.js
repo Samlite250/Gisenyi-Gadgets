@@ -147,43 +147,18 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Colors */}
           {product.colors?.length > 0 && (
             <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>
-                Color: <Text style={styles.optionSelected}>{selectedColor}</Text>
-              </Text>
+              <Text style={styles.optionLabel}>Color</Text>
               <View style={styles.optionRow}>
-                {product.colors.map((c) => (
-                  <TouchableOpacity
-                    key={c}
-                    style={[styles.optionChip, selectedColor === c && styles.optionChipActive]}
-                    onPress={() => setSelectedColor(c)}
-                  >
-                    <Text style={[styles.optionChipText, selectedColor === c && styles.optionChipTextActive]}>
-                      {c}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Storage */}
-          {product.storage_options?.length > 0 && (
-            <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>
-                Storage: <Text style={styles.optionSelected}>{selectedStorage}</Text>
-              </Text>
-              <View style={styles.optionRow}>
-                {product.storage_options.map((s) => (
-                  <TouchableOpacity
-                    key={s}
-                    style={[styles.optionChip, selectedStorage === s && styles.optionChipActive]}
-                    onPress={() => setSelectedStorage(s)}
-                  >
-                    <Text style={[styles.optionChipText, selectedStorage === s && styles.optionChipTextActive]}>
-                      {s}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {product.colors.map((c) => {
+                  const colorMap = { 'Titanium Black': '#222', 'Titanium Gray': '#888', 'Titanium Violet': '#4B0082', 'White': '#FFF', 'Blue': '#00F', 'Natural Titanium': '#A09383' };
+                  return (
+                    <TouchableOpacity
+                      key={c}
+                      style={[styles.colorDot, { backgroundColor: colorMap[c] || '#000' }, selectedColor === c && styles.colorDotActive]}
+                      onPress={() => setSelectedColor(c)}
+                    />
+                  );
+                })}
               </View>
             </View>
           )}
@@ -211,7 +186,6 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Description */}
           {product.description && (
             <View style={styles.descSection}>
-              <Text style={styles.descTitle}>About this product</Text>
               <Text style={styles.descText}>{product.description}</Text>
             </View>
           )}
@@ -221,14 +195,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
       {/* Bottom Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.cartBtn, inCart && styles.cartBtnDone]}
+          style={styles.cartBtn}
           onPress={handleAddToCart}
           activeOpacity={0.85}
         >
-          <ShoppingCart size={18} color={inCart ? COLORS.primaryGreen : COLORS.textPrimary} />
-          <Text style={[styles.cartBtnText, inCart && { color: COLORS.primaryGreen }]}>
-            {inCart ? 'In Cart' : 'Add to Cart'}
-          </Text>
+          <Text style={styles.cartBtnText}>Add to Cart</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -237,7 +208,6 @@ export default function ProductDetailsScreen({ route, navigation }) {
           disabled={product.stock === 0}
           activeOpacity={0.85}
         >
-          <Zap size={18} color="#fff" />
           <Text style={styles.buyBtnText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
@@ -286,54 +256,41 @@ const styles = StyleSheet.create({
   },
   stockText: { fontSize: SIZES.fontXs, color: COLORS.primaryGreen, fontWeight: '600' },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: SIZES.sm },
-  price: { fontSize: SIZES.fontXxl, fontWeight: '800', color: COLORS.textPrimary },
+  price: { fontSize: SIZES.fontXxl, fontWeight: '800', color: COLORS.primaryGreen },
   comparePrice: {
     fontSize: SIZES.fontMd, color: COLORS.textMuted,
     textDecorationLine: 'line-through',
   },
-  optionSection: { gap: SIZES.xs },
-  optionLabel: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, fontWeight: '500' },
-  optionSelected: { color: COLORS.textPrimary, fontWeight: '700' },
-  optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SIZES.xs },
-  optionChip: {
-    paddingVertical: SIZES.xs, paddingHorizontal: SIZES.md,
-    borderRadius: SIZES.radiusFull, borderWidth: 1.5,
-    borderColor: COLORS.border, backgroundColor: COLORS.cardBg,
-  },
-  optionChipActive: { borderColor: COLORS.primaryBlue, backgroundColor: `${COLORS.primaryBlue}15` },
-  optionChipText: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, fontWeight: '500' },
-  optionChipTextActive: { color: COLORS.primaryBlue, fontWeight: '700' },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 0 },
+  optionSection: { gap: SIZES.sm, marginTop: SIZES.sm },
+  optionLabel: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, fontWeight: '700' },
+  optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: SIZES.md, marginTop: SIZES.xs },
+  colorDot: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#eee' },
+  colorDotActive: { borderWidth: 3, borderColor: COLORS.primaryBlue },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: SIZES.md, marginTop: SIZES.xs },
   qtyBtn: {
-    width: 38, height: 38, backgroundColor: COLORS.cardBg,
-    borderRadius: SIZES.radiusMd, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: COLORS.border,
+    width: 40, height: 40, backgroundColor: '#F5F5F5',
+    borderRadius: SIZES.radiusSm, justifyContent: 'center', alignItems: 'center',
   },
   qtyText: {
-    minWidth: 44, textAlign: 'center',
     fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary,
   },
-  descSection: { gap: SIZES.xs, marginTop: SIZES.sm },
-  descTitle: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },
+  descSection: { marginTop: SIZES.md },
   descText: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, lineHeight: 22 },
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', gap: SIZES.sm,
+    flexDirection: 'row', gap: SIZES.md,
     padding: SIZES.lg, paddingBottom: SIZES.xl,
-    backgroundColor: COLORS.cardBg,
-    borderTopLeftRadius: SIZES.radiusXl, borderTopRightRadius: SIZES.radiusXl,
-    ...SHADOWS.lg,
+    backgroundColor: '#fff',
+    borderTopWidth: 1, borderTopColor: '#eee',
   },
   cartBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SIZES.xs,
-    backgroundColor: COLORS.cardBg, borderRadius: SIZES.radiusLg, height: 52,
-    borderWidth: 1.5, borderColor: COLORS.border,
+    flex: 1, height: 54, backgroundColor: COLORS.primaryBlue, borderRadius: SIZES.radiusSm,
+    justifyContent: 'center', alignItems: 'center',
   },
-  cartBtnDone: { borderColor: COLORS.primaryGreen },
-  cartBtnText: { color: COLORS.textPrimary, fontSize: SIZES.fontMd, fontWeight: '700' },
+  cartBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
   buyBtn: {
-    flex: 1.5, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: SIZES.xs,
-    backgroundColor: COLORS.primaryBlue, borderRadius: SIZES.radiusLg, height: 52, ...SHADOWS.md,
+    flex: 1, height: 54, backgroundColor: COLORS.primaryGreen, borderRadius: SIZES.radiusSm,
+    justifyContent: 'center', alignItems: 'center',
   },
   buyBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
 });

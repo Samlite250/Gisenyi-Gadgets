@@ -26,14 +26,18 @@ const SLIDES = [
   }
 ];
 
-export default function OnboardingScreen({ navigation }) {
+export default function OnboardingScreen({ navigation, onFinish }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      navigation.replace('Login');
+      if (onFinish) {
+        onFinish();
+      } else {
+        navigation.replace('Login');
+      }
     }
   };
 
@@ -76,7 +80,7 @@ export default function OnboardingScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F172A',
+    backgroundColor: '#FFFFFF', // Light Theme Background
   },
   content: {
     flex: 1,
@@ -89,22 +93,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    width: '100%',
+    backgroundColor: '#F5F5F5', // Light gray background to replace illustration space
+    borderRadius: 24,
+    marginBottom: 40,
+    marginTop: 20,
   },
   textContainer: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
+    width: '100%',
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
+    fontWeight: '800', // Poppins Bold
+    color: '#202124',
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 36,
   },
   description: {
     fontSize: 16,
-    color: '#94A3B8',
+    color: '#5F6368',
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 16,
@@ -117,7 +127,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#1E293B',
+    backgroundColor: '#E2E8F0', // Light Gray
     marginHorizontal: 4,
   },
   activeDot: {
@@ -128,12 +138,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#4285F4',
     width: '100%',
     padding: 16,
-    borderRadius: 16,
+    borderRadius: 12, // More rounded as per design
     alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#4285F4',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

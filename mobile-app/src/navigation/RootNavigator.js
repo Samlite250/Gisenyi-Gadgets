@@ -35,10 +35,12 @@ const Tab = createBottomTabNavigator();
 const COLORS = {
   PrimaryBlue: '#4285F4',
   PrimaryGreen: '#34A853',
-  DarkBackground: '#0F172A',
-  CardBackground: '#1E293B',
-  TextPrimary: '#FFFFFF',
-  TextSecondary: '#94A3B8',
+  DarkBackground: '#FFFFFF', // Changed to White for Light Theme
+  CardBackground: '#FFFFFF', // Changed to White
+  TextPrimary: '#202124',
+  TextSecondary: '#5F6368',
+  BackgroundLight: '#F5F5F5',
+  Danger: '#EA4335'
 };
 
 // ─── Cart Badge ───────────────────────────────────────────────
@@ -60,6 +62,8 @@ function CartTabIcon({ color }) {
             justifyContent: 'center',
             alignItems: 'center',
             paddingHorizontal: 3,
+            borderWidth: 1.5,
+            borderColor: '#FFFFFF'
           }}
         >
           <Text style={{ color: '#fff', fontSize: 10, fontWeight: '700' }}>
@@ -79,12 +83,10 @@ function MainTabs() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: COLORS.CardBackground,
-          borderTopWidth: 0,
-          elevation: 20,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -4 },
-          shadowOpacity: 0.2,
-          shadowRadius: 12,
+          borderTopWidth: 1,
+          borderTopColor: '#F0F0F0',
+          elevation: 0,
+          shadowOpacity: 0,
           height: 64,
           paddingBottom: 10,
           paddingTop: 8,
@@ -93,6 +95,7 @@ function MainTabs() {
         tabBarInactiveTintColor: COLORS.TextSecondary,
         tabBarLabelStyle: {
           fontSize: 11,
+          fontFamily: 'System', // Will use Poppins if loaded
           fontWeight: '600',
           marginTop: 2,
         },
@@ -102,14 +105,14 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Home size={24} color={color} strokeWidth={2} />,
         }}
       />
       <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
-          tabBarIcon: ({ color }) => <Search size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Search size={24} color={color} strokeWidth={2} />,
         }}
       />
       <Tab.Screen
@@ -123,14 +126,14 @@ function MainTabs() {
         name="Orders"
         component={OrdersScreen}
         options={{
-          tabBarIcon: ({ color }) => <ListOrdered size={24} color={color} />,
+          tabBarIcon: ({ color }) => <ListOrdered size={24} color={color} strokeWidth={2} />,
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color }) => <User size={24} color={color} />,
+          tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={2} />,
         }}
       />
     </Tab.Navigator>
@@ -160,7 +163,7 @@ function AppStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: COLORS.DarkBackground },
+        contentStyle: { backgroundColor: COLORS.BackgroundLight },
         animation: 'slide_from_right',
       }}
     >

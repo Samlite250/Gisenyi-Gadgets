@@ -165,7 +165,7 @@ export default function DashboardPage() {
                 <div style={{ 
                   width: 32, height: 32, borderRadius: 10, 
                   background: 'var(--surface-bg)', display: 'flex', 
-                  alignItems: 'center', justify-content: 'center', 
+                  alignItems: 'center', justifyContent: 'center', 
                   fontWeight: 800, fontSize: 13, color: 'var(--primary-blue)', 
                   flexShrink: 0, border: '1px solid var(--border)' 
                 }}>
@@ -271,7 +271,7 @@ function DonutChart() {
         <div style={{ 
           position: 'absolute', inset: 0, display: 'flex', 
           flexDirection: 'column', alignItems: 'center', 
-          justify-content: 'center', pointerEvents: 'none' 
+          justifyContent: 'center', pointerEvents: 'none' 
         }}>
           <span style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{total}%</span>
           <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Completed</span>

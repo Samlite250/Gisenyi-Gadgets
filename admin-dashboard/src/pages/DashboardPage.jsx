@@ -44,13 +44,23 @@ function StatCard({ icon: Icon, label, value, change, color, bgColor }) {
   return (
     <div className="stat-card">
       <div className="stat-icon" style={{ background: bgColor }}>
-        <Icon size={22} color={color} />
+        <Icon size={24} color={color} strokeWidth={2.5} />
       </div>
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
       <div className={`stat-change ${isUp ? 'up' : 'down'}`}>
-        {isUp ? <ArrowUpRight size={13} style={{ display: 'inline' }} /> : <ArrowDownRight size={13} style={{ display: 'inline' }} />}
-        {Math.abs(change)}% this month
+        <div style={{ 
+          background: isUp ? 'rgba(52,168,83,0.1)' : 'rgba(234,67,53,0.1)', 
+          padding: '2px 6px', 
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '2px'
+        }}>
+          {isUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+          {Math.abs(change)}%
+        </div>
+        <span style={{ color: 'var(--text-muted)', fontWeight: 500 }}>vs last month</span>
       </div>
     </div>
   );
@@ -91,10 +101,14 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 16, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, marginBottom: 24 }}>
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Sales Revenue (Last 7 Months)</span>
+            <span className="card-title">Revenue Forecast</span>
+            <div className="flex gap-2">
+              <span className="badge badge-blue">Weekly</span>
+              <span className="badge badge-gray">Monthly</span>
+            </div>
           </div>
           <div className="card-body">
             <MiniBarChart />
@@ -102,7 +116,7 @@ export default function DashboardPage() {
         </div>
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Order Status</span>
+            <span className="card-title">Order Distribution</span>
           </div>
           <div className="card-body">
             <DonutChart />
@@ -111,28 +125,28 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }}>
         {/* Recent Orders */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Recent Orders</span>
-            <a href="/orders" className="btn btn-ghost btn-sm">View All</a>
+            <span className="card-title">Recent Transactions</span>
+            <a href="/orders" className="btn btn-ghost btn-sm">Manage All</a>
           </div>
           <div className="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Order</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th>
+                  <th>Transaction ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th>
                 </tr>
               </thead>
               <tbody>
                 {RECENT_ORDERS.map((o) => (
                   <tr key={o.id}>
                     <td><span style={{ color: 'var(--primary-blue)', fontWeight: 700 }}>{o.id}</span></td>
-                    <td>{o.customer}</td>
-                    <td style={{ fontWeight: 700 }}>{fmt(o.amount)}</td>
+                    <td style={{ fontWeight: 600 }}>{o.customer}</td>
+                    <td style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{fmt(o.amount)}</td>
                     <td><span className={`badge ${STATUS_BADGE[o.status]}`}>{o.status}</span></td>
-                    <td className="text-muted">{o.date}</td>
+                    <td className="text-muted" style={{ fontSize: 13 }}>{o.date}</td>
                   </tr>
                 ))}
               </tbody>
@@ -143,24 +157,30 @@ export default function DashboardPage() {
         {/* Top Products */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Top Products</span>
+            <span className="card-title">Performance Leaders</span>
           </div>
-          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {TOP_PRODUCTS.map((p, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 12, color: 'var(--primary-blue)', flexShrink: 0 }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ 
+                  width: 32, height: 32, borderRadius: 10, 
+                  background: 'var(--surface-bg)', display: 'flex', 
+                  alignItems: 'center', justify-content: 'center', 
+                  fontWeight: 800, fontSize: 13, color: 'var(--primary-blue)', 
+                  flexShrink: 0, border: '1px solid var(--border)' 
+                }}>
                   {i + 1}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.sales} sold</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>{p.sales} units sold</div>
                 </div>
-                <div style={{ fontSize: 13, fontWeight: 700, flexShrink: 0 }}>{fmt(p.revenue)}</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary-blue)', flexShrink: 0 }}>{fmt(p.revenue)}</div>
               </div>
             ))}
           </div>
         </div>
-      </div>
+      </div>div>
     </div>
   );
 }
@@ -173,30 +193,41 @@ function MiniBarChart() {
     { month: 'Feb', val: 20 }, { month: 'Mar', val: 19 },
     { month: 'Apr', val: 24 },
   ];
-  const max = Math.max(...data.map(d => d.val));
-  const H = 200, W = 480, barW = 40, gap = 20;
+  const max = 30; // Fixed scale for stability
+  const H = 220, W = 600, barW = 44, gap = 24;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 30}`} style={{ width: '100%' }}>
+    <svg viewBox={`0 0 ${W} ${H + 40}`} style={{ width: '100%', height: 'auto' }}>
+      {/* Grid Lines */}
+      {[0, 10, 20, 30].map((v) => {
+        const y = H - (v / max) * H;
+        return (
+          <g key={v}>
+            <line x1="0" y1={y} x2={W} y2={y} stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
+            <text x="-10" y={y + 4} fill="var(--text-muted)" fontSize={11} textAnchor="end">{v}M</text>
+          </g>
+        );
+      })}
+
       {data.map((d, i) => {
-        const x = i * (barW + gap) + gap;
+        const x = i * (barW + gap) + 40;
         const barH = (d.val / max) * H;
         const y = H - barH;
         return (
-          <g key={i}>
+          <g key={i} className="chart-bar-group">
             <rect x={x} y={y} width={barW} height={barH}
-              rx={6} fill="url(#barGrad)" opacity={0.85} />
-            <text x={x + barW / 2} y={H + 18} textAnchor="middle"
-              fill="var(--text-muted)" fontSize={11}>{d.month}</text>
-            <text x={x + barW / 2} y={y - 6} textAnchor="middle"
-              fill="var(--text-secondary)" fontSize={10}>{d.val}M</text>
+              rx={8} fill="url(#barGrad)" style={{ transition: 'all 0.3s' }} />
+            <text x={x + barW / 2} y={H + 24} textAnchor="middle"
+              fill="var(--text-secondary)" fontSize={12} fontWeight={600}>{d.month}</text>
+            <text x={x + barW / 2} y={y - 10} textAnchor="middle"
+              fill="var(--primary-blue)" fontSize={12} fontWeight={800}>{d.val}M</text>
           </g>
         );
       })}
       <defs>
         <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#4285F4" />
-          <stop offset="100%" stopColor="#4285F4" stopOpacity="0.4" />
+          <stop offset="0%" stopColor="var(--primary-blue)" />
+          <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.4" />
         </linearGradient>
       </defs>
     </svg>
@@ -213,7 +244,7 @@ function DonutChart() {
     { label: 'Cancelled',  val: 3,  color: '#EA4335' },
   ];
   const total = data.reduce((s, d) => s + d.val, 0);
-  const cx = 90, cy = 90, r = 70, innerR = 45;
+  const cx = 90, cy = 90, r = 75, innerR = 50;
   let startAngle = -Math.PI / 2;
 
   const slices = data.map((d) => {
@@ -232,18 +263,26 @@ function DonutChart() {
   });
 
   return (
-    <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-      <svg viewBox="0 0 180 180" style={{ width: 140, flexShrink: 0 }}>
-        {slices.map((s, i) => <path key={i} d={s.path} fill={s.color} />)}
-        <text x={cx} y={cy - 6} textAnchor="middle" fill="white" fontSize={18} fontWeight={800}>{total}%</text>
-        <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--text-muted)" fontSize={10}>orders</text>
-      </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'center' }}>
+      <div style={{ position: 'relative', width: 180, height: 180 }}>
+        <svg viewBox="0 0 180 180" style={{ transform: 'rotate(-10deg)' }}>
+          {slices.map((s, i) => <path key={i} d={s.path} fill={s.color} style={{ transition: 'all 0.3s' }} />)}
+        </svg>
+        <div style={{ 
+          position: 'absolute', inset: 0, display: 'flex', 
+          flexDirection: 'column', alignItems: 'center', 
+          justify-content: 'center', pointerEvents: 'none' 
+        }}>
+          <span style={{ fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', lineHeight: 1 }}>{total}%</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Completed</span>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, width: '100%' }}>
         {data.map((d, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 2, background: d.color, flexShrink: 0 }} />
-            <span style={{ color: 'var(--text-secondary)' }}>{d.label}</span>
-            <span style={{ fontWeight: 700, marginLeft: 'auto', paddingLeft: 8 }}>{d.val}%</span>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
+            <div style={{ width: 12, height: 12, borderRadius: 4, background: d.color, flexShrink: 0 }} />
+            <span style={{ color: 'var(--text-secondary)', fontWeight: 600 }}>{d.label}</span>
+            <span style={{ fontWeight: 800, marginLeft: 'auto', color: 'var(--text-primary)' }}>{d.val}%</span>
           </div>
         ))}
       </div>

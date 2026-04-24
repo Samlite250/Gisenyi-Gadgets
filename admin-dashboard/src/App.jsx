@@ -31,14 +31,22 @@ function Sidebar({ collapsed, onToggle }) {
   return (
     <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        <ShoppingBag size={28} color="var(--primary-blue)" />
+        <div style={{ 
+          background: 'linear-gradient(135deg, var(--primary-blue), #60A5FA)',
+          width: 38, height: 38, borderRadius: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 10px rgba(66, 133, 244, 0.3)',
+          flexShrink: 0
+        }}>
+          <ShoppingBag size={22} color="white" strokeWidth={2.5} />
+        </div>
         {!collapsed && (
           <div className="sidebar-brand">
             <span className="sidebar-brand-name">Gisenyi</span>
-            <span className="sidebar-brand-sub">Admin</span>
+            <span className="sidebar-brand-sub">Management</span>
           </div>
         )}
-        <button className="sidebar-toggle" onClick={onToggle}>
+        <button className="sidebar-toggle" onClick={onToggle} style={{ marginLeft: collapsed ? 0 : 'auto' }}>
           {collapsed ? <Menu size={18} /> : <X size={18} />}
         </button>
       </div>
@@ -72,15 +80,28 @@ function Sidebar({ collapsed, onToggle }) {
 function TopBar() {
   return (
     <header className="topbar">
-      <div className="topbar-left">
-        <h1 className="topbar-title">Gisenyi Gadgets Admin</h1>
+      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+        <h1 className="topbar-title">Overview</h1>
+        <div className="search-wrap" style={{ width: 300 }}>
+          <div className="search-icon">
+            <Bell size={16} />
+          </div>
+          <input type="text" className="input input-sm" placeholder="Search orders, products..." />
+        </div>
       </div>
       <div className="topbar-right">
         <button className="topbar-btn">
           <Bell size={20} />
           <span className="notif-dot" />
         </button>
-        <div className="admin-avatar">A</div>
+        <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 8px' }} />
+        <div className="flex items-center gap-3">
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Samuel Admin</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>Super Admin</div>
+          </div>
+          <div className="admin-avatar">S</div>
+        </div>
       </div>
     </header>
   );

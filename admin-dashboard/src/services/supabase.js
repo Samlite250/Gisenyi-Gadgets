@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'YOUR_SUPABASE_URL';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = 'https://fdsaemjngaamvgjlooyh.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkc2FlbWpuZ2FhbXZnamxvb3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5ODI3NjcsImV4cCI6MjA5MjU1ODc2N30.zFgCoZs4R_gT5cGiQA2WLn9fUuzIcogUkWOy3A1WtwI';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// ─── Auth helpers ─────────────────────────────────────────────
 export const signInAdmin = async (email, password) => {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;

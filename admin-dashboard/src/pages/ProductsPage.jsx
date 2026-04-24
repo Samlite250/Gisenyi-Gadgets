@@ -156,8 +156,8 @@ export default function ProductsPage() {
             </div>
             <form onSubmit={handleSave}>
               <div className="modal-body">
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                <div className="form-grid">
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Product Name *</label>
                     <input className="input" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Samsung Galaxy S24" />
                   </div>
@@ -177,11 +177,11 @@ export default function ProductsPage() {
                     <label className="form-label">Compare Price (RWF)</label>
                     <input className="input" type="number" min={0} value={form.compare_price} onChange={(e) => setForm({ ...form, compare_price: e.target.value })} placeholder="950000" />
                   </div>
-                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Description</label>
                     <textarea className="input" rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Product description..." style={{ resize: 'vertical' }} />
                   </div>
-                  <div style={{ display: 'flex', gap: 20, gridColumn: '1 / -1' }}>
+                  <div style={{ display: 'flex', gap: 20, gridColumn: 'span 2' }}>
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 14 }}>
                       <input type="checkbox" checked={form.is_featured} onChange={(e) => setForm({ ...form, is_featured: e.target.checked })} />
                       Featured product

@@ -101,7 +101,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, marginBottom: 24 }}>
+      <div className="chart-row" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, marginBottom: 24 }}>
         <div className="card">
           <div className="card-header">
             <span className="card-title">Revenue Forecast</span>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Bottom Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }}>
+      <div className="chart-row" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }}>
         {/* Recent Orders */}
         <div className="card">
           <div className="card-header">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router, Routes, Route,
   NavLink, useNavigate,
@@ -27,95 +27,131 @@ const NAV_ITEMS = [
   { path: '/settings', icon: Settings,        label: 'Settings'  },
 ];
 
-function Sidebar({ collapsed, onToggle }) {
-  return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-header">
-        <div style={{ 
-          background: 'linear-gradient(135deg, var(--primary-blue), #60A5FA)',
-          width: 38, height: 38, borderRadius: 10,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 4px 10px rgba(66, 133, 244, 0.3)',
-          flexShrink: 0
-        }}>
-          <ShoppingBag size={22} color="white" strokeWidth={2.5} />
-        </div>
-        {!collapsed && (
-          <div className="sidebar-brand">
-            <span className="sidebar-brand-name">Gisenyi</span>
-            <span className="sidebar-brand-sub">Management</span>
-          </div>
-        )}
-        <button className="sidebar-toggle" onClick={onToggle} style={{ marginLeft: collapsed ? 0 : 'auto' }}>
-          {collapsed ? <Menu size={18} /> : <X size={18} />}
-        </button>
-      </div>
 
-      <nav className="sidebar-nav">
-        {NAV_ITEMS.map(({ path, icon: Icon, label }) => (
-          <NavLink
-            key={path}
-            to={path}
-            end={path === '/'}
-            className={({ isActive }) =>
-              `nav-item ${isActive ? 'nav-item-active' : ''}`
-            }
-          >
-            <Icon size={20} />
-            {!collapsed && <span>{label}</span>}
-          </NavLink>
-        ))}
-      </nav>
-
-      <div className="sidebar-footer">
-        <button className="nav-item nav-item-logout">
-          <LogOut size={20} />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
-      </div>
-    </aside>
-  );
-}
-
-function TopBar() {
-  return (
-    <header className="topbar">
-      <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        <h1 className="topbar-title">Overview</h1>
-        <div className="search-wrap" style={{ width: 300 }}>
-          <div className="search-icon">
-            <Bell size={16} />
-          </div>
-          <input type="text" className="input input-sm" placeholder="Search orders, products..." />
-        </div>
-      </div>
-      <div className="topbar-right">
-        <button className="topbar-btn">
-          <Bell size={20} />
-          <span className="notif-dot" />
-        </button>
-        <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 8px' }} />
-        <div className="flex items-center gap-3">
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Samuel Admin</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>Super Admin</div>
-          </div>
-          <div className="admin-avatar">S</div>
-        </div>
-      </div>
-    </header>
-  );
-}
 
 export default function App() {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileOpen(false);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setMobileOpen(!mobileOpen);
+    } else {
+      setCollapsed(!collapsed);
+    }
+  };
 
   return (
     <Router>
       <div className="app-layout">
-        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        {/* Mobile Overlay */}
+        <div 
+          className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`} 
+          onClick={() => setMobileOpen(false)} 
+        />
+
+        <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+          <div className="sidebar-header">
+            <div style={{ 
+              width: 42, height: 42, borderRadius: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+              overflow: 'hidden'
+            }}>
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+              />
+            </div>
+            {(!collapsed || mobileOpen) && (
+              <div className="sidebar-brand">
+                <span className="sidebar-brand-name">Gisenyi Gadgets</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span className="sidebar-brand-sub">Admin Console</span>
+                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34A853', boxShadow: '0 0 8px #34A853' }} />
+                </div>
+              </div>
+            )}
+            {!isMobile && (
+              <button className="sidebar-toggle" onClick={toggleSidebar}>
+                {collapsed ? <Menu size={18} /> : <X size={18} />}
+              </button>
+            )}
+          </div>
+
+          <nav className="sidebar-nav">
+            {NAV_ITEMS.map(({ path, icon: Icon, label }) => (
+              <NavLink
+                key={path}
+                to={path}
+                end={path === '/'}
+                onClick={() => isMobile && setMobileOpen(false)}
+                className={({ isActive }) =>
+                  `nav-item ${isActive ? 'nav-item-active' : ''}`
+                }
+              >
+                <Icon size={20} />
+                {(!collapsed || isMobile) && <span>{label}</span>}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="sidebar-footer">
+            <button className="nav-item nav-item-logout">
+              <LogOut size={20} />
+              {(!collapsed || isMobile) && <span>Sign Out</span>}
+            </button>
+          </div>
+        </aside>
+
         <div className="main-area">
-          <TopBar />
+          <header className="topbar">
+            <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+              {isMobile && (
+                <button className="topbar-btn" onClick={() => setMobileOpen(true)}>
+                  <Menu size={20} />
+                </button>
+              )}
+              <h1 className="topbar-title">Overview</h1>
+              {!isMobile && (
+                <div className="search-wrap" style={{ width: 300 }}>
+                  <div className="search-icon">
+                    <Bell size={16} />
+                  </div>
+                  <input type="text" className="input input-sm" placeholder="Search orders, products..." />
+                </div>
+              )}
+            </div>
+            <div className="topbar-right">
+              <button className="topbar-btn">
+                <Bell size={20} />
+                <span className="notif-dot" />
+              </button>
+              <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 8px' }} />
+              <div className="flex items-center gap-3">
+                {!isMobile && (
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Samuel Admin</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>Super Admin</div>
+                  </div>
+                )}
+                <div className="admin-avatar">S</div>
+              </div>
+            </div>
+          </header>
+
           <main className="page-content">
             <Routes>
               <Route path="/"         element={<DashboardPage />} />

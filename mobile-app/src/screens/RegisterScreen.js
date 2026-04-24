@@ -32,16 +32,21 @@ export default function RegisterScreen({ navigation }) {
     if (err) { setError(err); return; }
     setLoading(true);
     try {
-      await signUp({
+      const { data } = await signUp({
         email: form.email.trim().toLowerCase(),
         password: form.password,
         fullName: form.fullName.trim(),
       });
-      Alert.alert(
-        'Account Created! 🎉',
-        'Your account has been successfully created. You can now login.',
-        [{ text: 'Go to Login', onPress: () => navigation.navigate('Login') }]
-      );
+
+      // If Supabase auto-confirms, data.session will exist and RootNavigator will auto-switch
+      // If not, we show the manual alert
+      if (!data.session) {
+        Alert.alert(
+          'Check your email! 📧',
+          'We sent a verification link to your email. Please verify to login.',
+          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        );
+      }
     } catch (e) {
       setError(e.message || 'Registration failed. Please try again.');
     } finally {

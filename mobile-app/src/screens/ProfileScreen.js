@@ -50,40 +50,22 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Profile Card */}
-        <View style={styles.headerPad}>
-          <View style={styles.profileCard}>
-            {avatarUrl
-              ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
-              : (
-                <View style={styles.avatarPlaceholder}>
-                  <Text style={styles.avatarInitials}>{getInitials(displayName)}</Text>
-                </View>
-              )}
-            <View style={styles.profileInfo}>
-              <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
-              <Text style={styles.email} numberOfLines={1}>{displayEmail}</Text>
-              <TouchableOpacity style={styles.editBtn}>
-                <Text style={styles.editBtnText}>Edit Profile</Text>
-              </TouchableOpacity>
+        {/* Header Banner */}
+        <View style={styles.headerBanner}>
+          <View style={styles.userInfo}>
+            <View style={styles.avatarWrap}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?q=80&w=200' }} 
+                style={styles.avatar} 
+              />
+            </View>
+            <View style={styles.userNameWrap}>
+              <Text style={styles.name}>{displayName}</Text>
+              <Text style={styles.email}>{displayEmail}</Text>
             </View>
           </View>
-        </View>
-
-        {/* Stats */}
-        <View style={styles.statsRow}>
-          {[
-            { label: 'Orders', value: '—' },
-            { label: 'Wishlist', value: totalWishlistItems },
-            { label: 'Reviews', value: '—' },
-          ].map((s, i) => (
-            <View key={i} style={styles.statItem}>
-              <Text style={styles.statValue}>{s.value}</Text>
-              <Text style={styles.statLabel}>{s.label}</Text>
-            </View>
-          ))}
         </View>
 
         {/* Menu Items */}
@@ -93,103 +75,85 @@ export default function ProfileScreen({ navigation }) {
               key={item.id}
               style={styles.menuItem}
               onPress={() => item.route && navigation.navigate(item.route)}
-              activeOpacity={0.7}
             >
               <View style={styles.menuLeft}>
-                <View style={styles.menuIconWrap}>
-                  <item.icon size={18} color={COLORS.primaryBlue} />
-                </View>
+                <item.icon size={20} color={COLORS.textSecondary} />
                 <Text style={styles.menuTitle}>{item.title}</Text>
               </View>
-              <View style={styles.menuRight}>
-                {item.id === 'wishlist' && totalWishlistItems > 0 && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>{totalWishlistItems}</Text>
-                  </View>
-                )}
-                <ChevronRight size={18} color={COLORS.textMuted} />
-              </View>
+              <ChevronRight size={18} color={COLORS.textMuted} />
             </TouchableOpacity>
           ))}
 
-          <TouchableOpacity
-            style={[styles.menuItem, { marginTop: SIZES.sm }]}
-            onPress={handleLogout}
-            disabled={loggingOut}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
             <View style={styles.menuLeft}>
-              <View style={[styles.menuIconWrap, { backgroundColor: `${COLORS.error}15` }]}>
-                <LogOut size={18} color={COLORS.error} />
-              </View>
-              <Text style={[styles.menuTitle, { color: COLORS.error }]}>
-                {loggingOut ? 'Signing out...' : 'Sign Out'}
-              </Text>
+              <LogOut size={20} color={COLORS.error} />
+              <Text style={[styles.menuTitle, { color: COLORS.error }]}>Logout</Text>
             </View>
+            <ChevronRight size={18} color={COLORS.error} />
           </TouchableOpacity>
         </View>
-
-        <Text style={styles.version}>Gisenyi Gadgets v1.0.0</Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.darkBg },
-  headerPad: { padding: SIZES.lg, paddingBottom: 0 },
-  profileCard: {
-    flexDirection: 'row', alignItems: 'center',
+  container: { flex: 1, backgroundColor: '#fff' },
+  headerBanner: {
     backgroundColor: COLORS.primaryBlue,
-    borderRadius: SIZES.radiusXl, padding: SIZES.lg, ...SHADOWS.md,
+    paddingTop: 80,
+    paddingBottom: 40,
+    paddingHorizontal: SIZES.lg,
   },
-  avatar: { width: 68, height: 68, borderRadius: 34, borderWidth: 2, borderColor: '#fff' },
-  avatarPlaceholder: {
-    width: 68, height: 68, borderRadius: 34,
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: 'rgba(255,255,255,0.5)',
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SIZES.md,
   },
-  avatarInitials: { fontSize: SIZES.fontXl, fontWeight: '700', color: '#fff' },
-  profileInfo: { flex: 1, marginLeft: SIZES.md },
-  name: { fontSize: SIZES.fontLg, fontWeight: '700', color: '#fff', marginBottom: 2 },
-  email: { fontSize: SIZES.fontSm, color: 'rgba(255,255,255,0.75)', marginBottom: SIZES.sm },
-  editBtn: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: 4, paddingHorizontal: SIZES.sm,
-    borderRadius: SIZES.radiusFull,
+  avatarWrap: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: '#fff',
+    overflow: 'hidden',
+    backgroundColor: '#eee',
   },
-  editBtnText: { color: '#fff', fontSize: SIZES.fontXs, fontWeight: '600' },
-  statsRow: {
-    flexDirection: 'row', backgroundColor: COLORS.cardBg,
-    marginHorizontal: SIZES.lg, marginTop: SIZES.sm,
-    borderRadius: SIZES.radiusLg, padding: SIZES.md, ...SHADOWS.sm,
+  avatar: {
+    width: '100%',
+    height: '100%',
   },
-  statItem: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: SIZES.fontXl, fontWeight: '800', color: COLORS.textPrimary },
-  statLabel: { fontSize: SIZES.fontXs, color: COLORS.textSecondary, marginTop: 2 },
-  menu: { padding: SIZES.lg, gap: SIZES.sm },
+  userNameWrap: {
+    gap: 2,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  email: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+  },
+  menu: {
+    marginTop: SIZES.md,
+  },
   menuItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: COLORS.cardBg, padding: SIZES.md,
-    borderRadius: SIZES.radiusLg, ...SHADOWS.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: SIZES.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
   },
-  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: SIZES.md },
-  menuIconWrap: {
-    width: 36, height: 36, borderRadius: SIZES.radiusMd,
-    backgroundColor: `${COLORS.primaryBlue}15`,
-    justifyContent: 'center', alignItems: 'center',
+  menuLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SIZES.md,
   },
-  menuTitle: { fontSize: SIZES.fontMd, color: COLORS.textPrimary, fontWeight: '500' },
-  menuRight: { flexDirection: 'row', alignItems: 'center', gap: SIZES.sm },
-  badge: {
-    backgroundColor: COLORS.primaryBlue, borderRadius: SIZES.radiusFull,
-    minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 4,
-  },
-  badgeText: { color: '#fff', fontSize: SIZES.fontXs, fontWeight: '700' },
-  version: {
-    textAlign: 'center', color: COLORS.textMuted,
-    fontSize: SIZES.fontXs, paddingBottom: SIZES.xl,
+  menuTitle: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: COLORS.textPrimary,
   },
 });

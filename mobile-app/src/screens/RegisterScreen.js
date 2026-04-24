@@ -15,6 +15,7 @@ export default function RegisterScreen({ navigation }) {
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [focusedField, setFocusedField] = useState(null);
 
   const set = (key) => (val) => { setForm((f) => ({ ...f, [key]: val })); setError(''); };
 
@@ -31,6 +32,7 @@ export default function RegisterScreen({ navigation }) {
     const err = validate();
     if (err) { setError(err); return; }
     setLoading(true);
+    setFocusedField(null);
     try {
       const { data } = await signUp({
         email: form.email.trim().toLowerCase(),
@@ -55,7 +57,7 @@ export default function RegisterScreen({ navigation }) {
   };
 
   const Field = ({ icon: Icon, field, placeholder, secureEntry, keyType }) => (
-    <View style={styles.inputWrap}>
+    <View style={[styles.inputWrap, focusedField === field && styles.inputWrapFocused]}>
       <Icon size={20} color="#9AA0A6" style={styles.icon} />
       <TextInput
         style={styles.input}
@@ -67,6 +69,8 @@ export default function RegisterScreen({ navigation }) {
         keyboardType={keyType || 'default'}
         autoCapitalize={field === 'email' ? 'none' : 'words'}
         autoCorrect={false}
+        onFocus={() => setFocusedField(field)}
+        onBlur={() => setFocusedField(null)}
       />
     </View>
   );
@@ -145,9 +149,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: '#F5F5F5', borderRadius: 8,
     paddingHorizontal: 16, height: 52,
+    borderBottomWidth: 0,
+  },
+  inputWrapFocused: {
+    borderBottomWidth: 2,
+    borderColor: '#4285F4',
   },
   icon: { marginRight: 12 },
-  input: { flex: 1, color: '#202124', fontSize: 15 },
+  input: {
+    flex: 1,
+    color: '#202124',
+    fontSize: 15,
+    outlineStyle: 'none', // Remove web focus ring
+  },
   checkboxRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, marginBottom: 8 },
   checkbox: {
     width: 20, height: 20, borderRadius: 4,

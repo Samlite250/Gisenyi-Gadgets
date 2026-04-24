@@ -26,6 +26,7 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [focusedField, setFocusedField] = useState(null); // Track which field is active
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -34,6 +35,7 @@ export default function LoginScreen({ navigation }) {
     }
     setLoading(true);
     setError('');
+    setFocusedField(null); // Clear focus on submit
     try {
       await signIn({ email: email.trim().toLowerCase(), password });
     } catch (err) {
@@ -68,7 +70,7 @@ export default function LoginScreen({ navigation }) {
           <View style={styles.form}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
-              <View style={styles.inputWrap}>
+              <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
                 <TextInput
                   style={styles.input}
                   placeholder="samuel@example.com"
@@ -77,13 +79,15 @@ export default function LoginScreen({ navigation }) {
                   onChangeText={(t) => { setEmail(t); setError(''); }}
                   keyboardType="email-address"
                   autoCapitalize="none"
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
-              <View style={styles.inputWrap}>
+              <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
@@ -91,6 +95,8 @@ export default function LoginScreen({ navigation }) {
                   value={password}
                   onChangeText={(t) => { setPassword(t); setError(''); }}
                   secureTextEntry={!showPassword}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
                 />
                 <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
                   {showPassword ? <EyeOff size={18} color={COLORS.textSecondary} /> : <Eye size={18} color={COLORS.textSecondary} />}
@@ -149,8 +155,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: COLORS.inputBg, borderRadius: 8,
     paddingHorizontal: 16, height: 52,
+    borderBottomWidth: 0, // Base state
   },
-  input: { flex: 1, color: COLORS.textPrimary, fontSize: 15 },
+  inputWrapFocused: {
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.primaryBlue,
+  },
+  input: {
+    flex: 1,
+    color: COLORS.textPrimary,
+    fontSize: 15,
+    outlineStyle: 'none', // Remove web focus ring
+  },
   forgotBtn: { alignSelf: 'flex-end', marginTop: -4 },
   forgotText: { color: COLORS.textSecondary, fontSize: 12 },
   loginBtn: {

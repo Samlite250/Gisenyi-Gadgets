@@ -21,6 +21,7 @@ export default function ForgotPasswordScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleResetPassword = async () => {
     if (!email.trim()) {
@@ -35,6 +36,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
     setLoading(true);
     setError('');
+    setFocusedField(null);
     try {
       await resetPassword(email.trim().toLowerCase());
       setSent(true);
@@ -119,7 +121,7 @@ export default function ForgotPasswordScreen({ navigation }) {
 
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>Email Address</Text>
-              <View style={styles.inputContainer}>
+              <View style={[styles.inputContainer, focusedField === 'email' && styles.inputContainerFocused]}>
                 <Mail size={18} color={COLORS.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
@@ -132,6 +134,8 @@ export default function ForgotPasswordScreen({ navigation }) {
                   autoCorrect={false}
                   returnKeyType="send"
                   onSubmitEditing={handleResetPassword}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
                 />
               </View>
             </View>
@@ -244,6 +248,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     paddingHorizontal: SIZES.md,
     height: 54,
+    borderBottomWidth: 0,
+  },
+  inputContainerFocused: {
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.primaryBlue,
   },
   inputIcon: {
     marginRight: SIZES.sm,
@@ -252,6 +261,7 @@ const styles = StyleSheet.create({
     flex: 1,
     color: COLORS.textPrimary,
     fontSize: SIZES.fontMd,
+    outlineStyle: 'none', // Remove web focus ring
   },
   submitBtn: {
     backgroundColor: COLORS.primaryBlue,

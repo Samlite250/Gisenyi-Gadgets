@@ -13,14 +13,39 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 // ─── Demo data fallback ───────────────────────────────────────
 const DEMO_CATEGORIES = [
-  { id: '1', name: 'Electronics', icon: '💻', slug: 'electronics' },
-  { id: '2', name: 'Phone Cases', icon: '📱', slug: 'phone-cases' },
-  { id: '3', name: 'Clothes',     icon: '👕', slug: 'clothes' },
-  { id: '4', name: 'More',        icon: '...', slug: 'more' },
+  { id: 'c1', name: 'Smartphones', icon: '📱', slug: 'smartphones' },
+  { id: 'c2', name: 'Laptops', icon: '💻', slug: 'laptops' },
+  { id: 'c3', name: 'Headphones', icon: '🎧', slug: 'headphones' },
+  { id: 'c4', name: 'Smartwatches', icon: '⌚', slug: 'smartwatches' },
+  { id: 'c5', name: 'Tablets', icon: '📇', slug: 'tablets' },
+  { id: 'c6', name: 'Cameras', icon: '📷', slug: 'cameras' },
 ];
 
 const BANNERS = [
-  { id: 1, title: 'Big Sale Up to\n40% OFF', subtitle: 'On all electronics and accessories', color: '#0F172A', emoji: '🎧', buttonText: 'Shop Now' },
+  { id: 1, title: 'Big Sale Up to\n40% OFF', subtitle: 'On all electronics', color: '#0F172A', emoji: '🎧', buttonText: 'Shop Now', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300' },
+  { id: 2, title: 'Apple Days\nSave $200', subtitle: 'MacBooks & iPads', color: '#8B5CF6', emoji: '💻', buttonText: 'Explore', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=300' },
+  { id: 3, title: 'Smart Wear\nTrending', subtitle: 'Upgrade your style', color: '#EF4444', emoji: '⌚', buttonText: 'View Deals', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=300' },
+];
+
+const DEMO_BRANDS = [
+  { id: 'b1', name: 'Apple', icon: '🍎' },
+  { id: 'b2', name: 'Samsung', icon: '📱' },
+  { id: 'b3', name: 'Sony', icon: '🎧' },
+  { id: 'b4', name: 'HP', icon: '💻' },
+  { id: 'b5', name: 'Dell', icon: '🖥️' },
+];
+
+const DEMO_PRODUCTS = [
+  { id: 'p1', name: 'Wireless AirPods Max', price: 45000, rating: '4.8', category_id: 'c3', images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300'] },
+  { id: 'p2', name: 'Apple Smart Watch', price: 85000, rating: '4.9', category_id: 'c4', images: ['https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=300'] },
+  { id: 'p3', name: 'MacBook Air M2', price: 1200000, rating: '5.0', category_id: 'c2', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=300'] },
+  { id: 'p4', name: 'Ultra Wide Monitor', price: 150000, rating: '4.7', category_id: 'c1', images: ['https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?q=80&w=300'] },
+  { id: 'p5', name: 'Samsung Galaxy S24', price: 950000, rating: '4.9', category_id: 'c1', images: ['https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=300'] },
+  { id: 'p6', name: 'Sony Noise Canceling', price: 35000, rating: '4.6', category_id: 'c3', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=300'] },
+  { id: 'p7', name: 'iPad Pro 12.9"', price: 890000, rating: '4.9', category_id: 'c5', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=300'] },
+  { id: 'p8', name: 'Fitbit Versa 4', price: 65000, rating: '4.5', category_id: 'c4', images: ['https://images.unsplash.com/photo-1579586337278-3befd40fd17a?q=80&w=300'] },
+  { id: 'p9', name: 'Canon EOS R5', price: 2500000, rating: '5.0', category_id: 'c6', images: ['https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=300'] },
+  { id: 'p10', name: 'Dell XPS 15', price: 1500000, rating: '4.8', category_id: 'c2', images: ['https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=300'] }
 ];
 
 export default function HomeScreen({ navigation }) {
@@ -107,22 +132,41 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchBar}>
+        <TouchableOpacity style={styles.searchBar} activeOpacity={0.9} onPress={() => navigation.navigate('Search')}>
           <Search size={18} color={COLORS.textMuted} />
-          <TextInput placeholder="Search products..." placeholderTextColor={COLORS.textMuted} style={styles.searchInput} />
-        </View>
+          <TextInput 
+            placeholder="Search products..." 
+            placeholderTextColor={COLORS.textMuted} 
+            style={styles.searchInput}
+            editable={false}
+            pointerEvents="none"
+          />
+        </TouchableOpacity>
+
+        {/* Top Brands */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.brandRow}>
+          {DEMO_BRANDS.map((b) => (
+            <TouchableOpacity key={b.id} style={styles.brandItem} onPress={() => navigation.navigate('Search', { query: b.name })}>
+              <View style={styles.brandIconWrap}><Text style={styles.brandIcon}>{b.icon}</Text></View>
+              <Text style={styles.brandName}>{b.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Banners */}
-        <View style={styles.bannerContainer}>
-          {BANNERS.map((b) => (
-            <View key={b.id} style={[styles.banner, { backgroundColor: b.color }]}>
-              <View style={styles.bannerContent}>
-                <Text style={styles.bannerTitle}>{b.title}</Text>
-                <TouchableOpacity style={styles.bannerButton}><Text style={styles.bannerButtonText}>{b.buttonText}</Text></TouchableOpacity>
+        <View style={styles.bannerContainerWrap}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SIZES.lg, gap: 16 }}>
+            {BANNERS.map((b) => (
+              <View key={b.id} style={[styles.banner, { backgroundColor: b.color }]}>
+                <View style={styles.bannerContent}>
+                  <Text style={styles.bannerSubtitle}>{b.subtitle}</Text>
+                  <Text style={styles.bannerTitle}>{b.title}</Text>
+                  <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}><Text style={styles.bannerButtonText}>{b.buttonText}</Text></TouchableOpacity>
+                </View>
+                <Image source={{ uri: b.image }} style={styles.bannerImage} />
               </View>
-              <Image source={{ uri: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300' }} style={styles.bannerImage} />
-            </View>
-          ))}
+            ))}
+          </ScrollView>
         </View>
 
         {/* Categories */}
@@ -130,89 +174,162 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.sectionTitle}>Categories</Text>
           <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
         </View>
-        <View style={styles.catRow}>
-          {categories.map((c) => (
-            <TouchableOpacity key={c.id} style={styles.catItem}>
-              <View style={styles.catIconWrap}><Text style={styles.catIcon}>{c.icon}</Text></View>
-              <Text style={styles.catName}>{c.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.catRow}>
+            {categories.map((c) => (
+              <TouchableOpacity 
+                key={c.id} 
+                style={[styles.catItem, activeCategory === c.id && { opacity: 0.8 }]}
+                onPress={() => setActiveCategory(activeCategory === c.id ? 'all' : c.id)}
+              >
+                <View style={[styles.catIconWrap, activeCategory === c.id && { backgroundColor: COLORS.primaryBlue, borderColor: COLORS.primaryBlue, borderWidth: 1 }]}>
+                  <Text style={styles.catIcon}>{c.icon || '📱'}</Text>
+                </View>
+                <Text style={[styles.catName, activeCategory === c.id && { color: COLORS.primaryBlue, fontWeight: '700' }]}>{c.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </ScrollView>
 
         {/* Featured Products */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Featured Products</Text>
+          <Text style={styles.sectionTitle}>
+             {activeCategory === 'all' ? 'Featured Products' : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products'}
+          </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-          {DEMO_PRODUCTS.map((p) => (
+          {(featuredProducts.length > 0 ? featuredProducts : DEMO_PRODUCTS)
+            .filter(p => activeCategory === 'all' || p.category_id === activeCategory)
+            .map((p) => (
             <ProductCard key={p.id} product={p} style={styles.featuredCard} />
           ))}
         </ScrollView>
 
-        <View style={{ height: SIZES.xxl }} />
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+        {/* Flash Deal */}
+        <TouchableOpacity style={styles.flashDealContainer} activeOpacity={0.9} onPress={() => navigation.navigate('ProductDetails', { product: DEMO_PRODUCTS[5] })}>
+          <View style={styles.flashDealContent}>
+            <View style={styles.flashHeader}>
+              <Text style={styles.flashBadge}>⚡ FLASH DEAL</Text>
+              <Text style={styles.flashTimer}>02 : 14 : 30</Text>
+            </View>
+            <Text style={styles.flashTitle}>Sony WH-1000XM5</Text>
+            <View style={styles.priceRow}>
+              <Text style={styles.flashPrice}>RWF 35,000</Text>
+              <Text style={styles.flashOldPrice}>50,000</Text>
+            </View>
+          </View>
+          <Image source={{ uri: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=300' }} style={styles.flashImage} />
+        </TouchableOpacity>
 
-        <View style={{ height: SIZES.xxl }} />
+        {/* New Arrivals */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>New Arrivals</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+        </View>
+        <View style={styles.newArrivalsList}>
+          {(newArrivals.length > 0 ? newArrivals : DEMO_PRODUCTS.slice(4, 7)).map((p) => (
+            <TouchableOpacity key={p.id} style={styles.listCard} onPress={() => navigation.navigate('ProductDetails', { product: p })}>
+              <Image source={{ uri: p.images[0] }} style={styles.listImage} />
+              <View style={styles.listInfo}>
+                <Text style={styles.listName} numberOfLines={1}>{p.name}</Text>
+                <Text style={styles.listRating}>⭐ {p.rating}</Text>
+                <Text style={styles.listPrice}>{fmt(p.price)}</Text>
+              </View>
+              <TouchableOpacity style={styles.addCartBtnSmall} onPress={() => addToCart(p)}>
+                <ShoppingBag size={18} color="#FFFFFF" />
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <View style={{ height: SIZES.xxl || 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.darkBg },
+  container: { flex: 1, backgroundColor: '#FAFAFA' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: SIZES.lg, paddingTop: SIZES.md, paddingBottom: SIZES.sm,
   },
-  greeting: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },
-  tagline: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, marginTop: 2 },
-  notifBtn: { width: 44, height: 44, backgroundColor: COLORS.cardBg, borderRadius: 22, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWeight: 1, borderColor: '#eee' },
+  greeting: { fontSize: SIZES.fontMd, fontWeight: '800', color: '#1A1A1A' },
+  tagline: { fontSize: SIZES.fontSm, color: '#666666', marginTop: 4 },
+  notifBtn: { width: 44, height: 44, backgroundColor: '#FFFFFF', borderRadius: 22, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
   
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: SIZES.sm,
-    backgroundColor: '#F5F5F5', borderRadius: SIZES.radiusMd,
+    backgroundColor: '#FFFFFF', borderRadius: 16,
     marginHorizontal: SIZES.lg, marginVertical: SIZES.md,
-    paddingHorizontal: SIZES.md, height: 48,
+    paddingHorizontal: SIZES.md, height: 52,
+    ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0'
   },
-  searchInput: { flex: 1, fontSize: SIZES.fontSm, color: COLORS.textPrimary, outlineStyle: 'none' },
+  searchInput: { flex: 1, fontSize: SIZES.fontSm, color: '#1A1A1A', outlineStyle: 'none' },
 
   bannerContainer: { paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
   banner: {
-    height: 160, borderRadius: SIZES.radiusLg, padding: SIZES.lg,
+    height: 170, borderRadius: 24, padding: SIZES.lg,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     ...SHADOWS.md, overflow: 'hidden',
   },
-  bannerContent: { flex: 1, justifyContent: 'center', gap: SIZES.md },
-  bannerTitle: { fontSize: 22, fontWeight: '800', color: '#fff', lineHeight: 28 },
-  bannerButton: { alignSelf: 'flex-start', backgroundColor: COLORS.primaryBlue, borderRadius: SIZES.radiusSm, paddingVertical: 8, paddingHorizontal: 16 },
-  bannerButtonText: { color: '#fff', fontSize: 12, fontWeight: '700' },
-  bannerImage: { width: 120, height: 120, borderRadius: 60 },
+  bannerContent: { flex: 1, justifyContent: 'center', gap: 12 },
+  bannerTitle: { fontSize: 24, fontWeight: '900', color: '#FFFFFF', lineHeight: 30, letterSpacing: -0.5 },
+  bannerButton: { alignSelf: 'flex-start', backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 18 },
+  bannerButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  bannerImage: { width: 130, height: 130, borderRadius: 65, right: -10, position: 'relative' },
 
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },
-  sectionTitle: { fontSize: SIZES.fontLg, fontWeight: '700', color: COLORS.textPrimary },
-  seeAll: { fontSize: SIZES.fontSm, color: COLORS.primaryBlue, fontWeight: '600' },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },
+  sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.5 },
+  seeAll: { fontSize: 13, color: '#3B82F6', fontWeight: '700' },
 
-  catRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
-  catItem: { alignItems: 'center', gap: SIZES.sm },
-  catIconWrap: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#F5F5F5', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm },
-  catIcon: { fontSize: 24 },
-  catName: { fontSize: 12, fontWeight: '500', color: COLORS.textSecondary },
+  catRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg, gap: 16 },
+  catItem: { alignItems: 'center', gap: 8 },
+  catIconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
+  catIcon: { fontSize: 26 },
+  catName: { fontSize: 12, fontWeight: '600', color: '#666666' },
 
-  hScroll: { paddingHorizontal: SIZES.lg, gap: SIZES.md, paddingBottom: SIZES.md },
-  featuredCard: { width: 160 },
+  hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
+  featuredCard: { width: 170 },
   
-  productCard: { backgroundColor: COLORS.cardBg, borderRadius: SIZES.radiusLg, padding: SIZES.sm, ...SHADOWS.sm, borderWeight: 1, borderColor: '#F0F0F0' },
-  productImageWrap: { position: 'relative', marginBottom: SIZES.sm },
-  productImage: { width: '100%', height: 120 },
-  imagePlaceholder: { backgroundColor: COLORS.surfaceBg, justifyContent: 'center', alignItems: 'center' },
-  heartBtn: { position: 'absolute', top: 0, right: 0, width: 28, height: 28, justifyContent: 'center', alignItems: 'center' },
-  productInfo: { gap: 4 },
-  productName: { fontSize: SIZES.fontSm, fontWeight: '700', color: COLORS.textPrimary },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingText: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
-  productPrice: { fontSize: SIZES.fontMd, fontWeight: '800', color: COLORS.primaryBlue },
+  productCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 12, ...SHADOWS.md, borderWidth: 1, borderColor: '#F5F5F5' },
+  productImageWrap: { position: 'relative', marginBottom: 12, backgroundColor: '#FAFAFA', borderRadius: 12, padding: 8 },
+  productImage: { width: '100%', height: 130, borderRadius: 8 },
+  imagePlaceholder: { backgroundColor: '#FAFAFA', justifyContent: 'center', alignItems: 'center' },
+  heartBtn: { position: 'absolute', top: 6, right: 6, width: 32, height: 32, backgroundColor: '#FFFFFF', borderRadius: 16, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm },
+  productInfo: { gap: 6 },
+  productName: { fontSize: 14, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.3 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  ratingText: { fontSize: 12, color: '#666666', fontWeight: '600' },
+  productPrice: { fontSize: 16, fontWeight: '900', color: '#3B82F6', marginTop: 4 },
+
+  brandRow: { paddingHorizontal: SIZES.lg, gap: 16, marginBottom: SIZES.lg },
+  brandItem: { alignItems: 'center', gap: 6 },
+  brandIconWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
+  brandIcon: { fontSize: 24 },
+  brandName: { fontSize: 12, fontWeight: '700', color: '#1A1A1A' },
+
+  bannerContainerWrap: { marginBottom: SIZES.lg },
+  bannerSubtitle: { fontSize: 12, color: '#E0E7FF', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+
+  flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.lg, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
+  flashDealContent: { flex: 1, justifyContent: 'center', gap: 6 },
+  flashHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  flashBadge: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', backgroundColor: '#EF4444', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
+  flashTimer: { fontSize: 11, fontWeight: '800', color: '#EF4444' },
+  flashTitle: { fontSize: 16, fontWeight: '800', color: '#1A1A1A' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  flashPrice: { fontSize: 15, fontWeight: '900', color: '#EF4444' },
+  flashOldPrice: { fontSize: 12, color: '#999999', textDecorationLine: 'line-through', fontWeight: '600' },
+  flashImage: { width: 90, height: 90, borderRadius: 12, alignSelf: 'center' },
+
+  newArrivalsList: { paddingHorizontal: SIZES.lg, gap: 12 },
+  listCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 10, alignItems: 'center', gap: 12, ...SHADOWS.sm, borderWidth: 1, borderColor: '#F5F5F5' },
+  listImage: { width: 70, height: 70, borderRadius: 10, backgroundColor: '#FAFAFA' },
+  listInfo: { flex: 1, gap: 4 },
+  listName: { fontSize: 14, fontWeight: '800', color: '#1A1A1A' },
+  listRating: { fontSize: 12, color: '#666666', fontWeight: '700' },
+  listPrice: { fontSize: 15, fontWeight: '900', color: '#3B82F6' },
+  addCartBtnSmall: { width: 36, height: 36, backgroundColor: '#1A1A1A', borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
 });

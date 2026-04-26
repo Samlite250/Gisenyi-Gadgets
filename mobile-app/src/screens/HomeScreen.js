@@ -231,11 +231,19 @@ export default function HomeScreen({ navigation }) {
           <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-          {(featuredProducts.length > 0 ? featuredProducts : DEMO_PRODUCTS)
-            .filter(p => activeCategory === 'all' || p.category_id === activeCategory)
-            .map((p) => (
-            <ProductCard key={p.id} product={p} style={styles.featuredCard} />
-          ))}
+          {(() => {
+            const allItems = featuredProducts.length > 0 ? featuredProducts : DEMO_PRODUCTS;
+            // If specific category selected, show all items in that category
+            if (activeCategory !== 'all') {
+              return allItems
+                .filter(p => p.category_id === activeCategory)
+                .map((p) => <ProductCard key={p.id} product={p} style={styles.featuredCard} />);
+            }
+            // If 'all' is selected, show only items marked as featured
+            return allItems
+              .filter(p => p.is_featured)
+              .map((p) => <ProductCard key={p.id} product={p} style={styles.featuredCard} />);
+          })()}
         </ScrollView>
 
         {/* Flash Deal */}

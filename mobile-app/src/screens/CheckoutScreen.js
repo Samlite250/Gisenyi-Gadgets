@@ -4,22 +4,24 @@ import {
   TouchableOpacity, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, MapPin, CreditCard, Smartphone, Banknote, CheckCircle2 } from 'lucide-react-native';
+import { ChevronLeft, MapPin, CreditCard, Smartphone, Banknote, CheckCircle2, Landmark, Bitcoin } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 const PAYMENT_METHODS = [
-  { id: 'momo', name: 'Mobile Money (MTN/Airtel)', icon: Smartphone, description: 'Pay with MTN MoMo or Airtel Money' },
-  { id: 'card', name: 'Card Payment', icon: CreditCard, description: 'Visa, Mastercard accepted' },
-  { id: 'cash', name: 'Cash on Delivery', icon: Banknote, description: 'Pay when your order arrives' },
+  { id: 'mtn', name: 'MTN MoMo', icon: Smartphone, color: '#FBC400', bg: '#FFFBEB', description: 'Pay via MTN Mobile Money' },
+  { id: 'airtel', name: 'Airtel Money', icon: Smartphone, color: '#E8002D', bg: '#FFF1F2', description: 'Pay via Airtel Money' },
+  { id: 'bank', name: 'Bank Transfer', icon: Landmark, color: '#1D4ED8', bg: '#EFF6FF', description: 'Direct bank transfer — use order # as ref.' },
+  { id: 'crypto', name: 'Crypto', icon: Bitcoin, color: '#F7931A', bg: '#FFF7ED', description: 'Pay with USDT, BTC, etc.' },
+  { id: 'cash', name: 'Cash on Delivery', icon: Banknote, color: '#16A34A', bg: '#F0FDF4', description: 'Pay when your order arrives at your door.' },
 ];
 
 export default function CheckoutScreen({ navigation }) {
   const { user, profile } = useAuth();
   const { cartItems, subtotal, shippingFee, total } = useCart();
-  const [selectedPayment, setSelectedPayment] = useState('momo');
+  const [selectedPayment, setSelectedPayment] = useState('mtn');
   const [placing, setPlacing] = useState(false);
 
   const fmt = (n) => `RWF ${n.toLocaleString()}`;
@@ -28,6 +30,13 @@ export default function CheckoutScreen({ navigation }) {
   const displayAddress = profile?.address
     ? `${profile.address}, ${profile.city || 'Gisenyi'}`
     : 'KG 15 Ave, Gisenyi, Rubavu District';
+
+  // Map UI payment method IDs → DB allowed values ('momo' | 'card' | 'cash')
+  const toDbPayment = (id) => {
+    if (id === 'cash') return 'cash';
+    if (id === 'mtn' || id === 'airtel') return 'momo';
+    return 'card'; // bank, crypto
+  };
 
   const estimatedDelivery = () => {
     const d = new Date();
@@ -48,8 +57,8 @@ export default function CheckoutScreen({ navigation }) {
         .insert({
           user_id: user.id,
           status: 'pending',
-          payment_method: selectedPayment,
-          payment_status: selectedPayment === 'cash' ? 'unpaid' : 'unpaid',
+          payment_method: toDbPayment(selectedPayment), // map to DB-allowed value
+          payment_status: 'unpaid',
           subtotal,
           shipping_fee: shippingFee,
           total,
@@ -132,29 +141,40 @@ export default function CheckoutScreen({ navigation }) {
 
         {/* Payment Methods */}
         <Text style={styles.sectionTitle}>Payment Method</Text>
-        <View style={styles.card}>
-          {PAYMENT_METHODS.map((m) => (
-            <TouchableOpacity
-              key={m.id}
-              style={styles.payRow}
-              onPress={() => setSelectedPayment(m.id)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.payLeft}>
-                <View style={[styles.radio, selectedPayment === m.id && styles.radioActive]}>
-                  {selectedPayment === m.id && <View style={styles.radioDot} />}
+        <View style={styles.payGrid}>
+          {PAYMENT_METHODS.map((m) => {
+            const isActive = selectedPayment === m.id;
+            return (
+              <TouchableOpacity
+                key={m.id}
+                style={[styles.payCard, isActive && { borderColor: m.color, backgroundColor: m.bg }]}
+                onPress={() => setSelectedPayment(m.id)}
+                activeOpacity={0.8}
+              >
+                <View style={[styles.payIconBox, { backgroundColor: isActive ? m.color + '22' : '#F3F4F6' }]}>
+                  <m.icon size={22} color={isActive ? m.color : COLORS.textSecondary} />
                 </View>
-                <m.icon size={20} color={selectedPayment === m.id ? COLORS.primaryBlue : COLORS.textSecondary} />
-                <View>
-                  <Text style={[styles.payName, selectedPayment === m.id && { color: COLORS.primaryBlue }]}>
-                    {m.name}
-                  </Text>
-                  <Text style={styles.payDesc}>{m.description}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+                <Text style={[styles.payCardName, isActive && { color: m.color }]} numberOfLines={2}>
+                  {m.name}
+                </Text>
+                {isActive && (
+                  <View style={[styles.selectedDot, { backgroundColor: m.color }]}>
+                    <CheckCircle2 size={14} color="#fff" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </View>
+        {/* Selected method description note */}
+        {PAYMENT_METHODS.find(m => m.id === selectedPayment) && (
+          <View style={[styles.payNote, { borderLeftColor: PAYMENT_METHODS.find(m => m.id === selectedPayment).color }]}>
+            <Text style={styles.payNoteText}>
+              {PAYMENT_METHODS.find(m => m.id === selectedPayment).description}
+            </Text>
+          </View>
+        )}
+
 
         {/* Order Summary */}
         <Text style={styles.sectionTitle}>Order Summary</Text>
@@ -219,6 +239,30 @@ const styles = StyleSheet.create({
   cardName: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
   changeText: { color: COLORS.primaryBlue, fontSize: 13, fontWeight: '700' },
   cardSub: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 20 },
+  payGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: SIZES.md },
+  payCard: {
+    width: '30%',
+    flexGrow: 1,
+    minWidth: 90,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#fff',
+    padding: 12,
+    alignItems: 'center',
+    gap: 8,
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
+  },
+  payIconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  payCardName: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary, textAlign: 'center', lineHeight: 16 },
+  selectedDot: { position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
+  payNote: { borderLeftWidth: 3, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F9FAFB', borderRadius: 8, marginBottom: SIZES.lg },
+  payNoteText: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 18 },
   payRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   payLeft: { flexDirection: 'row', alignItems: 'center', gap: SIZES.md },
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#DDD', justifyContent: 'center', alignItems: 'center' },

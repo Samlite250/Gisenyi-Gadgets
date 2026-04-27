@@ -24,8 +24,8 @@ export default function WishlistScreen({ navigation }) {
         {item.images?.[0]
           ? <Image source={{ uri: item.images[0] }} style={styles.image} />
           : <View style={[styles.image, styles.imagePlaceholder]}>
-              <Heart size={32} color={COLORS.textMuted} />
-            </View>
+            <Heart size={32} color={COLORS.textMuted} />
+          </View>
         }
       </TouchableOpacity>
 
@@ -123,6 +123,7 @@ const styles = StyleSheet.create({
   addBtnDone: { backgroundColor: COLORS.primaryGreen },
   addBtnText: { color: '#fff', fontSize: 12, fontWeight: '700' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SIZES.md },
+  emptyIcon: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center' },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textPrimary },
   emptySub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', paddingHorizontal: 40 },
   browseBtn: { backgroundColor: COLORS.primaryBlue, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },

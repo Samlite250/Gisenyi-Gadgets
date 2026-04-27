@@ -18,8 +18,8 @@ export default function CartScreen({ navigation }) {
       {item.images?.[0]
         ? <Image source={{ uri: item.images[0] }} style={styles.itemImage} />
         : <View style={[styles.itemImage, styles.imagePlaceholder]}>
-            <ShoppingBag size={28} color={COLORS.textMuted} />
-          </View>
+          <ShoppingBag size={28} color={COLORS.textMuted} />
+        </View>
       }
       <View style={styles.itemDetails}>
         <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
@@ -78,7 +78,9 @@ export default function CartScreen({ navigation }) {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Cart</Text>
         {cartItems.length > 0 && (
-          <Text style={styles.headerCount}>{cartItems.length} item{cartItems.length > 1 ? 's' : ''}</Text>
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerCount}>{cartItems.length}</Text>
+          </View>
         )}
       </View>
 
@@ -126,13 +128,17 @@ export default function CartScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   header: {
-    padding: SIZES.lg,
-    paddingTop: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    padding: SIZES.lg, paddingTop: 40,
+    borderBottomWidth: 1, borderBottomColor: '#F5F5F5',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: COLORS.textPrimary },
-  listContent: { padding: SIZES.lg, paddingBottom: 150 },
+  headerTitle: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary, letterSpacing: -0.5 },
+  headerBadge: {
+    backgroundColor: COLORS.primaryBlue, borderRadius: 12,
+    paddingHorizontal: 10, paddingVertical: 3,
+  },
+  headerCount: { fontSize: 13, color: '#fff', fontWeight: '700' },
+  listContent: { padding: SIZES.lg, paddingBottom: 200 },
   cartItem: {
     flexDirection: 'row',
     marginBottom: SIZES.lg,
@@ -166,7 +172,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F5F5F5',
   },
+  summaryRows: { marginBottom: SIZES.md },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SIZES.md },
+  summaryLabel: { fontSize: 14, color: COLORS.textSecondary },
+  summaryValue: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '600' },
+  divider: { height: 1, backgroundColor: '#F5F5F5', marginVertical: 12 },
   totalLabel: { fontSize: 16, fontWeight: '600', color: COLORS.textSecondary },
   totalAmount: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary },
   checkoutBtn: {

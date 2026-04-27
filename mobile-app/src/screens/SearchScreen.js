@@ -1,37 +1,46 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, TextInput, FlatList,
-  TouchableOpacity, Image,
+  TouchableOpacity, Image, ScrollView, Animated,
+  ActivityIndicator, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, SlidersHorizontal, Star, X, Heart } from 'lucide-react-native';
+import {
+  Search, SlidersHorizontal, Star, X, Heart,
+  History, TrendingUp, Filter, ArrowRight,
+  ChevronRight, ShoppingBag
+} from 'lucide-react-native';
 import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
-const DEMO_RESULTS = [
-  { id: 'p1', name: 'Samsung Galaxy S24 Ultra', price: 850000, compare_price: 950000, rating: 4.8, review_count: 124, brand: 'Samsung', images: ['https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=500'], colors: ['Titanium Black', 'Titanium Gray'], storage_options: ['256GB', '512GB'], stock: 12 },
-  { id: 'p2', name: 'iPhone 15 Pro Max', price: 1200000, rating: 4.9, review_count: 89, brand: 'Apple', images: ['https://images.unsplash.com/photo-1695048133142-1a20484429b6?q=80&w=500'], colors: ['Natural Titanium'], storage_options: ['256GB', '512GB'], stock: 8 },
-  { id: 'p3', name: 'AirPods Pro (3rd Gen)', price: 120000, compare_price: 150000, rating: 4.7, review_count: 201, brand: 'Apple', images: ['https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?q=80&w=500'], colors: ['White'], storage_options: [], stock: 25 },
-  { id: 'p4', name: 'MacBook Air M3', price: 1450000, rating: 4.9, review_count: 67, brand: 'Apple', images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=500'], colors: ['Space Gray', 'Silver'], storage_options: ['256GB', '512GB'], stock: 5 },
-  { id: 'p5', name: 'Sony WH-1000XM5', price: 195000, compare_price: 220000, rating: 4.8, review_count: 156, brand: 'Sony', images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=500'], colors: ['Black', 'Silver'], storage_options: [], stock: 18 },
-  { id: 'p6', name: 'iPad Pro 12.9"', price: 980000, compare_price: 1100000, rating: 4.7, review_count: 43, brand: 'Apple', images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=500'], colors: ['Space Gray', 'Silver'], storage_options: ['128GB', '256GB'], stock: 7 },
-];
+const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gaming', 'Offers'];
 
-const SORT_OPTIONS = ['Relevance', 'Price: Low→High', 'Price: High→Low', 'Top Rated'];
-
-export default function SearchScreen({ navigation }) {
+export default function SearchScreen({ navigation, route }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState(DEMO_RESULTS);
+
+  // States
+  const [query, setQuery] = useState(route.params?.query || '');
+  const [selectedCategory, setSelectedCategory] = useState(route.params?.category || null);
+  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState('Relevance');
-  const [showSort, setShowSort] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [recentSearches, setRecentSearches] = useState(['Samsung', 'iPhone', 'Headphones']);
+
+  const searchInputRef = useRef(null);
   const debounceRef = useRef(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
-  const doSearch = useCallback(async (q) => {
+  const doSearch = useCallback(async (q, catId) => {
+    if (!q.trim() && !catId) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       let qb = supabase
@@ -39,26 +48,34 @@ export default function SearchScreen({ navigation }) {
         .select('*')
         .eq('is_active', true);
 
-      if (q.trim()) qb = qb.ilike('name', `%${q}%`);
+      // Robust Basic Search logic
+      if (q.trim()) {
+        qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%`);
+      }
 
+      if (catId && catId !== 'all') {
+        qb = qb.eq('category_id', catId);
+      }
+
+      // Sorting
       if (sortBy === 'Price: Low→High') qb = qb.order('price', { ascending: true });
       else if (sortBy === 'Price: High→Low') qb = qb.order('price', { ascending: false });
       else if (sortBy === 'Top Rated') qb = qb.order('rating', { ascending: false });
       else qb = qb.order('created_at', { ascending: false });
 
-      const { data } = await qb.limit(50);
-      if (data?.length) {
-        setResults(data);
-      } else if (!q.trim()) {
-        setResults(DEMO_RESULTS);
-      } else {
-        setResults([]);
-      }
-    } catch {
-      const filtered = q.trim()
-        ? DEMO_RESULTS.filter((p) => p.name.toLowerCase().includes(q.toLowerCase()))
-        : DEMO_RESULTS;
-      setResults(filtered);
+      const { data, error } = await qb.limit(20);
+
+      if (error) throw error;
+      setResults(data || []);
+
+      // Animate results entry
+      Animated.timing(fadeAnim, {
+        toValue: 1, duration: 400, useNativeDriver: true,
+      }).start();
+
+    } catch (err) {
+      console.warn('Search search error:', err.message);
+      setResults([]);
     } finally {
       setLoading(false);
     }
@@ -66,54 +83,54 @@ export default function SearchScreen({ navigation }) {
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => doSearch(query), 350);
+    debounceRef.current = setTimeout(() => {
+      doSearch(query, selectedCategory);
+      if (query.trim().length > 2 && !recentSearches.includes(query.trim())) {
+        setRecentSearches(prev => [query.trim(), ...prev.slice(0, 4)]);
+      }
+    }, 400);
     return () => clearTimeout(debounceRef.current);
-  }, [query, doSearch]);
+  }, [query, selectedCategory, doSearch]);
 
-  const renderItem = ({ item }) => {
-    const discount = item.compare_price
-      ? Math.round((1 - item.price / item.compare_price) * 100) : 0;
+  const clearFilters = () => {
+    setQuery('');
+    setSelectedCategory(null);
+    setResults([]);
+  };
+
+  const renderProduct = ({ item }) => {
     const wishlisted = isInWishlist(item.id);
+    const discount = item.compare_price ? Math.round((1 - item.price / item.compare_price) * 100) : 0;
 
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={styles.productCard}
         onPress={() => navigation.navigate('ProductDetails', { product: item })}
-        activeOpacity={0.85}
+        activeOpacity={0.9}
       >
-        <View style={styles.imageWrap}>
-          {item.images?.[0]
-            ? <Image source={{ uri: item.images[0] }} style={styles.image} resizeMode="cover" />
-            : <View style={[styles.image, styles.imageFallback]}><Search size={24} color={COLORS.textMuted} /></View>
-          }
-          {discount > 0 && (
-            <View style={styles.badge}><Text style={styles.badgeText}>-{discount}%</Text></View>
+        <View style={styles.imageContainer}>
+          {item.images?.[0] ? (
+            <Image source={{ uri: item.images[0] }} style={styles.productImage} />
+          ) : (
+            <View style={styles.placeholderImg}><ShoppingBag size={24} color={COLORS.textMuted} /></View>
           )}
+          {discount > 0 && <View style={styles.discountPill}><Text style={styles.discountVal}>-{discount}%</Text></View>}
         </View>
-        <View style={styles.info}>
-          {item.brand && <Text style={styles.brand}>{item.brand}</Text>}
-          <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+        <View style={styles.productDetails}>
+          <Text style={styles.productBrand}>{item.brand || 'Premium Gadget'}</Text>
+          <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
           <View style={styles.ratingRow}>
             <Star size={12} color="#FBBC04" fill="#FBBC04" />
-            <Text style={styles.rating}>{item.rating}</Text>
-            <Text style={styles.reviews}>({item.review_count})</Text>
+            <Text style={styles.ratingText}>{item.rating || '4.5'}</Text>
+            <Text style={styles.reviewCount}>({item.review_count || 0})</Text>
           </View>
           <View style={styles.priceRow}>
-            <Text style={styles.price}>{fmt(item.price)}</Text>
-            {item.compare_price && (
-              <Text style={styles.comparePrice}>{fmt(item.compare_price)}</Text>
-            )}
+            <Text style={styles.priceText}>{fmt(item.price)}</Text>
+            {item.compare_price && <Text style={styles.comparePrice}>{fmt(item.compare_price)}</Text>}
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.wishBtn}
-          onPress={() => toggleWishlist(item)}
-        >
-          <Heart
-            size={18}
-            color={wishlisted ? COLORS.error : COLORS.textSecondary}
-            fill={wishlisted ? COLORS.error : 'none'}
-          />
+        <TouchableOpacity style={styles.wishlistIcon} onPress={() => toggleWishlist(item)}>
+          <Heart size={18} color={wishlisted ? COLORS.error : COLORS.textMuted} fill={wishlisted ? COLORS.error : 'none'} />
         </TouchableOpacity>
       </TouchableOpacity>
     );
@@ -121,139 +138,210 @@ export default function SearchScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Search Bar */}
-      <View style={styles.searchRow}>
-        <View style={styles.searchBar}>
-          <Search size={18} color={COLORS.textSecondary} />
+      {/* Search Header */}
+      <View style={styles.header}>
+        <View style={styles.searchContainer}>
+          <Search size={20} color={COLORS.textSecondary} />
           <TextInput
-            style={styles.searchInput}
-            placeholder="Search products..."
+            ref={searchInputRef}
+            style={styles.input}
+            placeholder="Search phones, laptops..."
             placeholderTextColor={COLORS.textMuted}
             value={query}
             onChangeText={setQuery}
             autoFocus
-            returnKeyType="search"
+            clearButtonMode="while-editing"
           />
           {query.length > 0 && (
             <TouchableOpacity onPress={() => setQuery('')}>
-              <X size={16} color={COLORS.textSecondary} />
+              <X size={18} color={COLORS.textMuted} />
             </TouchableOpacity>
           )}
         </View>
         <TouchableOpacity
-          style={[styles.filterBtn, showSort && styles.filterBtnActive]}
-          onPress={() => setShowSort(!showSort)}
+          style={[styles.filterToggle, showFilters && styles.filterToggleActive]}
+          onPress={() => setShowFilters(!showFilters)}
         >
-          <SlidersHorizontal size={18} color={showSort ? '#fff' : COLORS.textPrimary} />
+          <SlidersHorizontal size={20} color={showFilters ? '#fff' : COLORS.textPrimary} />
         </TouchableOpacity>
       </View>
 
-      {/* Sort Options */}
-      {showSort && (
-        <View style={styles.sortPanel}>
-          {SORT_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt}
-              style={[styles.sortOpt, sortBy === opt && styles.sortOptActive]}
-              onPress={() => { setSortBy(opt); setShowSort(false); }}
-            >
-              <Text style={[styles.sortOptText, sortBy === opt && styles.sortOptTextActive]}>
-                {opt}
-              </Text>
-            </TouchableOpacity>
-          ))}
+      {/* Quick Filters / Sort */}
+      {showFilters && (
+        <View style={styles.filterBar}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            {['Relevance', 'Price: Low→High', 'Price: High→Low', 'Top Rated'].map((sort) => (
+              <TouchableOpacity
+                key={sort}
+                style={[styles.sortChip, sortBy === sort && styles.sortChipActive]}
+                onPress={() => setSortBy(sort)}
+              >
+                <Text style={[styles.sortText, sortBy === sort && styles.sortTextActive]}>{sort}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
 
-      {/* Results Header */}
-      <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>
-          {loading ? 'Searching...' : `${results.length} result${results.length !== 1 ? 's' : ''}`}
-          {query.trim() ? ` for "${query}"` : ''}
-        </Text>
-        <Text style={styles.sortLabel}>{sortBy}</Text>
-      </View>
-
-      <FlatList
-        data={results}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={results.length === 0 ? { flex: 1 } : styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🔍</Text>
-            <Text style={styles.emptyTitle}>No results found</Text>
-            <Text style={styles.emptySub}>Try a different search term</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={COLORS.primaryBlue} />
+          <Text style={styles.loadingText}>Searching live database...</Text>
+        </View>
+      ) : results.length > 0 ? (
+        <Animated.FlatList
+          data={results}
+          keyExtractor={(item) => item.id}
+          renderItem={renderProduct}
+          contentContainerStyle={styles.resultList}
+          showsVerticalScrollIndicator={false}
+          style={{ opacity: fadeAnim }}
+          ListHeaderComponent={
+            <Text style={styles.resultCount}>{results.length} items found for your search</Text>
+          }
+        />
+      ) : query.trim().length > 0 ? (
+        <View style={styles.emptyContainer}>
+          <Image
+            source={{ uri: 'https://cdn-icons-png.flaticon.com/512/6134/6134065.png' }}
+            style={styles.emptyImg}
+          />
+          <Text style={styles.emptyTitle}>No results for "{query}"</Text>
+          <Text style={styles.emptySub}>
+            We couldn't find items matching your search. Try checking the spelling or using broader terms like "Galaxy" or "Mac".
+          </Text>
+          <TouchableOpacity style={styles.clearFiltersBtn} onPress={clearFilters}>
+            <Text style={styles.clearFiltersText}>Clear All Filters</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView style={styles.landing} showsVerticalScrollIndicator={false}>
+          {/* Recent Searches */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent Searches</Text>
+              <History size={16} color={COLORS.textMuted} />
+            </View>
+            <View style={styles.tagCloud}>
+              {recentSearches.map((s, i) => (
+                <TouchableOpacity key={i} style={styles.tag} onPress={() => setQuery(s)}>
+                  <Text style={styles.tagText}>{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-        }
-      />
+
+          {/* Trending Now */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Trending Tags</Text>
+              <TrendingUp size={16} color={COLORS.primaryGreen} />
+            </View>
+            <View style={styles.trendingList}>
+              {TRENDING_TAGS.map((t, i) => (
+                <TouchableOpacity key={i} style={styles.trendingItem} onPress={() => setQuery(t)}>
+                  <Text style={styles.trendingText}># {t}</Text>
+                  <ChevronRight size={16} color={COLORS.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: SIZES.sm,
-    paddingHorizontal: SIZES.lg, paddingVertical: SIZES.md,
+  header: {
+    flexDirection: 'row', gap: 12, paddingHorizontal: SIZES.lg,
+    paddingVertical: SIZES.md, alignItems: 'center'
   },
-  searchBar: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: SIZES.sm,
-    backgroundColor: '#F5F5F5', borderRadius: SIZES.radiusMd,
-    paddingHorizontal: SIZES.md, height: 48,
+  searchContainer: {
+    flex: 1, height: 48, backgroundColor: '#F3F4F6',
+    borderRadius: 14, flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 14, gap: 10,
   },
-  searchInput: { flex: 1, color: COLORS.textPrimary, fontSize: 14, outlineStyle: 'none' },
-  filterBtn: {
-    width: 48, height: 48, backgroundColor: '#F5F5F5',
-    borderRadius: SIZES.radiusMd, justifyContent: 'center', alignItems: 'center',
+  input: { flex: 1, fontSize: 15, color: COLORS.textPrimary, fontWeight: '500' },
+  filterToggle: {
+    width: 48, height: 48, backgroundColor: '#F3F4F6',
+    borderRadius: 14, justifyContent: 'center', alignItems: 'center',
   },
-  filterBtnActive: { backgroundColor: COLORS.primaryBlue },
-  sortPanel: {
-    flexDirection: 'row', flexWrap: 'wrap', gap: SIZES.sm,
-    paddingHorizontal: SIZES.lg, paddingBottom: SIZES.sm,
+  filterToggleActive: { backgroundColor: COLORS.primaryBlue },
+
+  filterBar: { borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 12 },
+  filterScroll: { paddingHorizontal: SIZES.lg, gap: 10 },
+  sortChip: {
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 20, backgroundColor: '#F3F4F6',
+    borderWidth: 1, borderColor: '#E5E7EB'
   },
-  sortOpt: {
-    paddingVertical: 6, paddingHorizontal: 12,
-    borderRadius: 8, backgroundColor: '#F5F5F5',
+  sortChipActive: { backgroundColor: COLORS.primaryBlue, borderColor: COLORS.primaryBlue },
+  sortText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '600' },
+  sortTextActive: { color: '#fff' },
+
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
+  loadingText: { fontSize: 14, color: COLORS.textMuted, fontWeight: '500' },
+
+  resultList: { paddingHorizontal: SIZES.lg, paddingBottom: 40 },
+  resultCount: { fontSize: 13, fontWeight: '600', color: COLORS.textMuted, marginBottom: 16, marginTop: 4 },
+
+  productCard: {
+    flexDirection: 'row', gap: 16, marginBottom: 20,
+    backgroundColor: '#fff', borderRadius: 16, padding: 8,
+    borderWidth: 1, borderColor: '#F3F4F6', ...SHADOWS.sm,
   },
-  sortOptActive: { backgroundColor: COLORS.primaryBlue },
-  sortOptText: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '600' },
-  sortOptTextActive: { color: '#fff' },
-  resultsHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: SIZES.lg, paddingVertical: SIZES.sm,
+  imageContainer: { position: 'relative' },
+  productImage: { width: 100, height: 100, borderRadius: 12, backgroundColor: '#F9FAFB' },
+  placeholderImg: {
+    width: 100, height: 100, borderRadius: 12,
+    backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center'
   },
-  resultsCount: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
-  sortLabel: { fontSize: 12, color: COLORS.primaryBlue, fontWeight: '700' },
-  list: { paddingHorizontal: SIZES.lg, paddingBottom: 40 },
-  card: {
-    flexDirection: 'row',
-    marginBottom: SIZES.lg,
-    gap: SIZES.md,
-    alignItems: 'center',
+  discountPill: {
+    position: 'absolute', top: 6, left: 6,
+    backgroundColor: COLORS.error, paddingHorizontal: 6,
+    paddingVertical: 2, borderRadius: 4,
   },
-  imageWrap: { position: 'relative' },
-  image: { width: 90, height: 90, borderRadius: 12, backgroundColor: '#F5F5F5' },
-  imageFallback: { justifyContent: 'center', alignItems: 'center' },
-  badge: {
-    position: 'absolute', top: 4, left: 4,
-    backgroundColor: COLORS.error, borderRadius: 4,
-    paddingVertical: 2, paddingHorizontal: 4,
-  },
-  badgeText: { color: '#fff', fontSize: 10, fontWeight: '800' },
-  info: { flex: 1, gap: 2 },
-  brand: { fontSize: 10, fontWeight: '700', color: COLORS.textMuted, textTransform: 'uppercase' },
-  name: { fontSize: 15, fontWeight: '600', color: COLORS.textPrimary },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rating: { fontSize: 12, color: '#FBBC04', fontWeight: '700' },
-  reviews: { fontSize: 12, color: COLORS.textMuted },
-  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  price: { fontSize: 16, fontWeight: '800', color: COLORS.primaryGreen },
+  discountVal: { color: '#fff', fontSize: 10, fontWeight: '800' },
+
+  productDetails: { flex: 1, justifyContent: 'center', gap: 2 },
+  productBrand: { fontSize: 10, fontWeight: '800', color: COLORS.textMuted, textTransform: 'uppercase' },
+  productName: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  ratingText: { fontSize: 12, fontWeight: '700', color: '#333' },
+  reviewCount: { fontSize: 12, color: COLORS.textMuted },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 4 },
+  priceText: { fontSize: 17, fontWeight: '800', color: COLORS.primaryGreen },
   comparePrice: { fontSize: 12, color: COLORS.textMuted, textDecorationLine: 'line-through' },
-  wishBtn: { padding: 4 },
-  empty: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SIZES.sm },
-  emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textPrimary },
-  emptySub: { fontSize: 14, color: COLORS.textSecondary },
+  wishlistIcon: { position: 'absolute', top: 12, right: 12 },
+
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40, gap: 16 },
+  emptyImg: { width: 120, height: 120, opacity: 0.8 },
+  emptyTitle: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary, textAlign: 'center' },
+  emptySub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22 },
+  clearFiltersBtn: {
+    marginTop: 10, paddingVertical: 12, paddingHorizontal: 24,
+    borderRadius: 25, backgroundColor: COLORS.primaryBlue, ...SHADOWS.md
+  },
+  clearFiltersText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+
+  landing: { flex: 1, paddingHorizontal: SIZES.lg },
+  section: { marginTop: 24 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
+  tagCloud: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  tag: {
+    paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: '#F3F4F6', borderRadius: 20,
+    borderWidth: 1, borderColor: '#E5E7EB',
+  },
+  tagText: { fontSize: 13, color: COLORS.textPrimary, fontWeight: '500' },
+
+  trendingList: { gap: 12 },
+  trendingItem: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F9FAFB'
+  },
+  trendingText: { fontSize: 15, fontWeight: '600', color: COLORS.textSecondary },
 });

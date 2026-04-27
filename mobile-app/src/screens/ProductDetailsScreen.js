@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
-  Minus, Plus, ShoppingCart, Zap,
+  Minus, Plus, ShoppingCart, Zap, CheckCircle2,
 } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -53,6 +53,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
     ]);
   };
 
+  const handleShare = () => {
+    Alert.alert('Share', `Check out ${product.name} on Gisenyi Gadgets!`);
+  };
+
   const handleBuyNow = () => {
     addToCart(product, quantity, selectedColor, selectedStorage);
     navigation.navigate('Checkout');
@@ -69,9 +73,14 @@ export default function ProductDetailsScreen({ route, navigation }) {
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
-          <ShoppingCart size={22} color={COLORS.textPrimary} />
-        </TouchableOpacity>
+        <View style={styles.topBarRight}>
+          <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
+            <Share2 size={20} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
+            <ShoppingCart size={22} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
@@ -163,6 +172,24 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
           )}
 
+          {/* Storage Options */}
+          {product.storage_options?.length > 0 && (
+            <View style={styles.optionSection}>
+              <Text style={styles.optionLabel}>Storage</Text>
+              <View style={styles.optionRow}>
+                {product.storage_options.map((s) => (
+                  <TouchableOpacity
+                    key={s}
+                    style={[styles.storagePill, selectedStorage === s && styles.storagePillActive]}
+                    onPress={() => setSelectedStorage(s)}
+                  >
+                    <Text style={[styles.storagePillText, selectedStorage === s && { color: '#fff' }]}>{s}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* Quantity */}
           <View style={styles.optionSection}>
             <Text style={styles.optionLabel}>Quantity</Text>
@@ -195,11 +222,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
       {/* Bottom Buttons */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={styles.cartBtn}
+          style={[styles.cartBtn, inCart && { backgroundColor: COLORS.primaryGreen }]}
           onPress={handleAddToCart}
           activeOpacity={0.85}
         >
-          <Text style={styles.cartBtnText}>Add to Cart</Text>
+          {inCart && <CheckCircle2 size={18} color="#fff" />}
+          <Text style={styles.cartBtnText}>{inCart ? 'In Cart ✓' : 'Add to Cart'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -208,6 +236,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           disabled={product.stock === 0}
           activeOpacity={0.85}
         >
+          <Zap size={18} color="#fff" />
           <Text style={styles.buyBtnText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
@@ -221,6 +250,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between',
     padding: SIZES.md, paddingBottom: 0,
   },
+  topBarRight: { flexDirection: 'row', gap: 8 },
   iconBtn: {
     width: 42, height: 42, backgroundColor: COLORS.cardBg,
     borderRadius: 21, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm,
@@ -283,14 +313,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1, borderTopColor: '#eee',
   },
+  storagePill: {
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 20, borderWidth: 1.5,
+    borderColor: '#E5E7EB', backgroundColor: '#fff',
+  },
+  storagePillActive: { backgroundColor: COLORS.primaryBlue, borderColor: COLORS.primaryBlue },
+  storagePillText: { fontSize: 13, fontWeight: '700', color: COLORS.textSecondary },
   cartBtn: {
     flex: 1, height: 54, backgroundColor: COLORS.primaryBlue, borderRadius: SIZES.radiusSm,
-    justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8,
   },
   cartBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
   buyBtn: {
     flex: 1, height: 54, backgroundColor: COLORS.primaryGreen, borderRadius: SIZES.radiusSm,
-    justifyContent: 'center', alignItems: 'center',
+    justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8,
   },
   buyBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
 });

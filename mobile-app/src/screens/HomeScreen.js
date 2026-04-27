@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, Image, FlatList, RefreshControl,
@@ -93,6 +93,22 @@ export default function HomeScreen({ navigation }) {
   const [activeBanner, setActiveBanner] = useState(0);
   const [activeCategory, setActiveCategory] = useState('all');
 
+  // Real countdown timer for flash deal (2 hours from now on first render)
+  const deadlineRef = useRef(Date.now() + 2 * 60 * 60 * 1000);
+  const [flashTimer, setFlashTimer] = useState('02 : 00 : 00');
+  useEffect(() => {
+    const tick = () => {
+      const diff = Math.max(0, deadlineRef.current - Date.now());
+      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      setFlashTimer(`${h} : ${m} : ${s}`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
   const displayName = profile?.full_name?.split(' ')[0]
     || user?.user_metadata?.full_name?.split(' ')[0]
     || 'there';
@@ -160,15 +176,17 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.greeting}>Hello, {displayName} 👋</Text>
             <Text style={styles.tagline}>What are you looking for today?</Text>
           </View>
-          <TouchableOpacity style={styles.notifBtn}><Bell size={22} color={COLORS.textPrimary} /></TouchableOpacity>
+          <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('Notifications')}>
+            <Bell size={22} color={COLORS.textPrimary} />
+          </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
         <TouchableOpacity style={styles.searchBar} activeOpacity={0.9} onPress={() => navigation.navigate('Search')}>
           <Search size={18} color={COLORS.textMuted} />
-          <TextInput 
-            placeholder="Search products..." 
-            placeholderTextColor={COLORS.textMuted} 
+          <TextInput
+            placeholder="Search products..."
+            placeholderTextColor={COLORS.textMuted}
             style={styles.searchInput}
             editable={false}
             pointerEvents="none"
@@ -204,13 +222,15 @@ export default function HomeScreen({ navigation }) {
         {/* Categories */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Categories</Text>
-          <TouchableOpacity><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
+            <Text style={styles.seeAll}>See all</Text>
+          </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.catRow}>
             {categories.map((c) => (
-              <TouchableOpacity 
-                key={c.id} 
+              <TouchableOpacity
+                key={c.id}
                 style={[styles.catItem, activeCategory === c.id && { opacity: 0.8 }]}
                 onPress={() => setActiveCategory(activeCategory === c.id ? 'all' : c.id)}
               >
@@ -226,15 +246,17 @@ export default function HomeScreen({ navigation }) {
         {/* Featured Products */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-             {activeCategory === 'all' ? 'Featured Products' : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products'}
+            {activeCategory === 'all' ? 'Featured Products' : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products'}
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
+            <Text style={styles.seeAll}>See all</Text>
+          </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
           {(() => {
             const allItems = featuredProducts.length > 0 ? featuredProducts : DEMO_PRODUCTS;
             const selectedCat = categories.find(c => c.id === activeCategory);
-            
+
             // If specific category selected, show all items in that category
             if (activeCategory !== 'all') {
               return allItems
@@ -253,7 +275,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.flashDealContent}>
             <View style={styles.flashHeader}>
               <Text style={styles.flashBadge}>⚡ FLASH DEAL</Text>
-              <Text style={styles.flashTimer}>02 : 14 : 30</Text>
+              <Text style={styles.flashTimer}>{flashTimer}</Text>
             </View>
             <Text style={styles.flashTitle}>Sony WH-1000XM5</Text>
             <View style={styles.priceRow}>
@@ -300,7 +322,7 @@ const styles = StyleSheet.create({
   greeting: { fontSize: SIZES.fontMd, fontWeight: '800', color: '#1A1A1A' },
   tagline: { fontSize: SIZES.fontSm, color: '#666666', marginTop: 4 },
   notifBtn: { width: 44, height: 44, backgroundColor: '#FFFFFF', borderRadius: 22, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
-  
+
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: SIZES.sm,
     backgroundColor: '#FFFFFF', borderRadius: 16,
@@ -334,7 +356,7 @@ const styles = StyleSheet.create({
 
   hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },
-  
+
   productCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 12, ...SHADOWS.md, borderWidth: 1, borderColor: '#F5F5F5' },
   productImageWrap: { position: 'relative', marginBottom: 12, backgroundColor: '#FAFAFA', borderRadius: 12, padding: 8 },
   productImage: { width: '100%', height: 130, borderRadius: 8 },

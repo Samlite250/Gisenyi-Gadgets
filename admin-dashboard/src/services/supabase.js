@@ -23,11 +23,15 @@ export const fetchDashboardStats = async () => {
     { count: totalUsers },
     { count: totalProducts },
     { count: totalVendors },
+    { data: recentOrders },
+    { data: topProducts },
   ] = await Promise.all([
     supabase.from('orders').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
     supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('vendors').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('orders').select('id, profiles(full_name), total, status, created_at').order('created_at', { ascending: false }).limit(5),
+    supabase.from('products').select('id, name, price').order('created_at', { ascending: false }).limit(5),
   ]);
 
   const { data: revenueData } = await supabase
@@ -37,7 +41,7 @@ export const fetchDashboardStats = async () => {
 
   const totalRevenue = revenueData?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
 
-  return { totalOrders, totalUsers, totalProducts, totalVendors, totalRevenue };
+  return { totalOrders, totalUsers, totalProducts, totalVendors, totalRevenue, recentOrders, topProducts };
 };
 
 // ─── Products CRUD ────────────────────────────────────────────

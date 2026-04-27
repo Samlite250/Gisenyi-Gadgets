@@ -2,28 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const DEMO_PRODUCTS = [
-  { id: 'p1', name: 'Samsung Galaxy S24 Ultra', brand: 'Samsung', price: 850000, compare_price: 950000, stock: 12, is_active: true, is_featured: true,  categories: { name: 'Smartphones' } },
-  { id: 'p2', name: 'iPhone 15 Pro Max',        brand: 'Apple',   price: 1200000,compare_price: null,   stock: 8,  is_active: true, is_featured: true,  categories: { name: 'Smartphones' } },
-  { id: 'p3', name: 'AirPods Pro (3rd Gen)',    brand: 'Apple',   price: 120000, compare_price: 150000, stock: 25, is_active: true, is_featured: false, categories: { name: 'Headphones'  } },
-  { id: 'p4', name: 'MacBook Air M3',           brand: 'Apple',   price: 1450000,compare_price: null,   stock: 5,  is_active: true, is_featured: true,  categories: { name: 'Laptops'     } },
-  { id: 'p5', name: 'Sony WH-1000XM5',          brand: 'Sony',    price: 195000, compare_price: 220000, stock: 18, is_active: true, is_featured: false, categories: { name: 'Headphones'  } },
-  { id: 'p6', name: 'iPad Pro 12.9"',           brand: 'Apple',   price: 980000, compare_price: 1100000,stock: 7,  is_active: true, is_featured: false, categories: { name: 'Tablets'     } },
-];
-
-const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true };
+const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [] };
 
 const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
 export default function ProductsPage() {
-  const [products, setProducts]   = useState(DEMO_PRODUCTS);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editProduct, setEdit]    = useState(null);
-  const [form, setForm]           = useState(EMPTY_FORM);
-  const [saving, setSaving]       = useState(false);
-  const [deleting, setDeleting]   = useState(null);
+  const [editProduct, setEdit] = useState(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -31,9 +22,10 @@ export default function ProductsPage() {
         .from('products')
         .select('*, categories(name)')
         .order('created_at', { ascending: false });
-      if (data?.length) setProducts(data);
-    } catch { /* keep demo */ }
-    finally { setLoading(false); }
+      if (data) setProducts(data);
+    } catch (err) {
+      console.warn('Products fetch error:', err.message);
+    } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
@@ -43,11 +35,56 @@ export default function ProductsPage() {
     p.brand?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const openAdd  = () => { setEdit(null); setForm(EMPTY_FORM); setShowModal(true); };
+  const openAdd = () => { setEdit(null); setForm(EMPTY_FORM); setShowModal(true); };
   const openEdit = (p) => {
     setEdit(p);
-    setForm({ name: p.name, brand: p.brand || '', price: p.price, compare_price: p.compare_price || '', stock: p.stock, description: p.description || '', is_featured: p.is_featured, is_active: p.is_active });
+    setForm({
+      name: p.name,
+      brand: p.brand || '',
+      price: p.price,
+      compare_price: p.compare_price || '',
+      stock: p.stock,
+      description: p.description || '',
+      is_featured: p.is_featured,
+      is_active: p.is_active,
+      images: p.images || []
+    });
     setShowModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    setSaving(true);
+    const newImages = [...form.images];
+
+    for (const file of files) {
+      if (newImages.length >= 5) break;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(filePath, file);
+
+      if (error) {
+        alert('Error uploading image: ' + error.message);
+      } else {
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+        newImages.push(publicUrl);
+      }
+    }
+    setForm({ ...form, images: newImages });
+    setSaving(false);
+  };
+
+  const removeImage = (index) => {
+    const newImages = form.images.filter((_, i) => i !== index);
+    setForm({ ...form, images: newImages });
   };
 
   const handleSave = async (e) => {
@@ -107,8 +144,15 @@ export default function ProductsPage() {
               {filtered.map((p) => (
                 <tr key={p.id}>
                   <td>
-                    <div style={{ fontWeight: 600 }}>{p.name}</div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.brand}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 6, overflow: 'hidden', background: '#f5f5f5', border: '1px solid #eee' }}>
+                        {p.images?.[0] ? <img src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Package size={20} style={{ margin: 10, color: '#bbb' }} />}
+                      </div>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{p.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{p.brand}</div>
+                      </div>
+                    </div>
                   </td>
                   <td><span className="badge badge-blue">{p.categories?.name || '—'}</span></td>
                   <td>
@@ -176,6 +220,33 @@ export default function ProductsPage() {
                   <div className="form-group">
                     <label className="form-label">Compare Price (RWF)</label>
                     <input className="input" type="number" min={0} value={form.compare_price} onChange={(e) => setForm({ ...form, compare_price: e.target.value })} placeholder="950000" />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">Product Images (Up to 5)</label>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+                      {form.images.map((url, i) => (
+                        <div key={i} style={{ position: 'relative', width: 80, height: 80, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                          <img src={url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(i)}
+                            style={{ position: 'absolute', top: 2, right: 2, background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', borderRadius: '50%', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: 12 }}
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                      {form.images.length < 5 && (
+                        <label style={{
+                          width: 80, height: 80, borderRadius: 8, border: '2px dashed var(--border)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          cursor: 'pointer', color: 'var(--text-muted)'
+                        }}>
+                          <Plus size={20} />
+                          <input type="file" multiple accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                        </label>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Description</label>

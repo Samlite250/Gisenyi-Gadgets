@@ -2,22 +2,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Shield, ShieldOff, Eye } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const DEMO_USERS = [
-  { id: 'u1', full_name: 'Samuel Niyomugabo', phone: '+250 788 111 222', role: 'customer', is_active: true,  city: 'Gisenyi', created_at: '2026-01-15T10:00:00Z' },
-  { id: 'u2', full_name: 'Amelia Uwase',       phone: '+250 788 333 444', role: 'vendor',   is_active: true,  city: 'Kigali',  created_at: '2026-01-20T08:00:00Z' },
-  { id: 'u3', full_name: 'Jean Baptiste',      phone: '+250 788 555 666', role: 'customer', is_active: true,  city: 'Musanze', created_at: '2026-02-05T12:00:00Z' },
-  { id: 'u4', full_name: 'Grace Mutoni',       phone: '+250 788 777 888', role: 'customer', is_active: false, city: 'Huye',    created_at: '2026-02-14T09:00:00Z' },
-  { id: 'u5', full_name: 'Eric Habimana',      phone: '+250 788 999 000', role: 'vendor',   is_active: true,  city: 'Rubavu',  created_at: '2026-03-01T11:00:00Z' },
-  { id: 'u6', full_name: 'Claire Ingabire',    phone: '+250 788 111 333', role: 'customer', is_active: true,  city: 'Gisenyi', created_at: '2026-03-12T14:00:00Z' },
-  { id: 'u7', full_name: 'Patrick Uwimana',    phone: '+250 788 222 444', role: 'admin',    is_active: true,  city: 'Kigali',  created_at: '2026-01-01T00:00:00Z' },
-];
-
-const ROLE_BADGE   = { customer: 'badge-blue', vendor: 'badge-green', admin: 'badge-yellow' };
+const ROLE_BADGE = { customer: 'badge-blue', vendor: 'badge-green', admin: 'badge-yellow' };
 
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default function UsersPage() {
-  const [users, setUsers]   = useState(DEMO_USERS);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRole] = useState('All');
@@ -64,10 +54,10 @@ export default function UsersPage() {
       {/* Summary Cards */}
       <div className="stats-grid" style={{ marginBottom: 16 }}>
         {[
-          { label: 'Total Users',     value: users.length,                   color: '#4285F4', bg: 'rgba(66,133,244,0.1)'  },
-          { label: 'Customers',       value: roleCounts.customer || 0,        color: '#34A853', bg: 'rgba(52,168,83,0.1)'   },
-          { label: 'Vendors',         value: roleCounts.vendor   || 0,        color: '#FBBC04', bg: 'rgba(251,188,4,0.1)'   },
-          { label: 'Active',          value: users.filter(u => u.is_active).length, color: '#34A853', bg: 'rgba(52,168,83,0.1)' },
+          { label: 'Total Users', value: users.length, color: '#4285F4', bg: 'rgba(66,133,244,0.1)' },
+          { label: 'Customers', value: roleCounts.customer || 0, color: '#34A853', bg: 'rgba(52,168,83,0.1)' },
+          { label: 'Vendors', value: roleCounts.vendor || 0, color: '#FBBC04', bg: 'rgba(251,188,4,0.1)' },
+          { label: 'Active', value: users.filter(u => u.is_active).length, color: '#34A853', bg: 'rgba(52,168,83,0.1)' },
         ].map((s) => (
           <div className="stat-card" key={s.label}>
             <div className="stat-icon" style={{ background: s.bg }}>
@@ -164,10 +154,10 @@ export default function UsersPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {[
-                  { label: 'Phone',   value: selected.phone    },
-                  { label: 'City',    value: selected.city     },
-                  { label: 'Country', value: selected.country  },
-                  { label: 'Status',  value: selected.is_active ? 'Active' : 'Blocked' },
+                  { label: 'Phone', value: selected.phone },
+                  { label: 'City', value: selected.city },
+                  { label: 'Country', value: selected.country },
+                  { label: 'Status', value: selected.is_active ? 'Active' : 'Blocked' },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <div className="form-label">{label}</div>

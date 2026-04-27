@@ -2,19 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const DEMO_ORDERS = [
-  { id: 'o1', order_number: '#GGS001', created_at: '2026-04-23T08:12:00Z', status: 'delivered',  payment_method: 'momo', payment_status: 'paid',   total: 1200000, profiles: { full_name: 'Samuel Niyomugabo', phone: '+250 788 111 222' } },
-  { id: 'o2', order_number: '#GGS002', created_at: '2026-04-23T09:45:00Z', status: 'shipped',    payment_method: 'card', payment_status: 'paid',   total: 1450000, profiles: { full_name: 'Amelia Uwase',       phone: '+250 788 333 444' } },
-  { id: 'o3', order_number: '#GGS003', created_at: '2026-04-23T11:00:00Z', status: 'pending',    payment_method: 'cash', payment_status: 'unpaid', total: 120000,  profiles: { full_name: 'Jean Baptiste',     phone: '+250 788 555 666' } },
-  { id: 'o4', order_number: '#GGS004', created_at: '2026-04-22T14:30:00Z', status: 'processing', payment_method: 'momo', payment_status: 'paid',   total: 850000,  profiles: { full_name: 'Grace Mutoni',      phone: '+250 788 777 888' } },
-  { id: 'o5', order_number: '#GGS005', created_at: '2026-04-22T10:00:00Z', status: 'cancelled',  payment_method: 'card', payment_status: 'refunded',total: 195000, profiles: { full_name: 'Eric Habimana',     phone: '+250 788 999 000' } },
-  { id: 'o6', order_number: '#GGS006', created_at: '2026-04-21T16:20:00Z', status: 'delivered',  payment_method: 'momo', payment_status: 'paid',   total: 980000,  profiles: { full_name: 'Claire Ingabire',   phone: '+250 788 111 333' } },
-];
-
 const STATUS_OPTIONS = ['All', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 const STATUS_BADGE = {
-  delivered:  'badge-green', shipped: 'badge-blue', processing: 'badge-yellow',
-  confirmed:  'badge-blue',  pending: 'badge-gray',  cancelled:  'badge-red', refunded: 'badge-gray',
+  delivered: 'badge-green', shipped: 'badge-blue', processing: 'badge-yellow',
+  confirmed: 'badge-blue', pending: 'badge-gray', cancelled: 'badge-red', refunded: 'badge-gray',
 };
 const PAY_BADGE = { paid: 'badge-green', unpaid: 'badge-yellow', refunded: 'badge-gray' };
 
@@ -22,11 +13,11 @@ const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 const fmtDate = (iso) => new Date(iso).toLocaleString('en-RW', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
 export default function OrdersPage() {
-  const [orders, setOrders]         = useState(DEMO_ORDERS);
-  const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState('');
-  const [statusFilter, setStatus]   = useState('All');
-  const [selected, setSelected]     = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatus] = useState('All');
+  const [selected, setSelected] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
 
   const fetchOrders = useCallback(async () => {
@@ -34,9 +25,10 @@ export default function OrdersPage() {
       let q = supabase.from('orders').select('*, profiles(full_name, phone)').order('created_at', { ascending: false });
       if (statusFilter !== 'All') q = q.eq('status', statusFilter);
       const { data } = await q;
-      if (data?.length) setOrders(data);
-    } catch { /* keep demo */ }
-    finally { setLoading(false); }
+      if (data) setOrders(data);
+    } catch (err) {
+      console.warn('Orders fetch error:', err.message);
+    } finally { setLoading(false); }
   }, [statusFilter]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
@@ -115,7 +107,7 @@ export default function OrdersPage() {
                       disabled={updatingId === o.id}
                       onChange={(e) => handleStatusChange(o.id, e.target.value)}
                     >
-                      {['pending','confirmed','processing','shipped','delivered','cancelled'].map((s) => (
+                      {['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'].map((s) => (
                         <option key={s} value={s} style={{ textTransform: 'capitalize' }}>{s}</option>
                       ))}
                     </select>
@@ -151,10 +143,10 @@ export default function OrdersPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 {[
                   { label: 'Customer', value: selected.profiles?.full_name },
-                  { label: 'Phone',    value: selected.profiles?.phone     },
-                  { label: 'Payment',  value: selected.payment_method      },
-                  { label: 'Pay Status', value: selected.payment_status    },
-                  { label: 'Total',    value: fmt(selected.total)          },
+                  { label: 'Phone', value: selected.profiles?.phone },
+                  { label: 'Payment', value: selected.payment_method },
+                  { label: 'Pay Status', value: selected.payment_status },
+                  { label: 'Total', value: fmt(selected.total) },
                   { label: 'Shipping', value: fmt(selected.shipping_fee || 0) },
                 ].map(({ label, value }) => (
                   <div key={label}>

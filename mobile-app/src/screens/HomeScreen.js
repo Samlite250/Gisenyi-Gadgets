@@ -4,81 +4,20 @@ import {
   TouchableOpacity, Image, FlatList, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Bell, Heart, Star, ChevronRight, ShoppingBag } from 'lucide-react-native';
+import { 
+  Bell, Search, ShoppingBag, Heart, 
+  ChevronRight, Star, ArrowRight, MessageSquare,
+  Smartphone, Laptop, Headphones, Watch, Gamepad2, 
+  Cpu, Camera, Zap, MapPin, Tablet
+} from 'lucide-react-native';
+import FloatingSupport from '../components/FloatingSupport';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
-// ─── Demo data fallback ───────────────────────────────────────
-const DEMO_CATEGORIES = [
-  { id: 'smartphones', name: 'Smartphones', icon: '📱', slug: 'smartphones' },
-  { id: 'laptops', name: 'Laptops', icon: '💻', slug: 'laptops' },
-  { id: 'headphones', name: 'Headphones', icon: '🎧', slug: 'headphones' },
-  { id: 'smartwatches', name: 'Smartwatches', icon: '⌚', slug: 'smartwatches' },
-  { id: 'tablets', name: 'Tablets', icon: '📇', slug: 'tablets' },
-  { id: 'cameras', name: 'Cameras', icon: '📷', slug: 'cameras' },
-];
-
-const BANNERS = [
-  { id: 1, title: 'Big Sale Up to\n40% OFF', subtitle: 'On all electronics', color: '#0F172A', emoji: '🎧', buttonText: 'Shop Now', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300' },
-  { id: 2, title: 'Apple Days\nSave $200', subtitle: 'MacBooks & iPads', color: '#8B5CF6', emoji: '💻', buttonText: 'Explore', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=300' },
-  { id: 3, title: 'Smart Wear\nTrending', subtitle: 'Upgrade your style', color: '#EF4444', emoji: '⌚', buttonText: 'View Deals', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=300' },
-];
-
-const DEMO_BRANDS = [
-  { id: 'b1', name: 'Apple', icon: '🍎' },
-  { id: 'b2', name: 'Samsung', icon: '📱' },
-  { id: 'b3', name: 'Sony', icon: '🎧' },
-  { id: 'b4', name: 'HP', icon: '💻' },
-  { id: 'b5', name: 'Dell', icon: '🖥️' },
-];
-
-const DEMO_PRODUCTS = [
-  // Smartphones (smartphones)
-  { id: 'p1', name: 'iPhone 15 Pro', price: 1200000, rating: '4.9', category_id: 'smartphones', is_featured: true, images: ['https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=300'] },
-  { id: 'p2', name: 'Samsung Galaxy S24 Ultra', price: 1300000, rating: '4.8', category_id: 'smartphones', is_featured: true, images: ['https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=300'] },
-  { id: 'p3', name: 'Google Pixel 8 Pro', price: 950000, rating: '4.7', category_id: 'smartphones', images: ['https://images.unsplash.com/photo-1598327105666-5b89351aff97?q=80&w=300'] },
-  { id: 'p4', name: 'OnePlus 12', price: 850000, rating: '4.6', category_id: 'smartphones', images: ['https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=300'] },
-  { id: 'p5', name: 'Nothing Phone (2)', price: 650000, rating: '4.5', category_id: 'smartphones', images: ['https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=300'] },
-
-  // Laptops (laptops)
-  { id: 'p6', name: 'MacBook Pro M3 Max', price: 3500000, rating: '5.0', category_id: 'laptops', is_featured: true, images: ['https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=300'] },
-  { id: 'p7', name: 'Dell XPS 15', price: 2100000, rating: '4.8', category_id: 'laptops', images: ['https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=300'] },
-  { id: 'p8', name: 'Razer Blade 16', price: 3200000, rating: '4.9', category_id: 'laptops', images: ['https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=300'] },
-  { id: 'p9', name: 'Asus ROG Zephyrus G14', price: 1800000, rating: '4.7', category_id: 'laptops', images: ['https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=300'] },
-  { id: 'p10', name: 'HP Spectre x360', price: 1600000, rating: '4.6', category_id: 'laptops', images: ['https://images.unsplash.com/photo-1544006659-f0b21f04cb1d?q=80&w=300'] },
-
-  // Headphones (headphones)
-  { id: 'p11', name: 'Sony WH-1000XM5', price: 380000, rating: '4.9', category_id: 'headphones', is_featured: true, images: ['https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=300'] },
-  { id: 'p12', name: 'AirPods Max', price: 550000, rating: '4.7', category_id: 'headphones', images: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300'] },
-  { id: 'p13', name: 'Bose QC Ultra', price: 420000, rating: '4.8', category_id: 'headphones', images: ['https://images.unsplash.com/photo-1546435770-a3e426ff472b?q=80&w=300'] },
-  { id: 'p14', name: 'Sennheiser Momentum 4', price: 350000, rating: '4.7', category_id: 'headphones', images: ['https://images.unsplash.com/photo-1583394838336-acd97773dbf9?q=80&w=300'] },
-  { id: 'p15', name: 'Beats Studio Pro', price: 280000, rating: '4.5', category_id: 'headphones', images: ['https://images.unsplash.com/photo-1520170350707-b2da59970118?q=80&w=300'] },
-
-  // Smartwatches (smartwatches)
-  { id: 'p16', name: 'Apple Watch Ultra 2', price: 850000, rating: '4.9', category_id: 'smartwatches', is_featured: true, images: ['https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=300'] },
-  { id: 'p17', name: 'Galaxy Watch 6 Classic', price: 35000, rating: '4.7', category_id: 'smartwatches', images: ['https://images.unsplash.com/photo-1579586337278-3befd40fd17a?q=80&w=300'] },
-  { id: 'p18', name: 'Garmin Epix Gen 2', price: 950000, rating: '4.8', category_id: 'smartwatches', images: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=300'] },
-  { id: 'p19', name: 'Pixel Watch 2', price: 320000, rating: '4.6', category_id: 'smartwatches', images: ['https://images.unsplash.com/photo-1508685096489-7aac29bc7b39?q=80&w=300'] },
-  { id: 'p20', name: 'HUAWEI Watch GT 4', price: 250000, rating: '4.5', category_id: 'smartwatches', images: ['https://images.unsplash.com/photo-1434493789847-2f02dc603507?q=80&w=300'] },
-
-  // Tablets (tablets)
-  { id: 'p21', name: 'iPad Pro 12.9" M2', price: 1200000, rating: '4.9', category_id: 'tablets', is_featured: true, images: ['https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=300'] },
-  { id: 'p22', name: 'Samsung Galaxy Tab S9 Ultra', price: 1100000, rating: '4.8', category_id: 'tablets', images: ['https://images.unsplash.com/photo-1589739900243-4b123b7305ae?q=80&w=300'] },
-  { id: 'p23', name: 'Microsoft Surface Pro 9', price: 950000, rating: '4.7', category_id: 'tablets', images: ['https://images.unsplash.com/photo-1515248187930-8041c9a62888?q=80&w=300'] },
-  { id: 'p24', name: 'Xiaomi Pad 6 Pro', price: 450000, rating: '4.6', category_id: 'tablets', images: ['https://images.unsplash.com/photo-1542751110-9764648393fb?q=80&w=300'] },
-  { id: 'p25', name: 'Lenovo Tab P12 Pro', price: 650000, rating: '4.5', category_id: 'tablets', images: ['https://images.unsplash.com/photo-1527690789675-4ea7d8da4fe3?q=80&w=300'] },
-
-  // Cameras (cameras)
-  { id: 'p26', name: 'Sony A7 IV', price: 2500000, rating: '4.9', category_id: 'cameras', is_featured: true, images: ['https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=300'] },
-  { id: 'p27', name: 'Fujifilm X-T5', price: 1800000, rating: '4.8', category_id: 'cameras', images: ['https://images.unsplash.com/photo-1510127034890-ba27508e9f1c?q=80&w=300'] },
-  { id: 'p28', name: 'Canon EOS R6 Mark II', price: 2400000, rating: '4.9', category_id: 'cameras', images: ['https://images.unsplash.com/photo-1502920917128-1aa500764cbd?q=80&w=300'] },
-  { id: 'p29', name: 'Nikon Z8', price: 4200000, rating: '5.0', category_id: 'cameras', images: ['https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=300'] },
-  { id: 'p30', name: 'GoPro Hero 12', price: 450000, rating: '4.7', category_id: 'cameras', images: ['https://images.unsplash.com/photo-1562184120-da3e884fbf34?q=80&w=300'] },
-];
-
+import { DEMO_CATEGORIES, BANNERS, SPECIAL_OFFERS, DEMO_PRODUCTS } from '../constants/dummyData';
 
 export default function HomeScreen({ navigation }) {
   const { profile, user } = useAuth();
@@ -87,7 +26,7 @@ export default function HomeScreen({ navigation }) {
 
   const [categories, setCategories] = useState(DEMO_CATEGORIES);
   const [featuredProducts, setFeaturedProducts] = useState(DEMO_PRODUCTS);
-  const [newArrivals, setNewArrivals] = useState(DEMO_PRODUCTS);
+  const [allProducts, setAllProducts] = useState(DEMO_PRODUCTS);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
@@ -119,15 +58,33 @@ export default function HomeScreen({ navigation }) {
         supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
         supabase.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(20),
       ]);
-      if (cats?.length) setCategories(cats);
-      if (products?.length) {
-        setFeaturedProducts(products.filter((p) => p.is_featured));
-        setNewArrivals(products.slice(0, 6));
+      
+      // Combine Supabase data with Dummy Data to ensure the app looks "full"
+      // We prioritize Supabase items but append Dummy items if they don't exist
+      if (cats?.length) {
+        const mergedCats = [...cats];
+        DEMO_CATEGORIES.forEach(dc => {
+          if (!mergedCats.find(c => c.slug === dc.slug)) mergedCats.push(dc);
+        });
+        setCategories(mergedCats);
       }
+
+      const dbProducts = products || [];
+      // Filter out dummy products that might already be in DB (by name)
+      const uniqueDummy = DEMO_PRODUCTS.filter(dp => !dbProducts.find(p => p.name === dp.name));
+      const allProducts = [...dbProducts, ...uniqueDummy];
+
+      setFeaturedProducts(allProducts.filter((p) => p.is_featured));
+      setAllProducts(allProducts);
+      
     } catch (err) {
-      // keep demo data
+      console.warn('Fetch error, using demo data only');
+      setCategories(DEMO_CATEGORIES);
+      setFeaturedProducts(DEMO_PRODUCTS.filter(p => p.is_featured));
+      setAllProducts(DEMO_PRODUCTS);
     } finally {
       setRefreshing(false);
+      setLoading(false);
     }
   }, []);
 
@@ -164,6 +121,31 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
+  if (loading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <View style={[styles.avatar, { backgroundColor: '#E5E7EB' }]} />
+          <View style={{ gap: 6 }}>
+            <View style={{ width: 80, height: 12, backgroundColor: '#E5E7EB', borderRadius: 6 }} />
+            <View style={{ width: 140, height: 20, backgroundColor: '#E5E7EB', borderRadius: 8 }} />
+          </View>
+        </View>
+        <View style={[styles.searchBar, { backgroundColor: '#F3F4F6', borderWidth: 0 }]} />
+        <ScrollView showsVerticalScrollIndicator={false} style={{ padding: SIZES.lg }}>
+          <View style={{ width: 150, height: 24, backgroundColor: '#E5E7EB', borderRadius: 6, marginBottom: 20 }} />
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            {[1, 2, 3].map(i => (
+              <View key={i} style={{ width: 140, height: 180, backgroundColor: '#F3F4F6', borderRadius: 20 }} />
+            ))}
+          </View>
+          <View style={{ width: 150, height: 24, backgroundColor: '#E5E7EB', borderRadius: 6, marginVertical: 30 }} />
+          <View style={{ height: 170, backgroundColor: '#F3F4F6', borderRadius: 24 }} />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
@@ -172,12 +154,28 @@ export default function HomeScreen({ navigation }) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hello, {displayName} 👋</Text>
-            <Text style={styles.tagline}>What are you looking for today?</Text>
-          </View>
+          {/* Avatar + greeting */}
+          <TouchableOpacity style={styles.headerLeft} onPress={() => navigation.navigate('Profile')} activeOpacity={0.8}>
+            <View style={styles.avatar}>
+              {profile?.avatar_url ? (
+                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
+              ) : (
+                <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+              )}
+            </View>
+            <View style={styles.headerTextGroup}>
+              <View style={styles.locationPill}>
+                <MapPin size={10} color="#3B82F6" />
+                <Text style={styles.locationText}>Gisenyi, RW</Text>
+              </View>
+              <Text style={styles.greeting}>Hello, {displayName}</Text>
+              <Text style={styles.tagline}>Find your next tech obsession</Text>
+            </View>
+          </TouchableOpacity>
+          {/* Notification bell */}
           <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('Notifications')}>
-            <Bell size={22} color={COLORS.textPrimary} />
+            <Bell size={21} color='#1A1A1A' />
+            <View style={styles.notifDot} />
           </TouchableOpacity>
         </View>
 
@@ -187,18 +185,36 @@ export default function HomeScreen({ navigation }) {
           <TextInput
             placeholder="Search products..."
             placeholderTextColor={COLORS.textMuted}
-            style={styles.searchInput}
+            style={[styles.searchInput, { pointerEvents: 'none' }]}
             editable={false}
-            pointerEvents="none"
           />
         </TouchableOpacity>
 
-        {/* Top Brands */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.brandRow}>
-          {DEMO_BRANDS.map((b) => (
-            <TouchableOpacity key={b.id} style={styles.brandItem} onPress={() => navigation.navigate('Search', { query: b.name })}>
-              <View style={styles.brandIconWrap}><Text style={styles.brandIcon}>{b.icon}</Text></View>
-              <Text style={styles.brandName}>{b.name}</Text>
+        {/* Special Offers */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Special Offers</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+            <Text style={styles.seeAll}>See all</Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
+          {SPECIAL_OFFERS.map((offer) => (
+            <TouchableOpacity
+              key={offer.id}
+              style={[styles.offerCard, { backgroundColor: offer.color }]}
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('Search', { category: offer.category })}
+            >
+              <View style={styles.offerImageHalf}>
+                <Image source={{ uri: offer.image }} style={styles.offerImgFull} />
+              </View>
+              <View style={styles.offerContentHalf}>
+                <View style={styles.offerBadge}>
+                  <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                </View>
+                <Text style={styles.offerLabel}>{offer.label}</Text>
+                <Text style={styles.offerTagline} numberOfLines={1}>{offer.tagline}</Text>
+              </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -228,18 +244,40 @@ export default function HomeScreen({ navigation }) {
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.catRow}>
-            {categories.map((c) => (
-              <TouchableOpacity
-                key={c.id}
-                style={[styles.catItem, activeCategory === c.id && { opacity: 0.8 }]}
-                onPress={() => setActiveCategory(activeCategory === c.id ? 'all' : c.id)}
-              >
-                <View style={[styles.catIconWrap, activeCategory === c.id && { backgroundColor: COLORS.primaryBlue, borderColor: COLORS.primaryBlue, borderWidth: 1 }]}>
-                  <Text style={styles.catIcon}>{c.icon || '📱'}</Text>
-                </View>
-                <Text style={[styles.catName, activeCategory === c.id && { color: COLORS.primaryBlue, fontWeight: '700' }]}>{c.name}</Text>
-              </TouchableOpacity>
-            ))}
+            {categories.map((c) => {
+              const isActive = activeCategory === c.id;
+              
+              // Map slug/id to respective Lucide icon
+              const slug = c.slug?.toLowerCase() || c.id?.toLowerCase() || '';
+              const Icon = {
+                smartphones: Smartphone,
+                phones: Smartphone,
+                laptops: Laptop,
+                tablets: Tablet,
+                headphones: Headphones,
+                audio: Headphones,
+                smartwatches: Watch,
+                watches: Watch,
+                gaming: Gamepad2,
+                accessories: Cpu,
+                tech: Cpu,
+                cameras: Camera,
+                photo: Camera,
+              }[slug] || ShoppingBag;
+
+              return (
+                <TouchableOpacity
+                  key={c.id}
+                  style={styles.catItem}
+                  onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
+                >
+                  <View style={[styles.catIconWrap, isActive && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' }]}>
+                    <Icon size={28} color={isActive ? '#fff' : '#4285F4'} strokeWidth={2.4} />
+                  </View>
+                  <Text style={[styles.catName, isActive && { color: '#3B82F6', fontWeight: '700' }]}>{c.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </ScrollView>
 
@@ -274,7 +312,10 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity style={styles.flashDealContainer} activeOpacity={0.9} onPress={() => navigation.navigate('ProductDetails', { product: DEMO_PRODUCTS[5] })}>
           <View style={styles.flashDealContent}>
             <View style={styles.flashHeader}>
-              <Text style={styles.flashBadge}>⚡ FLASH DEAL</Text>
+              <View style={styles.flashBadgeWrap}>
+                <Zap size={10} color="#fff" fill="#fff" />
+                <Text style={styles.flashBadgeText}>FLASH DEAL</Text>
+              </View>
               <Text style={styles.flashTimer}>{flashTimer}</Text>
             </View>
             <Text style={styles.flashTitle}>Sony WH-1000XM5</Text>
@@ -286,29 +327,76 @@ export default function HomeScreen({ navigation }) {
           <Image source={{ uri: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=300' }} style={styles.flashImage} />
         </TouchableOpacity>
 
-        {/* New Arrivals */}
+        {/* Live Support Help Section */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>New Arrivals</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')}><Text style={styles.seeAll}>See all</Text></TouchableOpacity>
+          <Text style={styles.sectionTitle}>Need Help?</Text>
         </View>
-        <View style={styles.newArrivalsList}>
-          {(newArrivals.length > 0 ? newArrivals : DEMO_PRODUCTS.slice(4, 7)).map((p) => (
-            <TouchableOpacity key={p.id} style={styles.listCard} onPress={() => navigation.navigate('ProductDetails', { product: p })}>
-              <Image source={{ uri: p.images[0] }} style={styles.listImage} />
-              <View style={styles.listInfo}>
-                <Text style={styles.listName} numberOfLines={1}>{p.name}</Text>
-                <Text style={styles.listRating}>⭐ {p.rating}</Text>
-                <Text style={styles.listPrice}>{fmt(p.price)}</Text>
+        <TouchableOpacity 
+          style={styles.helpCard} 
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate('ChatSupport')}
+        >
+          <View style={styles.helpContent}>
+            <Text style={styles.helpTitle}>24/7 Live Support</Text>
+            <Text style={styles.helpSub}>Chat with our gadget experts now</Text>
+            <View style={styles.onlineBadge}>
+              <View style={styles.onlineDot} />
+              <Text style={styles.onlineText}>We are online</Text>
+            </View>
+          </View>
+          <View style={styles.helpIconBox}>
+            <MessageSquare size={32} color={COLORS.primaryBlue} />
+          </View>
+        </TouchableOpacity>
+
+        {/* Discovery Grid — 30+ Cards */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Discover Gadgets</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+            <Text style={styles.seeAll}>View all 50+ items</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.discoveryGrid}>
+          {allProducts.slice(0, 40).map((p) => (
+            <TouchableOpacity 
+              key={p.id} 
+              style={styles.discoveryCard}
+              activeOpacity={0.9}
+              onPress={() => navigation.navigate('ProductDetails', { product: p })}
+            >
+              <View style={styles.discoveryImageWrap}>
+                <Image source={{ uri: p.images[0] }} style={styles.discoveryImage} resizeMode="contain" />
+                <TouchableOpacity style={styles.discoveryHeart} onPress={() => toggleWishlist(p)}>
+                  <Heart size={14} color={isInWishlist(p.id) ? COLORS.error : '#666'} fill={isInWishlist(p.id) ? COLORS.error : 'none'} />
+                </TouchableOpacity>
+                {p.compare_price > p.price && (
+                  <View style={styles.discoveryBadge}>
+                    <Text style={styles.discoveryBadgeText}>OFFER</Text>
+                  </View>
+                )}
               </View>
-              <TouchableOpacity style={styles.addCartBtnSmall} onPress={() => addToCart(p)}>
-                <ShoppingBag size={18} color="#FFFFFF" />
-              </TouchableOpacity>
+              <View style={styles.discoveryInfo}>
+                <Text style={styles.discoveryName} numberOfLines={1}>{p.name}</Text>
+                <View style={styles.discoveryMeta}>
+                  <Text style={styles.discoveryPrice}>{fmt(p.price)}</Text>
+                  <View style={styles.discoveryRating}>
+                    <Star size={10} color="#FBBC04" fill="#FBBC04" />
+                    <Text style={styles.discoveryRatingText}>{p.rating}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.discoveryAddBtn} onPress={() => addToCart(p)}>
+                  <ShoppingBag size={14} color="#fff" />
+                  <Text style={styles.discoveryAddText}>Add</Text>
+                </TouchableOpacity>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
 
         <View style={{ height: SIZES.xxl || 40 }} />
       </ScrollView>
+
+      <FloatingSupport />
     </SafeAreaView>
   );
 }
@@ -319,9 +407,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: SIZES.lg, paddingTop: SIZES.md, paddingBottom: SIZES.sm,
   },
-  greeting: { fontSize: SIZES.fontMd, fontWeight: '800', color: '#1A1A1A' },
-  tagline: { fontSize: SIZES.fontSm, color: '#666666', marginTop: 4 },
-  notifBtn: { width: 44, height: 44, backgroundColor: '#FFFFFF', borderRadius: 22, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
+  headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  avatar: {
+    width: 48, height: 48, borderRadius: 24,
+    backgroundColor: '#3B82F6',
+    justifyContent: 'center', alignItems: 'center',
+    ...SHADOWS.md,
+  },
+  avatarText: { fontSize: 20, fontWeight: '900', color: '#FFFFFF' },
+  avatarImg: { width: 48, height: 48, borderRadius: 24 },
+  headerTextGroup: { gap: 2, flex: 1 },
+  locationPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3,
+    marginBottom: 2,
+  },
+  locationText: { fontSize: 10, fontWeight: '700', color: '#3B82F6' },
+  greeting: { fontSize: 16, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.3 },
+  tagline: { fontSize: 12, color: '#888888', fontWeight: '500' },
+  notifBtn: {
+    width: 44, height: 44, backgroundColor: '#FFFFFF', borderRadius: 22,
+    justifyContent: 'center', alignItems: 'center',
+    ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0',
+    position: 'relative',
+  },
+  notifDot: {
+    position: 'absolute', top: 9, right: 9,
+    width: 8, height: 8, borderRadius: 4,
+    backgroundColor: '#EF4444', borderWidth: 1.5, borderColor: '#FFFFFF',
+  },
 
   searchBar: {
     flexDirection: 'row', alignItems: 'center', gap: SIZES.sm,
@@ -348,11 +466,11 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.5 },
   seeAll: { fontSize: 13, color: '#3B82F6', fontWeight: '700' },
 
-  catRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg, gap: 16 },
-  catItem: { alignItems: 'center', gap: 8 },
-  catIconWrap: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
-  catIcon: { fontSize: 26 },
-  catName: { fontSize: 12, fontWeight: '600', color: '#666666' },
+  catRow: { flexDirection: 'row', paddingHorizontal: SIZES.lg, paddingRight: 40, marginBottom: SIZES.lg, gap: 16 },
+  catItem: { alignItems: 'center', gap: 10 },
+  catIconWrap: { width: 68, height: 68, borderRadius: 34, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1.5, borderColor: '#F0F0F0', overflow: 'hidden' },
+  catIconImg: { width: 44, height: 44, borderRadius: 22 },
+  catName: { fontSize: 13, fontWeight: '600', color: '#1A1A1A' },
 
   hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },
@@ -368,11 +486,46 @@ const styles = StyleSheet.create({
   ratingText: { fontSize: 12, color: '#666666', fontWeight: '600' },
   productPrice: { fontSize: 16, fontWeight: '900', color: '#3B82F6', marginTop: 4 },
 
-  brandRow: { paddingHorizontal: SIZES.lg, gap: 16, marginBottom: SIZES.lg },
-  brandItem: { alignItems: 'center', gap: 6 },
-  brandIconWrap: { width: 56, height: 56, borderRadius: 28, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0' },
-  brandIcon: { fontSize: 24 },
-  brandName: { fontSize: 12, fontWeight: '700', color: '#1A1A1A' },
+  offerRow: { paddingHorizontal: SIZES.lg, paddingRight: 40, gap: 16, marginBottom: SIZES.lg, paddingBottom: 4 },
+  offerCard: {
+    width: 160, height: 200, borderRadius: 28,
+    ...SHADOWS.md, overflow: 'hidden',
+    borderWidth: 1, borderColor: '#F0F0F0',
+  },
+  offerImageHalf: { width: '100%', height: '50%', backgroundColor: '#F8F9FA' },
+  offerImgFull: { width: '100%', height: '100%', resizeMode: 'cover' },
+  offerContentHalf: { flex: 1, padding: 16, justifyContent: 'center', gap: 6 },
+  offerBadge: {
+    alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.25)',
+    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 2,
+  },
+  offerDiscount: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.8 },
+  offerLabel: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 },
+  offerTagline: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },
+
+  helpCard: {
+    marginHorizontal: SIZES.lg,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SIZES.lg,
+    ...SHADOWS.md,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  helpContent: { flex: 1, gap: 4 },
+  helpTitle: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary },
+  helpSub: { fontSize: 13, color: COLORS.textSecondary },
+  onlineBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 },
+  onlineDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.primaryGreen },
+  onlineText: { fontSize: 11, fontWeight: '700', color: COLORS.primaryGreen },
+  helpIconBox: {
+    width: 56, height: 56, borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+    justifyContent: 'center', alignItems: 'center',
+  },
 
   bannerContainerWrap: { marginBottom: SIZES.lg },
   bannerSubtitle: { fontSize: 12, color: '#E0E7FF', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
@@ -380,7 +533,11 @@ const styles = StyleSheet.create({
   flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.lg, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
   flashDealContent: { flex: 1, justifyContent: 'center', gap: 6 },
   flashHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  flashBadge: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', backgroundColor: '#EF4444', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, overflow: 'hidden' },
+  flashBadgeWrap: { 
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#EF4444', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
+  },
+  flashBadgeText: { fontSize: 10, fontWeight: '900', color: '#FFFFFF' },
   flashTimer: { fontSize: 11, fontWeight: '800', color: '#EF4444' },
   flashTitle: { fontSize: 16, fontWeight: '800', color: '#1A1A1A' },
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -388,12 +545,99 @@ const styles = StyleSheet.create({
   flashOldPrice: { fontSize: 12, color: '#999999', textDecorationLine: 'line-through', fontWeight: '600' },
   flashImage: { width: 90, height: 90, borderRadius: 12, alignSelf: 'center' },
 
-  newArrivalsList: { paddingHorizontal: SIZES.lg, gap: 12 },
-  listCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, padding: 10, alignItems: 'center', gap: 12, ...SHADOWS.sm, borderWidth: 1, borderColor: '#F5F5F5' },
-  listImage: { width: 70, height: 70, borderRadius: 10, backgroundColor: '#FAFAFA' },
-  listInfo: { flex: 1, gap: 4 },
-  listName: { fontSize: 14, fontWeight: '800', color: '#1A1A1A' },
-  listRating: { fontSize: 12, color: '#666666', fontWeight: '700' },
-  listPrice: { fontSize: 15, fontWeight: '900', color: '#3B82F6' },
-  addCartBtnSmall: { width: 36, height: 36, backgroundColor: '#1A1A1A', borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+  discoveryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: SIZES.lg - 6,
+    justifyContent: 'space-between',
+  },
+  discoveryCard: {
+    width: '48%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    marginBottom: 16,
+    ...SHADOWS.sm,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    overflow: 'hidden',
+  },
+  discoveryImageWrap: {
+    height: 140,
+    backgroundColor: '#FAFAFA',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  discoveryImage: {
+    width: '85%',
+    height: '85%',
+  },
+  discoveryHeart: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  discoveryBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: COLORS.primaryGreen,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  discoveryBadgeText: {
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: '900',
+  },
+  discoveryInfo: {
+    padding: 12,
+    gap: 8,
+  },
+  discoveryName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  discoveryMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  discoveryPrice: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.primaryBlue,
+  },
+  discoveryRating: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 2,
+  },
+  discoveryRatingText: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    fontWeight: '600',
+  },
+  discoveryAddBtn: {
+    backgroundColor: COLORS.textPrimary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 10,
+    gap: 6,
+  },
+  discoveryAddText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
 });

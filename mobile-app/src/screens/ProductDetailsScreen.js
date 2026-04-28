@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, Alert, Dimensions,
@@ -8,9 +8,11 @@ import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CheckCircle2,
 } from 'lucide-react-native';
+import FloatingSupport from '../components/FloatingSupport';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { DEMO_PRODUCTS, DEMO_REVIEWS } from '../constants/dummyData';
 
 const { width } = Dimensions.get('window');
 
@@ -23,7 +25,13 @@ export default function ProductDetailsScreen({ route, navigation }) {
     rating: 4.8,
     review_count: 124,
     description: 'The ultimate Galaxy experience with a built-in S Pen, 200MP camera, and titanium frame. Experience AI-powered photography and productivity.',
-    images: ['https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600&auto=format&fit=crop'],
+    images: [
+      'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?q=80&w=600&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=600&auto=format&fit=crop'
+    ],
     colors: ['Titanium Black', 'Titanium Gray', 'Titanium Violet'],
     storage_options: ['256GB', '512GB', '1TB'],
     brand: 'Samsung',
@@ -37,6 +45,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [selectedStorage, setSelectedStorage] = useState(product.storage_options?.[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const scrollRef = useRef(null);
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
   const discount = product.compare_price
@@ -87,6 +96,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         {/* Image Gallery */}
         <View style={styles.galleryWrap}>
           <ScrollView
+            ref={scrollRef}
             horizontal pagingEnabled showsHorizontalScrollIndicator={false}
             onMomentumScrollEnd={(e) =>
               setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))
@@ -97,7 +107,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
             ))}
           </ScrollView>
 
-          {/* Dots */}
+          {/* Dots overlay */}
           {images.length > 1 && (
             <View style={styles.dots}>
               {images.map((_, i) => (
@@ -124,6 +134,26 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
           )}
         </View>
+
+        {/* Thumbnail Navigation Strip */}
+        {images.length > 1 && (
+          <View style={styles.thumbnailContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailScroll}>
+              {images.map((img, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={[styles.thumbnailWrap, i === activeImage && styles.thumbnailActive]}
+                  onPress={() => {
+                    setActiveImage(i);
+                    scrollRef.current?.scrollTo({ x: i * width, animated: true });
+                  }}
+                >
+                  <Image source={{ uri: img }} style={styles.thumbnail} />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Details */}
         <View style={styles.details}>
@@ -216,6 +246,93 @@ export default function ProductDetailsScreen({ route, navigation }) {
               <Text style={styles.descText}>{product.description}</Text>
             </View>
           )}
+
+          {/* Reviews Section */}
+          <View style={styles.reviewsSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Customer Reviews</Text>
+              <TouchableOpacity>
+                <Text style={styles.seeAll}>Write a review</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Rating Overview */}
+            <View style={styles.ratingOverview}>
+              <View style={styles.avgRatingBox}>
+                <Text style={styles.avgRatingText}>{product.rating || '4.5'}</Text>
+                <View style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map(s => (
+                    <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
+                  ))}
+                </View>
+                <Text style={styles.totalReviewsText}>{product.review_count || 24} reviews</Text>
+              </View>
+              <View style={styles.ratingBars}>
+                {[5, 4, 3, 2, 1].map(r => (
+                  <View key={r} style={styles.barRow}>
+                    <Text style={styles.barLabel}>{r} ★</Text>
+                    <View style={styles.barBg}>
+                      <View style={[styles.barFill, { width: `${r === 5 ? 70 : r === 4 ? 20 : 5}%` }]} />
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Review List */}
+            {DEMO_REVIEWS.slice(0, 2).map((rev) => (
+              <View key={rev.id} style={styles.reviewItem}>
+                <View style={styles.reviewHeader}>
+                  <Image source={{ uri: rev.avatar }} style={styles.reviewAvatar} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.reviewUser}>{rev.user}</Text>
+                    <View style={styles.starsRow}>
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={10} color={s <= rev.rating ? '#FBBC04' : '#E5E7EB'} fill={s <= rev.rating ? '#FBBC04' : 'none'} />
+                      ))}
+                    </View>
+                  </View>
+                  <Text style={styles.reviewDate}>{rev.date}</Text>
+                </View>
+                <Text style={styles.reviewComment}>{rev.comment}</Text>
+              </View>
+            ))}
+            
+            <TouchableOpacity style={styles.viewMoreReviews}>
+              <Text style={styles.viewMoreText}>View All {product.review_count || 24} Reviews</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Related Products Section */}
+          <View style={styles.relatedSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Related Products</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Search', { category: product.category_id })}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
+              {DEMO_PRODUCTS
+                .filter(p => {
+                  // Match by category_id or brand to ensure something always shows
+                  const sameCat = p.category_id === product.category_id;
+                  const sameBrand = p.brand === product.brand;
+                  return (sameCat || sameBrand) && p.id !== product.id;
+                })
+                .slice(0, 10) // Show more items
+                .map((p) => (
+                  <TouchableOpacity 
+                    key={p.id} 
+                    style={styles.relatedCard}
+                    onPress={() => navigation.push('ProductDetails', { product: p })}
+                  >
+                    <Image source={{ uri: p.images[0] }} style={styles.relatedImage} />
+                    <Text style={styles.relatedName} numberOfLines={1}>{p.name}</Text>
+                    <Text style={styles.relatedPrice}>RWF {p.price.toLocaleString()}</Text>
+                  </TouchableOpacity>
+                ))}
+            </ScrollView>
+          </View>
         </View>
       </ScrollView>
 
@@ -240,6 +357,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <Text style={styles.buyBtnText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
+
+      <FloatingSupport />
     </SafeAreaView>
   );
 }
@@ -330,4 +449,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8,
   },
   buyBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
+  thumbnailContainer: {
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  thumbnailScroll: {
+    paddingHorizontal: SIZES.lg,
+    gap: 12,
+  },
+  thumbnailWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    overflow: 'hidden',
+    backgroundColor: '#f9f9f9',
+  },
+  thumbnailActive: {
+    borderColor: COLORS.primaryBlue,
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  relatedSection: { marginTop: SIZES.lg, gap: SIZES.sm },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.sm },
+  sectionTitle: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },
+  seeAll: { fontSize: SIZES.fontSm, color: COLORS.primaryBlue, fontWeight: '600' },
+  relatedScroll: { gap: 16, paddingBottom: 8 },
+  relatedCard: { width: 120, gap: 4 },
+  relatedImage: { width: 120, height: 120, borderRadius: 12, backgroundColor: '#f9f9f9' },
+  relatedName: { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary },
+  relatedPrice: { fontSize: 12, fontWeight: '700', color: COLORS.primaryGreen },
+  reviewsSection: { marginTop: SIZES.lg, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: SIZES.lg },
+  ratingOverview: { flexDirection: 'row', gap: 24, marginBottom: 20, alignItems: 'center' },
+  avgRatingBox: { alignItems: 'center', gap: 4 },
+  avgRatingText: { fontSize: 32, fontWeight: '800', color: COLORS.textPrimary },
+  starsRow: { flexDirection: 'row', gap: 2 },
+  totalReviewsText: { fontSize: 12, color: COLORS.textMuted, fontWeight: '500' },
+  ratingBars: { flex: 1, gap: 6 },
+  barRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  barLabel: { fontSize: 11, color: COLORS.textSecondary, width: 25 },
+  barBg: { flex: 1, height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' },
+  barFill: { height: '100%', backgroundColor: '#FBBC04' },
+  reviewItem: { marginBottom: 16, backgroundColor: '#FAFAFA', padding: 12, borderRadius: 12 },
+  reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  reviewAvatar: { width: 32, height: 32, borderRadius: 16 },
+  reviewUser: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary },
+  reviewDate: { fontSize: 11, color: COLORS.textMuted },
+  reviewComment: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 18 },
+  viewMoreReviews: { alignItems: 'center', paddingVertical: 8 },
+  viewMoreText: { fontSize: 13, fontWeight: '700', color: COLORS.primaryBlue },
 });

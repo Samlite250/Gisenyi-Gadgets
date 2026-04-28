@@ -13,9 +13,9 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 const PAYMENT_METHODS = [
   { id: 'mtn', name: 'MTN MoMo', icon: Smartphone, color: '#FBC400', bg: '#FFFBEB', description: 'Pay via MTN Mobile Money' },
   { id: 'airtel', name: 'Airtel Money', icon: Smartphone, color: '#E8002D', bg: '#FFF1F2', description: 'Pay via Airtel Money' },
-  { id: 'bank', name: 'Bank Transfer', icon: Landmark, color: '#1D4ED8', bg: '#EFF6FF', description: 'Direct bank transfer — use order # as ref.' },
+  { id: 'bank', name: 'Bank Transfer', icon: Landmark, color: '#0EA5E9', bg: '#F0F9FF', description: 'Direct bank transfer — use order # as ref.' },
   { id: 'crypto', name: 'Crypto', icon: Bitcoin, color: '#F7931A', bg: '#FFF7ED', description: 'Pay with USDT, BTC, etc.' },
-  { id: 'cash', name: 'Cash on Delivery', icon: Banknote, color: '#16A34A', bg: '#F0FDF4', description: 'Pay when your order arrives at your door.' },
+  { id: 'cash', name: 'Cash on Delivery', icon: Banknote, color: '#16A34A', bg: '#F0FDF4', description: 'Pay when your order arrives.' },
 ];
 
 export default function CheckoutScreen({ navigation }) {
@@ -98,8 +98,11 @@ export default function CheckoutScreen({ navigation }) {
         total,
       });
     } catch (err) {
-      console.error(err);
-      Alert.alert('Order Failed', err.message || 'Something went wrong. Please try again.');
+      console.error('Order Error:', err);
+      Alert.alert(
+        'Submission Error',
+        'We encountered an issue saving your order items. Please verify your connection or contact support if the issue persists.'
+      );
     } finally {
       setPlacing(false);
     }
@@ -135,45 +138,66 @@ export default function CheckoutScreen({ navigation }) {
         <View style={[styles.card, styles.deliveryCard]}>
           <Text style={styles.deliveryDate}>{estimatedDelivery()}</Text>
           <Text style={styles.deliverySub}>
-            {shippingFee === 0 ? '🎉 Free Shipping' : `Shipping: ${fmt(shippingFee)}`}
+            {shippingFee === 0 ? 'Free Shipping' : `Shipping: ${fmt(shippingFee)}`}
           </Text>
         </View>
 
         {/* Payment Methods */}
         <Text style={styles.sectionTitle}>Payment Method</Text>
-        <View style={styles.payGrid}>
+        <View style={styles.payList}>
           {PAYMENT_METHODS.map((m) => {
             const isActive = selectedPayment === m.id;
             return (
-              <TouchableOpacity
-                key={m.id}
-                style={[styles.payCard, isActive && { borderColor: m.color, backgroundColor: m.bg }]}
-                onPress={() => setSelectedPayment(m.id)}
-                activeOpacity={0.8}
-              >
-                <View style={[styles.payIconBox, { backgroundColor: isActive ? m.color + '22' : '#F3F4F6' }]}>
-                  <m.icon size={22} color={isActive ? m.color : COLORS.textSecondary} />
-                </View>
-                <Text style={[styles.payCardName, isActive && { color: m.color }]} numberOfLines={2}>
-                  {m.name}
-                </Text>
+              <View key={m.id} style={[styles.payOptionCard, isActive && { borderColor: m.color }]}>
+                <TouchableOpacity
+                  style={styles.payOptionHeader}
+                  onPress={() => setSelectedPayment(m.id)}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.payIconBox, { backgroundColor: m.bg }]}>
+                    <m.icon size={22} color={m.color} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.payCardName, isActive && { color: m.color }]}>{m.name}</Text>
+                    <Text style={styles.payCardSub}>{m.description}</Text>
+                  </View>
+                  <View style={[styles.radio, isActive && styles.radioActive]}>
+                    {isActive && <View style={styles.radioDot} />}
+                  </View>
+                </TouchableOpacity>
+
                 {isActive && (
-                  <View style={[styles.selectedDot, { backgroundColor: m.color }]}>
-                    <CheckCircle2 size={14} color="#fff" />
+                  <View style={styles.payInstructions}>
+                    <View style={styles.dividerSmall} />
+                    <Text style={styles.instructionTitle}>Payment Process:</Text>
+                    {m.id === 'mtn' || m.id === 'airtel' ? (
+                      <Text style={styles.instructionText}>
+                        1. Dial *182# (MTN) or *500# (Airtel) {"\n"}
+                        2. Transfer total amount to: +250 78X XXX XXX {"\n"}
+                        3. Keep your Transaction ID for confirmation.
+                      </Text>
+                    ) : m.id === 'bank' ? (
+                      <Text style={styles.instructionText}>
+                        1. Transfer to BK Account: 000 XXXX XXX {"\n"}
+                        2. Name: Gisenyi Gadgets Ltd {"\n"}
+                        3. Use Order # as reference.
+                      </Text>
+                    ) : m.id === 'crypto' ? (
+                      <Text style={styles.instructionText}>
+                        1. Send USDT (TRC-20) to: TXXXXXX... {"\n"}
+                        2. Take a screenshot of the TxID.
+                      </Text>
+                    ) : (
+                      <Text style={styles.instructionText}>
+                        Pay the delivery agent in cash or MoMo upon receiving your package.
+                      </Text>
+                    )}
                   </View>
                 )}
-              </TouchableOpacity>
+              </View>
             );
           })}
         </View>
-        {/* Selected method description note */}
-        {PAYMENT_METHODS.find(m => m.id === selectedPayment) && (
-          <View style={[styles.payNote, { borderLeftColor: PAYMENT_METHODS.find(m => m.id === selectedPayment).color }]}>
-            <Text style={styles.payNoteText}>
-              {PAYMENT_METHODS.find(m => m.id === selectedPayment).description}
-            </Text>
-          </View>
-        )}
 
 
         {/* Order Summary */}
@@ -239,35 +263,80 @@ const styles = StyleSheet.create({
   cardName: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
   changeText: { color: COLORS.primaryBlue, fontSize: 13, fontWeight: '700' },
   cardSub: { color: COLORS.textSecondary, fontSize: 14, lineHeight: 20 },
-  payGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: SIZES.md },
-  payCard: {
-    width: '30%',
-    flexGrow: 1,
-    minWidth: 90,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+  payList: { gap: 12, marginBottom: SIZES.lg },
+  payOptionCard: {
     backgroundColor: '#fff',
-    padding: 12,
-    alignItems: 'center',
-    gap: 8,
-    position: 'relative',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#F3F4F6',
+    overflow: 'hidden',
   },
-  payIconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  payCardName: { fontSize: 12, fontWeight: '700', color: COLORS.textSecondary, textAlign: 'center', lineHeight: 16 },
-  selectedDot: { position: 'absolute', top: 8, right: 8, width: 22, height: 22, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
-  payNote: { borderLeftWidth: 3, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: '#F9FAFB', borderRadius: 8, marginBottom: SIZES.lg },
-  payNoteText: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 18 },
+  payOptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
+  },
+  payIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  payCardName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  payCardSub: {
+    fontSize: 12,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  radioActive: {
+    borderColor: COLORS.primaryBlue,
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: COLORS.primaryBlue,
+  },
+  payInstructions: {
+    paddingHorizontal: 14,
+    paddingBottom: 14,
+  },
+  dividerSmall: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginBottom: 10,
+  },
+  instructionTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: COLORS.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+    letterSpacing: 0.5,
+  },
+  instructionText: {
+    fontSize: 13,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+    fontWeight: '500',
+  },
   payRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F5F5F5' },
   payLeft: { flexDirection: 'row', alignItems: 'center', gap: SIZES.md },
-  radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#DDD', justifyContent: 'center', alignItems: 'center' },
-  radioActive: { borderColor: COLORS.primaryBlue },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: COLORS.primaryBlue },
   payName: { fontSize: 14, fontWeight: '600', color: COLORS.textPrimary },
   payDesc: { fontSize: 12, color: COLORS.textMuted, marginTop: 2 },
   summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
@@ -283,8 +352,10 @@ const styles = StyleSheet.create({
   totalLabel: { fontSize: 16, fontWeight: '600', color: COLORS.textSecondary },
   totalAmount: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary },
   placeBtn: {
-    backgroundColor: COLORS.primaryBlue, borderRadius: 8,
-    height: 56, justifyContent: 'center', alignItems: 'center',
+    backgroundColor: COLORS.primaryBlue, borderRadius: 12,
+    height: 56, flexDirection: 'row', gap: 10,
+    justifyContent: 'center', alignItems: 'center',
+    ...SHADOWS.md,
   },
   placeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

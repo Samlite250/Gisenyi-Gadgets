@@ -9,15 +9,16 @@ import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin } from 'lucide
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import FloatingSupport from '../components/FloatingSupport';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#F59E0B', bg: '#FEF3C7', icon: Clock },
-  confirmed: { label: 'Confirmed', color: COLORS.primaryBlue, bg: '#E0E7FF', icon: Package },
-  processing: { label: 'Processing', color: '#8B5CF6', bg: '#EDE9FE', icon: ShoppingBag },
+  confirmed: { label: 'Confirmed', color: '#4285F4', bg: '#E0E7FF', icon: Package },
+  processing: { label: 'Processing', color: '#0EA5E9', bg: '#E0F2FE', icon: ShoppingBag },
   shipped: { label: 'Shipped', color: '#0284C7', bg: '#E0F2FE', icon: Truck },
-  delivered: { label: 'Delivered', color: COLORS.primaryGreen, bg: '#DCFCE7', icon: MapPin },
-  cancelled: { label: 'Cancelled', color: COLORS.error, bg: '#FEE2E2', icon: null },
-  refunded: { label: 'Refunded', color: COLORS.textSecondary, bg: '#F3F4F6', icon: null },
+  delivered: { label: 'Delivered', color: '#34A853', bg: '#DCFCE7', icon: MapPin },
+  cancelled: { label: 'Cancelled', color: '#EA4335', bg: '#FEE2E2', icon: null },
+  refunded: { label: 'Refunded', color: '#5F6368', bg: '#F3F4F6', icon: null },
 };
 
 const FILTERS = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
@@ -216,6 +217,7 @@ export default function OrdersScreen({ navigation }) {
           </View>
         }
       />
+      <FloatingSupport />
     </SafeAreaView>
   );
 }
@@ -247,11 +249,16 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: '#F3F4F6',
     marginRight: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
     elevation: 1,
+    ...require('react-native').Platform.select({
+      web: { boxShadow: '0px 1px 1px rgba(0,0,0,0.05)' },
+      default: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 1,
+      },
+    }),
   },
   filterChipActive: { backgroundColor: COLORS.primaryBlue, shadowOpacity: 0.15 },
   filterText: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, letterSpacing: 0.2 },
@@ -259,17 +266,11 @@ const styles = StyleSheet.create({
 
   list: { padding: SIZES.lg, gap: 16 },
 
-  // Professional Order Card
   orderCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: SIZES.md,
-    ...SHADOWS.medium, // From theme constants, typically good shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
+    ...SHADOWS.sm,
     borderWidth: 1,
     borderColor: '#F9FAFB',
   },
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
   shopBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     backgroundColor: COLORS.primaryBlue, paddingHorizontal: 24, paddingVertical: 14,
-    borderRadius: 12, ...SHADOWS.small
+    borderRadius: 12, ...SHADOWS.sm
   },
   shopBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   clearBtn: { paddingVertical: 12, paddingHorizontal: 20 },

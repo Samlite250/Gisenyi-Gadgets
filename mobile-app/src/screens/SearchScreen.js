@@ -13,6 +13,7 @@ import {
 import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { DEMO_PRODUCTS } from '../constants/dummyData';
 
 const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gaming', 'Offers'];
 
@@ -34,8 +35,8 @@ export default function SearchScreen({ navigation, route }) {
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
-  const doSearch = useCallback(async (q, catId) => {
-    if (!q.trim() && !catId) {
+  const doSearch = useCallback(async (q, catSlug) => {
+    if (!q.trim() && !catSlug) {
       setResults([]);
       setLoading(false);
       return;
@@ -43,18 +44,30 @@ export default function SearchScreen({ navigation, route }) {
 
     setLoading(true);
     try {
+      // ── Resolve category slug → UUID ──────────────────────────
+      let categoryUUID = null;
+      if (catSlug && catSlug !== 'all') {
+        const { data: catRow } = await supabase
+          .from('categories')
+          .select('id')
+          .or(`slug.eq.${catSlug},name.ilike.${catSlug}`)
+          .maybeSingle();
+        categoryUUID = catRow?.id ?? null;
+      }
+
       let qb = supabase
         .from('products')
         .select('*')
         .eq('is_active', true);
 
-      // Robust Basic Search logic
+      // Text search
       if (q.trim()) {
         qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%`);
       }
 
-      if (catId && catId !== 'all') {
-        qb = qb.eq('category_id', catId);
+      // Filter by UUID only — never send the raw slug
+      if (categoryUUID) {
+        qb = qb.eq('category_id', categoryUUID);
       }
 
       // Sorting
@@ -66,15 +79,34 @@ export default function SearchScreen({ navigation, route }) {
       const { data, error } = await qb.limit(20);
 
       if (error) throw error;
-      setResults(data || []);
+      
+      if (!data || data.length === 0) {
+        // Fallback to dummy data
+        let dummy = DEMO_PRODUCTS;
+        if (q.trim()) {
+          const lowerQ = q.toLowerCase();
+          dummy = dummy.filter(p => p.name.toLowerCase().includes(lowerQ) || p.brand?.toLowerCase().includes(lowerQ));
+        }
+        if (catSlug && catSlug !== 'all') {
+          dummy = dummy.filter(p => p.category_id === catSlug || p.category_id === categoryUUID);
+        }
+        
+        // Sorting dummy
+        if (sortBy === 'Price: Low→High') dummy.sort((a,b) => a.price - b.price);
+        else if (sortBy === 'Price: High→Low') dummy.sort((a,b) => b.price - a.price);
+        else if (sortBy === 'Top Rated') dummy.sort((a,b) => parseFloat(b.rating) - parseFloat(a.rating));
+        
+        setResults(dummy);
+      } else {
+        setResults(data);
+      }
 
-      // Animate results entry
       Animated.timing(fadeAnim, {
-        toValue: 1, duration: 400, useNativeDriver: true,
+        toValue: 1, duration: 400, useNativeDriver: false,
       }).start();
 
     } catch (err) {
-      console.warn('Search search error:', err.message);
+      console.warn('Search error:', err.message);
       setResults([]);
     } finally {
       setLoading(false);

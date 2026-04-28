@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Smartphone, Headphones, Watch } from 'lucide-react-native';
 
@@ -138,13 +138,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#4285F4',
     width: '100%',
     padding: 16,
-    borderRadius: 12, // More rounded as per design
+    borderRadius: 12,
     alignItems: 'center',
     elevation: 2,
-    shadowColor: '#4285F4',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 8px rgba(66,133,244,0.3)' },
+      default: {
+        shadowColor: '#4285F4',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+      },
+    }),
   },
   buttonText: {
     color: '#FFFFFF',

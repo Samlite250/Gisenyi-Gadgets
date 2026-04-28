@@ -14,7 +14,7 @@ const TYPE_MAP = {
     promo: { icon: Tag, color: '#EA4335' },
     review: { icon: Star, color: '#FBBC04' },
     delivery: { icon: Truck, color: '#34A853' },
-    general: { icon: ShoppingBag, color: '#8B5CF6' },
+    general: { icon: ShoppingBag, color: '#6366F1' },
     system: { icon: Bell, color: '#F97316' },
 };
 
@@ -167,8 +167,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row', gap: 14,
         backgroundColor: '#fff', borderRadius: 14,
         padding: SIZES.md, alignItems: 'flex-start',
-        shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+        elevation: 1,
+        ...require('react-native').Platform.select({
+            web: { boxShadow: '0px 1px 4px rgba(0,0,0,0.04)' },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.04,
+                shadowRadius: 4,
+            },
+        }),
     },
     notifCardUnread: { borderLeftWidth: 3, borderLeftColor: COLORS.primaryBlue },
     iconBox: { width: 44, height: 44, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },

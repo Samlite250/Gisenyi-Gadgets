@@ -8,7 +8,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CheckCircle2, Package, Home, ListOrdered } from 'lucide-react-native';
+import { CheckCircle2, Package, Home, ListOrdered, Truck } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useCart } from '../context/CartContext';
 
@@ -29,14 +29,14 @@ export default function OrderSuccessScreen({ navigation, route }) {
     Animated.sequence([
       Animated.spring(scaleAnim, {
         toValue: 1,
-        useNativeDriver: true,
+        useNativeDriver: false,
         tension: 60,
         friction: 7,
       }),
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 400,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start();
   }, []);
@@ -106,13 +106,13 @@ export default function OrderSuccessScreen({ navigation, route }) {
         <Animated.View style={[styles.stepsCard, { opacity: fadeAnim }]}>
           <Text style={styles.stepsTitle}>What happens next?</Text>
           {[
-            { icon: '✅', label: 'Order Confirmed', done: true },
-            { icon: '📦', label: 'Being Packed', done: false },
-            { icon: '🚚', label: 'Out for Delivery', done: false },
-            { icon: '🏠', label: 'Delivered', done: false },
+            { icon: CheckCircle2, label: 'Order Confirmed', done: true, color: COLORS.primaryGreen },
+            { icon: Package, label: 'Being Packed', done: false, color: COLORS.textSecondary },
+            { icon: Truck, label: 'Out for Delivery', done: false, color: COLORS.textSecondary },
+            { icon: Home, label: 'Delivered', done: false, color: COLORS.textSecondary },
           ].map((step, i) => (
             <View key={i} style={styles.stepRow}>
-              <Text style={styles.stepIcon}>{step.icon}</Text>
+              <step.icon size={20} color={step.color} />
               <Text style={[styles.stepLabel, step.done && styles.stepLabelDone]}>
                 {step.label}
               </Text>

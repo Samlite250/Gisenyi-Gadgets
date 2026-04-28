@@ -17,6 +17,7 @@
     "@react-navigation/native-stack": "^6.9.26",
     "@supabase/supabase-js": "^2.42.0",
     "expo": "^55.0.17",
+    "expo-image-picker": "~55.0.19",
     "expo-status-bar": "~55.0.5",
     "lucide-react-native": "^0.368.0",
     "nullthrows": "^1.1.1",

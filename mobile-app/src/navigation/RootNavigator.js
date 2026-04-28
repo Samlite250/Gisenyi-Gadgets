@@ -33,6 +33,8 @@ import PaymentMethodsScreen from '../screens/PaymentMethodsScreen';
 import NotificationsScreen from '../screens/NotificationsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import ChatSupportScreen from '../screens/ChatSupportScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -40,8 +42,8 @@ const Tab = createBottomTabNavigator();
 const COLORS = {
   PrimaryBlue: '#4285F4',
   PrimaryGreen: '#34A853',
-  DarkBackground: '#FFFFFF', // Changed to White for Light Theme
-  CardBackground: '#FFFFFF', // Changed to White
+  DarkBackground: '#FFFFFF',
+  CardBackground: '#FFFFFF',
   TextPrimary: '#202124',
   TextSecondary: '#5F6368',
   BackgroundLight: '#F5F5F5',
@@ -110,14 +112,14 @@ function MainTabs() {
         name="Home"
         component={HomeScreen}
         options={{
-          tabBarIcon: ({ color }) => <Home size={24} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <Home size={24} color={color} strokeWidth={2.2} />,
         }}
       />
       <Tab.Screen
         name="Search"
         component={SearchScreen}
         options={{
-          tabBarIcon: ({ color }) => <Search size={24} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <Search size={24} color={color} strokeWidth={2.2} />,
         }}
       />
       <Tab.Screen
@@ -131,14 +133,14 @@ function MainTabs() {
         name="Orders"
         component={OrdersScreen}
         options={{
-          tabBarIcon: ({ color }) => <ListOrdered size={24} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <ListOrdered size={24} color={color} strokeWidth={2.2} />,
         }}
       />
       <Tab.Screen
         name="Profile"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={2} />,
+          tabBarIcon: ({ color }) => <User size={24} color={color} strokeWidth={2.2} />,
         }}
       />
     </Tab.Navigator>
@@ -187,6 +189,8 @@ function AppStack() {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+      <Stack.Screen name="ChatSupport" component={ChatSupportScreen} />
     </Stack.Navigator>
   );
 }

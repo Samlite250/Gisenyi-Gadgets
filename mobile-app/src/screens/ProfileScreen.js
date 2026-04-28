@@ -12,15 +12,16 @@ import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import FloatingSupport from '../components/FloatingSupport';
 
 const MENU_ITEMS = [
   { id: 'orders', title: 'My Orders', icon: Package, color: '#4285F4', route: 'Orders' },
   { id: 'wishlist', title: 'Wishlist', icon: Heart, color: '#EA4335', route: 'Wishlist' },
   { id: 'addresses', title: 'Addresses', icon: MapPin, color: '#34A853', route: 'Addresses' },
   { id: 'payment', title: 'Payment Methods', icon: CreditCard, color: '#FBBC04', route: 'PaymentMethods' },
-  { id: 'notifications', title: 'Notifications', icon: Bell, color: '#8B5CF6', route: 'Notifications' },
+  { id: 'notifications', title: 'Notifications', icon: Bell, color: '#6366F1', route: 'Notifications' },
   { id: 'settings', title: 'Settings', icon: Settings, color: '#0EA5E9', route: 'Settings' },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, color: '#F97316', route: 'HelpSupport' },
+  { id: 'help', title: 'Help & Support', icon: HelpCircle, color: '#F97316', route: 'ChatSupport' },
 ];
 
 export default function ProfileScreen({ navigation }) {
@@ -57,7 +58,7 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header Banner */}
         <View style={styles.headerBanner}>
@@ -76,7 +77,7 @@ export default function ProfileScreen({ navigation }) {
           </View>
           <TouchableOpacity
             style={styles.editBtn}
-            onPress={() => Alert.alert('Edit Profile', 'Edit profile feature coming soon.')}
+            onPress={() => navigation.navigate('EditProfile')}
           >
             <Edit3 size={16} color="#fff" />
           </TouchableOpacity>
@@ -131,8 +132,10 @@ export default function ProfileScreen({ navigation }) {
             <ChevronRight size={18} color={COLORS.error} />
           </TouchableOpacity>
         </View>
+        <View style={{ height: 40 }} />
       </ScrollView>
-    </View>
+      <FloatingSupport />
+    </SafeAreaView>
   );
 }
 

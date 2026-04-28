@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, FlatList,
-  Image, TouchableOpacity,
+  Image, TouchableOpacity, TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react-native';
@@ -95,6 +95,18 @@ export default function CartScreen({ navigation }) {
 
       {cartItems.length > 0 && (
         <View style={styles.footer}>
+          {/* Promotion Code Section */}
+          <View style={styles.promoSection}>
+            <TextInput 
+              style={styles.promoInput} 
+              placeholder="Promo Code" 
+              placeholderTextColor={COLORS.textMuted} 
+            />
+            <TouchableOpacity style={styles.promoBtn}>
+              <Text style={styles.promoBtnText}>Apply</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.summaryRows}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
@@ -192,4 +204,31 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 14, color: COLORS.textSecondary },
   shopBtn: { backgroundColor: COLORS.primaryBlue, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginTop: 12 },
   shopBtnText: { color: '#fff', fontWeight: '700' },
+  promoSection: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  promoInput: {
+    flex: 1,
+    height: 48,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    fontSize: 14,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  promoBtn: {
+    backgroundColor: COLORS.textPrimary,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  promoBtnText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
 });

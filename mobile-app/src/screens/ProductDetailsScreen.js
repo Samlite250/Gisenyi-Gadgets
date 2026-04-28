@@ -7,7 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CheckCircle2,
+  Maximize2, X, ZoomIn
 } from 'lucide-react-native';
+import { Modal } from 'react-native';
 import FloatingSupport from '../components/FloatingSupport';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -45,6 +47,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [selectedStorage, setSelectedStorage] = useState(product.storage_options?.[0] || null);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [isZoomVisible, setIsZoomVisible] = useState(false);
   const scrollRef = useRef(null);
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
@@ -103,7 +106,17 @@ export default function ProductDetailsScreen({ route, navigation }) {
             }
           >
             {images.map((img, i) => (
-              <Image key={i} source={{ uri: img }} style={styles.heroImage} resizeMode="cover" />
+              <TouchableOpacity 
+                key={i} 
+                activeOpacity={0.9} 
+                onPress={() => setIsZoomVisible(true)}
+              >
+                <Image source={{ uri: img }} style={styles.heroImage} resizeMode="cover" />
+                <View style={styles.zoomHint}>
+                  <Maximize2 size={16} color="#fff" />
+                  <Text style={styles.zoomHintText}>Tap to zoom</Text>
+                </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
 
@@ -359,6 +372,43 @@ export default function ProductDetailsScreen({ route, navigation }) {
       </View>
 
       <FloatingSupport />
+
+      {/* Full Screen Zoom Modal */}
+      <Modal visible={isZoomVisible} transparent={false} animationType="fade" onRequestClose={() => setIsZoomVisible(false)}>
+        <SafeAreaView style={styles.zoomModal}>
+          <View style={styles.zoomHeader}>
+            <TouchableOpacity style={styles.zoomClose} onPress={() => setIsZoomVisible(false)}>
+              <X size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.zoomCount}>{activeImage + 1} / {images.length}</Text>
+          </View>
+          
+          <ScrollView 
+            horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+            contentOffset={{ x: activeImage * width, y: 0 }}
+            onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))}
+            style={styles.zoomScroll}
+          >
+            {images.map((img, i) => (
+              <View key={i} style={{ width, height: '100%', justifyContent: 'center' }}>
+                <ScrollView 
+                  maximumZoomScale={3} 
+                  minimumZoomScale={1} 
+                  showsHorizontalScrollIndicator={false} 
+                  showsVerticalScrollIndicator={false}
+                  contentContainerStyle={{ flex: 1, justifyContent: 'center' }}
+                >
+                  <Image source={{ uri: img }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+                </ScrollView>
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={styles.zoomFooter}>
+            <Text style={styles.zoomInstruction}>Pinch to zoom • Swipe to navigate</Text>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -503,4 +553,23 @@ const styles = StyleSheet.create({
   reviewComment: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 18 },
   viewMoreReviews: { alignItems: 'center', paddingVertical: 8 },
   viewMoreText: { fontSize: 13, fontWeight: '700', color: COLORS.primaryBlue },
+  
+  // Zoom Modal Styles
+  zoomModal: { flex: 1, backgroundColor: '#000' },
+  zoomHeader: { 
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 20, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 
+  },
+  zoomClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  zoomCount: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  zoomScroll: { flex: 1 },
+  zoomFooter: { position: 'absolute', bottom: 40, left: 0, right: 0, alignItems: 'center' },
+  zoomInstruction: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '600' },
+  zoomHint: {
+    position: 'absolute', bottom: 20, right: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20,
+    paddingHorizontal: 12, paddingVertical: 6,
+    flexDirection: 'row', alignItems: 'center', gap: 6
+  },
+  zoomHintText: { color: '#fff', fontSize: 11, fontWeight: '700' }
 });

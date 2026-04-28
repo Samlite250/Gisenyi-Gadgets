@@ -112,10 +112,14 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.productInfo}>
           <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
           <View style={styles.ratingRow}>
-            <Star size={11} color="#FBBC04" fill="#FBBC04" />
-            <Text style={styles.ratingText}>{product.rating}</Text>
+            <View style={styles.starWrap}>
+              <Star size={10} color="#FBBC04" fill="#FBBC04" />
+              <Text style={styles.ratingText}>{product.rating}</Text>
+            </View>
+            <View style={styles.priceBadge}>
+              <Text style={styles.productPriceSmall}>{fmt(product.price)}</Text>
+            </View>
           </View>
-          <Text style={styles.productPrice}>{fmt(product.price)}</Text>
         </View>
       </TouchableOpacity>
     );
@@ -468,23 +472,46 @@ const styles = StyleSheet.create({
   seeAll: { fontSize: 13, color: '#3B82F6', fontWeight: '700' },
 
   catRow: { flexDirection: 'row', paddingHorizontal: SIZES.lg, paddingRight: 40, marginBottom: SIZES.lg, gap: 16 },
-  catItem: { alignItems: 'center', gap: 10 },
-  catIconWrap: { width: 68, height: 68, borderRadius: 34, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1.5, borderColor: '#F0F0F0', overflow: 'hidden' },
-  catIconImg: { width: 44, height: 44, borderRadius: 22 },
-  catName: { fontSize: 13, fontWeight: '600', color: '#1A1A1A' },
+  catItem: { alignItems: 'center', gap: 10, width: 75 },
+  catIconWrap: { width: 68, height: 68, borderRadius: 22, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1.5, borderColor: '#F8FAFC', overflow: 'hidden' },
+  catIconImg: { width: 44, height: 44, borderRadius: 12 },
+  catName: { fontSize: 11, fontWeight: '700', color: '#64748B', textAlign: 'center' },
 
   hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },
 
-  productCard: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 12, ...SHADOWS.md, borderWidth: 1, borderColor: '#F5F5F5' },
-  productImageWrap: { position: 'relative', marginBottom: 12, backgroundColor: '#FAFAFA', borderRadius: 12, padding: 8 },
-  productImage: { width: '100%', height: 130, borderRadius: 8 },
-  imagePlaceholder: { backgroundColor: '#FAFAFA', justifyContent: 'center', alignItems: 'center' },
-  heartBtn: { position: 'absolute', top: 6, right: 6, width: 32, height: 32, backgroundColor: '#FFFFFF', borderRadius: 16, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm },
-  productInfo: { gap: 6 },
-  productName: { fontSize: 14, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.3 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
-  ratingText: { fontSize: 12, color: '#666666', fontWeight: '600' },
+  productCard: { 
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 24, 
+    padding: 10, 
+    ...SHADOWS.md, 
+    borderWidth: 1, 
+    borderColor: 'rgba(0,0,0,0.03)',
+    marginVertical: 4
+  },
+  productImageWrap: { 
+    position: 'relative', 
+    marginBottom: 10, 
+    backgroundColor: '#F8FAFC', 
+    borderRadius: 18, 
+    padding: 6,
+    overflow: 'hidden'
+  },
+  productImage: { width: '100%', height: 135, borderRadius: 14 },
+  imagePlaceholder: { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
+  heartBtn: { 
+    position: 'absolute', top: 8, right: 8, 
+    width: 30, height: 30, backgroundColor: 'rgba(255,255,255,0.9)', 
+    borderRadius: 15, justifyContent: 'center', alignItems: 'center', 
+    ...SHADOWS.sm 
+  },
+  productInfo: { paddingHorizontal: 4, gap: 4 },
+  productName: { fontSize: 13, fontWeight: '700', color: '#1E293B', letterSpacing: -0.2 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
+  starWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  ratingText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
+  priceBadge: { backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  productPriceSmall: { fontSize: 12, fontWeight: '800', color: '#3B82F6' },
   productPrice: { fontSize: 16, fontWeight: '900', color: '#3B82F6', marginTop: 4 },
 
   offerRow: { paddingHorizontal: SIZES.lg, paddingRight: 40, gap: 16, marginBottom: SIZES.lg, paddingBottom: 4 },
@@ -555,11 +582,11 @@ const styles = StyleSheet.create({
   discoveryCard: {
     width: '48%',
     backgroundColor: '#fff',
-    borderRadius: 20,
+    borderRadius: 24,
     marginBottom: 16,
-    ...SHADOWS.sm,
+    ...SHADOWS.md,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: 'rgba(0,0,0,0.02)',
     overflow: 'hidden',
   },
   discoveryImageWrap: {

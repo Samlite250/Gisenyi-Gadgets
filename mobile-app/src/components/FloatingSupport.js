@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { 
   TouchableOpacity, StyleSheet, View, Text, 
-  Animated, Easing 
+  Animated, Easing, Platform 
 } from 'react-native';
 import { MessageCircle } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';

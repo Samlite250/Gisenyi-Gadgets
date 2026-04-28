@@ -148,7 +148,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                     scrollRef.current?.scrollTo({ x: i * width, animated: true });
                   }}
                 >
-                  <Image source={{ uri: img }} style={styles.thumbnail} />
+                  <Image source={{ uri: img }} style={styles.thumbnail} resizeMode="cover" />
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -474,7 +474,6 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: '100%',
     height: '100%',
-    resizeMode: 'cover',
   },
   relatedSection: { marginTop: SIZES.lg, gap: SIZES.sm },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.sm },

@@ -185,7 +185,8 @@ export default function HomeScreen({ navigation }) {
           <TextInput
             placeholder="Search products..."
             placeholderTextColor={COLORS.textMuted}
-            style={[styles.searchInput, { pointerEvents: 'none' }]}
+            style={styles.searchInput}
+            pointerEvents="none"
             editable={false}
           />
         </TouchableOpacity>
@@ -206,7 +207,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() => navigation.navigate('Search', { category: offer.category })}
             >
               <View style={styles.offerImageHalf}>
-                <Image source={{ uri: offer.image }} style={styles.offerImgFull} />
+                <Image source={{ uri: offer.image }} style={styles.offerImgFull} resizeMode="cover" />
               </View>
               <View style={styles.offerContentHalf}>
                 <View style={styles.offerBadge}>
@@ -493,7 +494,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#F0F0F0',
   },
   offerImageHalf: { width: '100%', height: '50%', backgroundColor: '#F8F9FA' },
-  offerImgFull: { width: '100%', height: '100%', resizeMode: 'cover' },
+  offerImgFull: { width: '100%', height: '100%' },
   offerContentHalf: { flex: 1, padding: 16, justifyContent: 'center', gap: 6 },
   offerBadge: {
     alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.25)',
@@ -569,8 +570,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   discoveryImage: {
-    width: '85%',
-    height: '85%',
+    width: '100%',
+    height: '100%',
   },
   discoveryHeart: {
     position: 'absolute',

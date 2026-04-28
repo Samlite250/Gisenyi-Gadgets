@@ -81,7 +81,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     ...SHADOWS.md,
     elevation: 8,
-    shadowColor: COLORS.primaryBlue,
+    ...Platform.select({
+      default: { shadowColor: COLORS.primaryBlue },
+      web: { boxShadow: `0px 4px 12px rgba(66, 133, 244, 0.4)` }
+    }),
   },
   badge: {
     position: 'absolute',

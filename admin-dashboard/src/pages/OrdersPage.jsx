@@ -36,7 +36,21 @@ export default function OrdersPage() {
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdatingId(orderId);
     try {
+      const { data: order } = await supabase.from('orders').select('user_id, order_number').eq('id', orderId).single();
+      
       await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
+      
+      // Notify the user
+      if (order) {
+        await supabase.from('notifications').insert({
+          user_id: order.user_id,
+          title: 'Order Updated',
+          body: `Your order ${order.order_number} is now ${newStatus}.`,
+          type: 'order',
+          metadata: { orderId, status: newStatus }
+        });
+      }
+
       setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: newStatus } : o));
       if (selected?.id === orderId) setSelected((s) => ({ ...s, status: newStatus }));
     } catch (err) { alert(err.message); }
@@ -157,7 +171,25 @@ export default function OrdersPage() {
               </div>
               {selected.shipping_address && (
                 <div style={{ background: 'var(--surface-bg)', borderRadius: 'var(--radius-md)', padding: 12 }}>
-                  <div className="form-label" style={{ marginBottom: 4 }}>Delivery Address</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div className="form-label" style={{ marginBottom: 0 }}>Delivery Address</div>
+                    <button 
+                      className="btn btn-ghost btn-sm" 
+                      style={{ padding: '2px 8px', fontSize: 11 }}
+                      onClick={() => {
+                        const newAddr = prompt('Edit Address:', selected.shipping_address.address);
+                        if (newAddr) {
+                          const updated = { ...selected.shipping_address, address: newAddr };
+                          supabase.from('orders').update({ shipping_address: updated }).eq('id', selected.id).then(() => {
+                            setSelected({ ...selected, shipping_address: updated });
+                            setOrders(prev => prev.map(o => o.id === selected.id ? { ...o, shipping_address: updated } : o));
+                          });
+                        }
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </div>
                   <div>{selected.shipping_address.address}</div>
                 </div>
               )}

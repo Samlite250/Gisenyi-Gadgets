@@ -15,33 +15,66 @@ const INITIAL_MESSAGES = [
 
 export default function ChatSupportScreen({ navigation }) {
   const { profile } = useAuth();
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef();
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    
-    const newUserMsg = {
-      id: Date.now(),
-      text: input,
-      sender: 'user',
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  // 1. Fetch history and setup real-time
+  useEffect(() => {
+    if (!profile?.id) return;
+
+    const fetchHistory = async () => {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', profile.id)
+        .order('created_at', { ascending: true });
+
+      if (error) console.warn(error);
+      else setMessages(data);
+      setLoading(false);
     };
 
-    setMessages([...messages, newUserMsg]);
+    fetchHistory();
+
+    // Subscribe to new messages for this user
+    const channel = supabase
+      .channel(`chat:${profile.id}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'chat_messages',
+        filter: `user_id=eq.${profile.id}` 
+      }, (payload) => {
+        // Only add if not already in state (to avoid double adding own messages)
+        setMessages(prev => {
+          if (prev.some(m => m.id === payload.new.id)) return prev;
+          return [...prev, payload.new];
+        });
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [profile?.id]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !profile?.id) return;
+    
+    const newMessage = {
+      user_id: profile.id,
+      text: input,
+      sender: 'user',
+    };
+
+    const tempInput = input;
     setInput('');
 
-    // Simulate support reply
-    setTimeout(() => {
-      const reply = {
-        id: Date.now() + 1,
-        text: "Thanks for reaching out! One of our agents will be with you in a moment. We're currently helping other customers in Gisenyi.",
-        sender: 'support',
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, reply]);
-    }, 1500);
+    const { error } = await supabase.from('chat_messages').insert(newMessage);
+    if (error) {
+      alert(error.message);
+      setInput(tempInput);
+    }
   };
 
   useEffect(() => {
@@ -104,7 +137,7 @@ export default function ChatSupportScreen({ navigation }) {
                   {m.text}
                 </Text>
                 <View style={styles.bubbleFooter}>
-                  <Text style={styles.timeText}>{m.time}</Text>
+                  <Text style={styles.timeText}>{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                   {m.sender === 'user' && <CheckCheck size={12} color="#fff" style={{ opacity: 0.8 }} />}
                 </View>
               </View>

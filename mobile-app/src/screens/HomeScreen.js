@@ -10,7 +10,6 @@ import {
   Smartphone, Laptop, Headphones, Watch, Gamepad2, 
   Cpu, Camera, Zap, MapPin, Tablet
 } from 'lucide-react-native';
-import FloatingSupport from '../components/FloatingSupport';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
@@ -19,15 +18,60 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 import { DEMO_CATEGORIES, BANNERS, SPECIAL_OFFERS, DEMO_PRODUCTS } from '../constants/dummyData';
 
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=600', // iPhone
+  'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600', // Laptop
+  'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600', // Watch
+  'https://images.unsplash.com/photo-1583394838336-acd97773dbf9?q=80&w=600', // Headphones
+  'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600', // Camera
+];
+
+const getFallbackImage = (id) => {
+  const hash = String(id || '1').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  return FALLBACK_IMAGES[hash % FALLBACK_IMAGES.length];
+};
+
+// ProductCard MUST be outside the parent component to prevent re-mount shaking
+const ProductCard = ({ product, style, onPress, onWishlist, wishlisted, fmt }) => (
+  <TouchableOpacity
+    style={[styles.productCard, style]}
+    onPress={onPress}
+    activeOpacity={0.85}
+  >
+    <View style={styles.productImageWrap}>
+      <Image
+        source={{ uri: product.images[0] }}
+        style={styles.productImage}
+        resizeMode="contain"
+      />
+      <TouchableOpacity style={styles.heartBtn} onPress={onWishlist}>
+        <Heart size={16} color={wishlisted ? COLORS.error : '#666'} fill={wishlisted ? COLORS.error : 'none'} />
+      </TouchableOpacity>
+    </View>
+    <View style={styles.productInfo}>
+      <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+      <View style={styles.ratingRow}>
+        <View style={styles.starWrap}>
+          <Star size={10} color="#FBBC04" fill="#FBBC04" />
+          <Text style={styles.ratingText}>{product.rating}</Text>
+        </View>
+        <View style={styles.priceBadge}>
+          <Text style={styles.productPriceSmall}>{fmt(product.price)}</Text>
+        </View>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
+
 export default function HomeScreen({ navigation }) {
   const { profile, user } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
 
-  const [categories, setCategories] = useState(DEMO_CATEGORIES);
-  const [featuredProducts, setFeaturedProducts] = useState(DEMO_PRODUCTS);
-  const [allProducts, setAllProducts] = useState(DEMO_PRODUCTS);
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeBanner, setActiveBanner] = useState(0);
   const [activeCategory, setActiveCategory] = useState('all');
@@ -54,31 +98,34 @@ export default function HomeScreen({ navigation }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [{ data: cats }, { data: products }] = await Promise.all([
+      const [{ data: cats, error: catErr }, { data: products, error: prodErr }] = await Promise.all([
         supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
-        supabase.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(20),
+        supabase.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(40),
       ]);
-      
-      // Combine Supabase data with Dummy Data to ensure the app looks "full"
-      // We prioritize Supabase items but append Dummy items if they don't exist
-      if (cats?.length) {
-        const mergedCats = [...cats];
-        DEMO_CATEGORIES.forEach(dc => {
-          if (!mergedCats.find(c => c.slug === dc.slug)) mergedCats.push(dc);
-        });
-        setCategories(mergedCats);
-      }
 
-      const dbProducts = products || [];
-      // Filter out dummy products that might already be in DB (by name)
-      const uniqueDummy = DEMO_PRODUCTS.filter(dp => !dbProducts.find(p => p.name === dp.name));
-      const allProducts = [...dbProducts, ...uniqueDummy];
+      if (catErr) throw catErr;
+      if (prodErr) throw prodErr;
 
-      setFeaturedProducts(allProducts.filter((p) => p.is_featured));
-      setAllProducts(allProducts);
-      
+      // ── Categories ────────────────────────────────────────────────
+      setCategories(cats?.length ? cats : DEMO_CATEGORIES);
+
+      // ── Products ─────────────────────────────────────────────────
+      const dbProducts = (products || []).map(p => {
+        let parsedImages = [];
+        try {
+          if (typeof p.images === 'string') parsedImages = JSON.parse(p.images);
+          else if (Array.isArray(p.images)) parsedImages = p.images;
+        } catch(e) {}
+        const hasImg = parsedImages.length > 0 && typeof parsedImages[0] === 'string' && parsedImages[0].startsWith('http');
+        return { ...p, images: hasImg ? parsedImages : [getFallbackImage(p.id)] };
+      });
+
+      const source = dbProducts.length > 0 ? dbProducts : DEMO_PRODUCTS;
+      setFeaturedProducts(source.filter(p => p.is_featured));
+      setAllProducts(source);
+
     } catch (err) {
-      console.warn('Fetch error, using demo data only');
+      console.warn('Supabase fetch error — using demo data:', err.message);
       setCategories(DEMO_CATEGORIES);
       setFeaturedProducts(DEMO_PRODUCTS.filter(p => p.is_featured));
       setAllProducts(DEMO_PRODUCTS);
@@ -92,38 +139,7 @@ export default function HomeScreen({ navigation }) {
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
-  const ProductCard = ({ product, style }) => {
-    const wishlisted = isInWishlist(product.id);
-    return (
-      <TouchableOpacity
-        style={[styles.productCard, style]}
-        onPress={() => navigation.navigate('ProductDetails', { product })}
-        activeOpacity={0.85}
-      >
-        <View style={styles.productImageWrap}>
-          {product.images?.[0]
-            ? <Image source={{ uri: product.images[0] }} style={styles.productImage} resizeMode="contain" />
-            : <View style={[styles.productImage, styles.imagePlaceholder]}><ShoppingBag size={32} color={COLORS.textMuted} /></View>
-          }
-          <TouchableOpacity style={styles.heartBtn} onPress={() => toggleWishlist(product)}>
-            <Heart size={16} color={wishlisted ? COLORS.error : '#666'} fill={wishlisted ? COLORS.error : 'none'} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.productInfo}>
-          <Text style={styles.productName} numberOfLines={1}>{product.name}</Text>
-          <View style={styles.ratingRow}>
-            <View style={styles.starWrap}>
-              <Star size={10} color="#FBBC04" fill="#FBBC04" />
-              <Text style={styles.ratingText}>{product.rating}</Text>
-            </View>
-            <View style={styles.priceBadge}>
-              <Text style={styles.productPriceSmall}>{fmt(product.price)}</Text>
-            </View>
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
+  // ProductCard is now defined outside this component — no re-mount shaking
 
   if (loading && !refreshing) {
     return (
@@ -304,12 +320,31 @@ export default function HomeScreen({ navigation }) {
             if (activeCategory !== 'all') {
               return allItems
                 .filter(p => p.category_id === activeCategory || (selectedCat && p.category_id === selectedCat.slug))
-                .map((p) => <ProductCard key={p.id} product={p} style={styles.featuredCard} />);
+                .map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    style={styles.featuredCard}
+                    onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                    onWishlist={() => toggleWishlist(p)}
+                    wishlisted={isInWishlist(p.id)}
+                    fmt={fmt}
+                  />
+                ));
             }
-            // If 'all' is selected, show only items marked as featured
             return allItems
               .filter(p => p.is_featured)
-              .map((p) => <ProductCard key={p.id} product={p} style={styles.featuredCard} />);
+              .map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  style={styles.featuredCard}
+                  onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                  onWishlist={() => toggleWishlist(p)}
+                  wishlisted={isInWishlist(p.id)}
+                  fmt={fmt}
+                />
+              ));
           })()}
         </ScrollView>
 
@@ -370,7 +405,11 @@ export default function HomeScreen({ navigation }) {
               onPress={() => navigation.navigate('ProductDetails', { product: p })}
             >
               <View style={styles.discoveryImageWrap}>
-                <Image source={{ uri: p.images[0] }} style={styles.discoveryImage} resizeMode="contain" />
+                <Image 
+                  source={{ uri: (p.images && p.images[0]) || getFallbackImage(p.id) }} 
+                  style={styles.discoveryImage} 
+                  resizeMode="contain" 
+                />
                 <TouchableOpacity style={styles.discoveryHeart} onPress={() => toggleWishlist(p)}>
                   <Heart size={14} color={isInWishlist(p.id) ? COLORS.error : '#666'} fill={isInWishlist(p.id) ? COLORS.error : 'none'} />
                 </TouchableOpacity>
@@ -400,8 +439,6 @@ export default function HomeScreen({ navigation }) {
 
         <View style={{ height: SIZES.xxl || 40 }} />
       </ScrollView>
-
-      <FloatingSupport />
     </SafeAreaView>
   );
 }
@@ -483,31 +520,39 @@ const styles = StyleSheet.create({
   productCard: { 
     backgroundColor: '#FFFFFF', 
     borderRadius: 24, 
-    padding: 10, 
+    padding: 8, 
     ...SHADOWS.md, 
     borderWidth: 1, 
     borderColor: 'rgba(0,0,0,0.03)',
-    marginVertical: 4
+    marginVertical: 6,
+    width: 170,
+    height: 250,
   },
   productImageWrap: { 
-    position: 'relative', 
-    marginBottom: 10, 
-    backgroundColor: '#F8FAFC', 
+    height: 150,
+    backgroundColor: '#F1F5F9', 
     borderRadius: 18, 
-    padding: 6,
-    overflow: 'hidden'
+    padding: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    position: 'relative'
   },
-  productImage: { width: '100%', height: 135, borderRadius: 14 },
+  productImage: { 
+    width: '100%', 
+    height: '100%',
+  },
   imagePlaceholder: { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
   heartBtn: { 
     position: 'absolute', top: 8, right: 8, 
-    width: 30, height: 30, backgroundColor: 'rgba(255,255,255,0.9)', 
-    borderRadius: 15, justifyContent: 'center', alignItems: 'center', 
-    ...SHADOWS.sm 
+    width: 32, height: 32, backgroundColor: 'rgba(255,255,255,0.95)', 
+    borderRadius: 16, justifyContent: 'center', alignItems: 'center', 
+    ...SHADOWS.sm,
+    zIndex: 10
   },
-  productInfo: { paddingHorizontal: 4, gap: 4 },
+  productInfo: { padding: 8, gap: 4 },
   productName: { fontSize: 13, fontWeight: '700', color: '#1E293B', letterSpacing: -0.2 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 },
   starWrap: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   ratingText: { fontSize: 11, color: '#64748B', fontWeight: '600' },
   priceBadge: { backgroundColor: '#EFF6FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
@@ -516,20 +561,20 @@ const styles = StyleSheet.create({
 
   offerRow: { paddingHorizontal: SIZES.lg, paddingRight: 40, gap: 16, marginBottom: SIZES.lg, paddingBottom: 4 },
   offerCard: {
-    width: 160, height: 200, borderRadius: 28,
+    width: 170, height: 230, borderRadius: 28,
     ...SHADOWS.md, overflow: 'hidden',
     borderWidth: 1, borderColor: '#F0F0F0',
   },
-  offerImageHalf: { width: '100%', height: '50%', backgroundColor: '#F8F9FA' },
+  offerImageHalf: { width: '100%', height: '48%', backgroundColor: '#F8F9FA' },
   offerImgFull: { width: '100%', height: '100%' },
-  offerContentHalf: { flex: 1, padding: 16, justifyContent: 'center', gap: 6 },
+  offerContentHalf: { flex: 1, paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'flex-start', gap: 4 },
   offerBadge: {
     alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 2,
+    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 4,
   },
   offerDiscount: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.8 },
-  offerLabel: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 },
-  offerTagline: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '600' },
+  offerLabel: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, lineHeight: 22 },
+  offerTagline: { fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: '600', lineHeight: 16 },
 
   helpCard: {
     marginHorizontal: SIZES.lg,

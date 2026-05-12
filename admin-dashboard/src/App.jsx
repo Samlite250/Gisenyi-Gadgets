@@ -6,7 +6,7 @@ import {
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
   Store, Star, Settings, LogOut, Menu, X,
-  ShoppingBag, Bell,
+  ShoppingBag, Bell, MessageCircle, Tag, Handshake,
 } from 'lucide-react';
 
 import DashboardPage from './pages/DashboardPage';
@@ -16,21 +16,27 @@ import UsersPage from './pages/UsersPage';
 import VendorsPage from './pages/VendorsPage';
 import ReviewsPage from './pages/ReviewsPage';
 import SettingsPage from './pages/SettingsPage';
+import SupportPage from './pages/SupportPage';
+import CategoriesPage from './pages/CategoriesPage';
+import SuppliersPage from './pages/SuppliersPage';
 
 const NAV_ITEMS = [
-  { path: '/',         icon: LayoutDashboard, label: 'Dashboard' },
-  { path: '/products', icon: Package,         label: 'Products'  },
-  { path: '/orders',   icon: ShoppingCart,    label: 'Orders'    },
-  { path: '/users',    icon: Users,           label: 'Users'     },
-  { path: '/vendors',  icon: Store,           label: 'Vendors'   },
-  { path: '/reviews',  icon: Star,            label: 'Reviews'   },
-  { path: '/settings', icon: Settings,        label: 'Settings'  },
+  { path: '/',           icon: LayoutDashboard, label: 'Dashboard'  },
+  { path: '/products',   icon: Package,         label: 'Products'   },
+  { path: '/categories', icon: Tag,             label: 'Categories' },
+  { path: '/orders',     icon: ShoppingCart,    label: 'Orders'     },
+  { path: '/suppliers',  icon: Handshake,       label: 'Suppliers'  },
+  { path: '/users',      icon: Users,           label: 'Users'      },
+  { path: '/vendors',    icon: Store,           label: 'Vendors'    },
+  { path: '/reviews',    icon: Star,            label: 'Reviews'    },
+  { path: '/support',    icon: MessageCircle,   label: 'Support'    },
+  { path: '/settings',   icon: Settings,        label: 'Settings'   },
 ];
 
 
 
 export default function App() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false); // Default to expanded for label visibility
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -65,29 +71,28 @@ export default function App() {
           <div className="sidebar-header">
             <div style={{ 
               width: 42, height: 42, borderRadius: 12,
+              background: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-              overflow: 'hidden'
+              flexShrink: 0, overflow: 'hidden',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
             }}>
               <img 
                 src="/logo.png" 
                 alt="Logo" 
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }} 
+                style={{ width: '85%', height: '85%', objectFit: 'contain' }} 
               />
             </div>
             {(!collapsed || mobileOpen) && (
               <div className="sidebar-brand">
-                <span className="sidebar-brand-name">Gisenyi Gadgets</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span className="sidebar-brand-sub">Admin Console</span>
-                  <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#34A853', boxShadow: '0 0 8px #34A853' }} />
+                <div className="sidebar-brand-name" style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                  <span style={{ color: 'var(--primary-blue)', textTransform: 'uppercase', fontSize: 13, fontWeight: 900 }}>Gisenyi</span>
+                  <span style={{ color: 'var(--primary-green)', textTransform: 'uppercase', fontSize: 13, fontWeight: 900 }}>Gadgets</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                  <span className="sidebar-brand-sub" style={{ fontSize: 9 }}>Admin Console</span>
+                  <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#34A853', boxShadow: '0 0 6px #34A853' }} />
                 </div>
               </div>
-            )}
-            {!isMobile && (
-              <button className="sidebar-toggle" onClick={toggleSidebar}>
-                {collapsed ? <Menu size={18} /> : <X size={18} />}
-              </button>
             )}
           </div>
 
@@ -108,8 +113,8 @@ export default function App() {
             ))}
           </nav>
 
-          <div className="sidebar-footer">
-            <button className="nav-item nav-item-logout">
+          <div className="mt-auto" style={{ padding: '16px 14px', borderTop: '1px solid var(--border)' }}>
+            <button className="nav-item nav-item-logout" style={{ width: '100%', margin: 0 }}>
               <LogOut size={20} />
               {(!collapsed || isMobile) && <span>Sign Out</span>}
             </button>
@@ -154,13 +159,16 @@ export default function App() {
 
           <main className="page-content">
             <Routes>
-              <Route path="/"         element={<DashboardPage />} />
-              <Route path="/products" element={<ProductsPage />}  />
-              <Route path="/orders"   element={<OrdersPage />}    />
-              <Route path="/users"    element={<UsersPage />}     />
-              <Route path="/vendors"  element={<VendorsPage />}   />
-              <Route path="/reviews"  element={<ReviewsPage />}   />
-              <Route path="/settings" element={<SettingsPage />}  />
+              <Route path="/"           element={<DashboardPage />} />
+              <Route path="/products"   element={<ProductsPage />}  />
+              <Route path="/categories" element={<CategoriesPage />} />
+              <Route path="/orders"     element={<OrdersPage />}    />
+              <Route path="/suppliers"  element={<SuppliersPage />} />
+              <Route path="/users"      element={<UsersPage />}     />
+              <Route path="/vendors"    element={<VendorsPage />}   />
+              <Route path="/reviews"    element={<ReviewsPage />}   />
+              <Route path="/support"    element={<SupportPage />}   />
+              <Route path="/settings"   element={<SettingsPage />}  />
             </Routes>
           </main>
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
   TouchableOpacity, Image, Alert,
@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import FloatingSupport from '../components/FloatingSupport';
 
@@ -29,6 +30,7 @@ export default function ProfileScreen({ navigation }) {
   const { wishlistItems } = useWishlist();
   const { totalItems } = useCart();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [orderCount, setOrderCount] = useState(null);
 
   const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Guest User';
   const displayEmail = user?.email || '';
@@ -38,6 +40,17 @@ export default function ProfileScreen({ navigation }) {
   const memberSince = user?.created_at
     ? new Date(user.created_at).getFullYear()
     : new Date().getFullYear();
+
+  // Fetch real order count
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .then(({ count }) => setOrderCount(count ?? 0))
+      .catch(() => setOrderCount(0));
+  }, [user]);
 
   const getInitials = (name) =>
     name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
@@ -86,9 +99,9 @@ export default function ProfileScreen({ navigation }) {
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <ShoppingBag size={18} color={COLORS.primaryBlue} />
-            <Text style={styles.statVal}>{totalItems || 0}</Text>
-            <Text style={styles.statLabel}>In Cart</Text>
+            <Package size={18} color={COLORS.primaryBlue} />
+            <Text style={styles.statVal}>{orderCount === null ? '…' : orderCount}</Text>
+            <Text style={styles.statLabel}>Orders</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
@@ -98,9 +111,9 @@ export default function ProfileScreen({ navigation }) {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Calendar size={18} color={COLORS.primaryGreen} />
-            <Text style={styles.statVal}>{memberSince}</Text>
-            <Text style={styles.statLabel}>Member Since</Text>
+            <ShoppingBag size={18} color={COLORS.primaryGreen} />
+            <Text style={styles.statVal}>{totalItems || 0}</Text>
+            <Text style={styles.statLabel}>In Cart</Text>
           </View>
         </View>
 

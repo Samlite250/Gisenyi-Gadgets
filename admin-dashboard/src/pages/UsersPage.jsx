@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Shield, ShieldOff, Eye } from 'lucide-react';
+import { Search, Shield, ShieldOff, Eye, Edit2, X } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 const ROLE_BADGE = { customer: 'badge-blue', vendor: 'badge-green', admin: 'badge-yellow' };
@@ -12,7 +12,10 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [roleFilter, setRole] = useState('All');
   const [selected, setSelected] = useState(null);
+  const [editUser, setEditUser] = useState(null);
+  const [form, setForm] = useState({ full_name: '', phone: '', city: '', country: '', role: '' });
   const [togglingId, setTogglingId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -23,6 +26,17 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await supabase.from('profiles').update(form).eq('id', editUser.id);
+      setUsers((prev) => prev.map((u) => u.id === editUser.id ? { ...u, ...form } : u));
+      setEditUser(null);
+    } catch (err) { alert(err.message); }
+    finally { setSaving(false); }
+  };
 
   const toggleActive = async (u) => {
     setTogglingId(u.id);
@@ -114,6 +128,7 @@ export default function UsersPage() {
                   <td>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setSelected(u)} title="View"><Eye size={14} /></button>
+                      <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setEditUser(u); setForm({ full_name: u.full_name || '', phone: u.phone || '', city: u.city || '', country: u.country || '', role: u.role }); }} title="Edit"><Edit2 size={14} /></button>
                       <button
                         className={`btn btn-sm btn-icon ${u.is_active ? 'btn-danger' : 'btn-success'}`}
                         onClick={() => toggleActive(u)}
@@ -169,6 +184,51 @@ export default function UsersPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setSelected(null)}>Close</button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Edit User Modal */}
+      {editUser && (
+        <div className="modal-overlay" onClick={() => setEditUser(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Edit User Profile</span>
+              <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setEditUser(null)}><X size={16} /></button>
+            </div>
+            <form onSubmit={handleSave}>
+              <div className="modal-body">
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">Full Name</label>
+                    <input className="input" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone</label>
+                    <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Role</label>
+                    <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                      <option value="customer">Customer</option>
+                      <option value="vendor">Vendor</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">City</label>
+                    <input className="input" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Country</label>
+                    <input className="input" value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })} />
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-ghost" onClick={() => setEditUser(null)}>Cancel</button>
+                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

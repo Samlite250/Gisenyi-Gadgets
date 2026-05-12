@@ -16,11 +16,11 @@ export const BANNERS = [
 ];
 
 export const SPECIAL_OFFERS = [
-  { id: 'o1', label: 'Smartphones', discount: '30% OFF', tagline: 'Top picks this week', color: '#3B82F6', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=150', category: 'smartphones' },
-  { id: 'o2', label: 'Laptops', discount: '20% OFF', tagline: 'Work smarter, save more', color: '#0EA5E9', image: 'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=150', category: 'laptops' },
-  { id: 'o3', label: 'Headphones', discount: '40% OFF', tagline: 'Sound deals today', color: '#0891B2', image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=150', category: 'headphones' },
-  { id: 'o4', label: 'Smartwatches', discount: '25% OFF', tagline: 'Style meets tech', color: '#10B981', image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?q=80&w=150', category: 'smartwatches' },
-  { id: 'o5', label: 'Cameras', discount: '15% OFF', tagline: 'Capture every moment', color: '#F59E0B', image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=150', category: 'cameras' },
+  { id: 'o1', label: 'Smartphones', discount: '30% OFF', tagline: 'Top picks this week', color: '#3B82F6', image: 'https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=600', category: 'smartphones' },
+  { id: 'o2', label: 'Laptops', discount: '20% OFF', tagline: 'Work smarter, save more', color: '#0EA5E9', image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?q=80&w=600', category: 'laptops' },
+  { id: 'o3', label: 'Headphones', discount: '40% OFF', tagline: 'Sound deals today', color: '#0891B2', image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600', category: 'headphones' },
+  { id: 'o4', label: 'Smartwatches', discount: '25% OFF', tagline: 'Style meets tech', color: '#10B981', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=600', category: 'smartwatches' },
+  { id: 'o5', label: 'Cameras', discount: '15% OFF', tagline: 'Capture every moment', color: '#F59E0B', image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600', category: 'cameras' },
 ];
 
 export const DEMO_REVIEWS = [
@@ -34,10 +34,11 @@ export const DEMO_PRODUCTS = [
   // Smartphones
   { id: 'p1', name: 'iPhone 15 Pro', price: 1200000, compare_price: 1350000, rating: '4.9', review_count: 120, brand: 'Apple', category_id: 'smartphones', is_featured: true, images: [
     'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=600',
-    'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?q=80&w=600',
-    'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=600',
-    'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?q=80&w=600',
-    'https://images.unsplash.com/photo-1556656793-08538906a9f8?q=80&w=600'
+    'https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=600'
+  ] },
+  { id: 'p1b', name: 'iPhone 15 Pro Max', price: 1450000, compare_price: 1600000, rating: '4.9', review_count: 98, brand: 'Apple', category_id: 'smartphones', is_featured: true, images: [
+    'https://images.unsplash.com/photo-1696446701796-da61225697cc?q=80&w=600',
+    'https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=600'
   ] },
   { id: 'p2', name: 'Samsung Galaxy S24 Ultra', price: 1300000, compare_price: 1450000, rating: '4.8', review_count: 85, brand: 'Samsung', category_id: 'smartphones', is_featured: true, images: [
     'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600',
@@ -62,8 +63,11 @@ export const DEMO_PRODUCTS = [
   // Laptops
   { id: 'p6', name: 'MacBook Pro M3 Max', price: 3500000, compare_price: 3800000, rating: '5.0', review_count: 50, brand: 'Apple', category_id: 'laptops', is_featured: true, images: [
     'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600',
-    'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600',
-    'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?q=80&w=600'
+    'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600'
+  ] },
+  { id: 'p6b', name: 'MacBook Air M3', price: 1350000, compare_price: 1500000, rating: '4.9', review_count: 220, brand: 'Apple', category_id: 'laptops', is_featured: true, images: [
+    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600',
+    'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?q=80&w=600'
   ] },
   { id: 'p7', name: 'Dell XPS 15', price: 2100000, rating: '4.8', review_count: 75, brand: 'Dell', category_id: 'laptops', images: [
     'https://images.unsplash.com/photo-1593642632823-8f785ba67e45?q=80&w=600',
@@ -91,8 +95,12 @@ export const DEMO_PRODUCTS = [
     'https://images.unsplash.com/photo-1520170350707-b2da59970118?q=80&w=600'
   ] },
   { id: 'p12', name: 'AirPods Max', price: 550000, rating: '4.7', review_count: 150, brand: 'Apple', category_id: 'headphones', images: [
-    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=600',
-    'https://images.unsplash.com/photo-1583394838336-acd97773dbf9?q=80&w=600'
+    'https://images.unsplash.com/photo-1588423771073-b8903fead2eb?q=80&w=600',
+    'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?q=80&w=600'
+  ] },
+  { id: 'p12b', name: 'AirPods Pro (3rd Gen)', price: 320000, rating: '4.8', review_count: 340, brand: 'Apple', category_id: 'headphones', is_featured: true, images: [
+    'https://images.unsplash.com/photo-1588423771073-b8903fead2eb?q=80&w=600',
+    'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?q=80&w=600'
   ] },
   { id: 'p13', name: 'Bose QC Ultra', price: 420000, rating: '4.8', review_count: 90, brand: 'Bose', category_id: 'headphones', images: [
     'https://images.unsplash.com/photo-1546435770-a3e426ff472b?q=80&w=600',

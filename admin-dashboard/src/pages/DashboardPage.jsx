@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShoppingCart, Users, Package, Store,
-  TrendingUp, ArrowUpRight, ArrowDownRight,
+  ShoppingCart, Users, Package, Store, Tag, Plus,
+  TrendingUp, ArrowUpRight, ArrowDownRight, Handshake
 } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
@@ -70,25 +70,59 @@ export default function DashboardPage() {
   const [stats, setStats] = useState(DEMO_STATS);
   const [recentOrders, setRecentOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadStats = async () => {
+    const loadData = async () => {
       try {
-        const data = await import('../services/supabase').then(m => m.fetchDashboardStats());
-        if (data) {
-          setStats({ ...DEMO_STATS, ...data });
-          setRecentOrders(data.recentOrders || []);
-          setTopProducts(data.topProducts || []);
-        }
+        const [
+          { count: totalOrders },
+          { count: totalUsers },
+          { count: totalProducts },
+          { count: totalSuppliers },
+          { data: recentOrdersData },
+          { data: topProductsData },
+          { data: revenueData },
+          { data: supData },
+        ] = await Promise.all([
+          supabase.from('orders').select('*', { count: 'exact', head: true }),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
+          supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
+          supabase.from('suppliers').select('*', { count: 'exact', head: true }),
+          supabase.from('orders').select('id, order_number, profiles(full_name), total, status, created_at').order('created_at', { ascending: false }).limit(5),
+          supabase.from('products').select('id, name, price, stock').order('created_at', { ascending: false }).limit(5),
+          supabase.from('orders').select('total').eq('payment_status', 'paid'),
+          supabase.from('suppliers').select('total_sold, commission_rate'),
+        ]);
+
+        const totalRevenue = revenueData?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
+
+        setStats({
+          totalRevenue,
+          totalOrders: totalOrders || 0,
+          totalUsers: totalUsers || 0,
+          totalProducts: totalProducts || 0,
+          totalVendors: totalSuppliers || 0,
+        });
+        setRecentOrders(recentOrdersData || []);
+        setTopProducts(topProductsData || []);
+        if (supData) setSuppliers(supData);
       } catch (err) {
         console.warn('Dashboard fetch error:', err.message);
       } finally {
         setLoading(false);
       }
     };
-    loadStats();
+    loadData();
   }, []);
+
+  const owedToSuppliers = suppliers.reduce((sum, s) => sum + (s.total_sold || 0) * (1 - s.commission_rate / 100), 0);
+  const consignmentCommissions = suppliers.reduce((sum, s) => sum + (s.total_sold || 0) * (s.commission_rate / 100), 0);
+  
+  // Base revenue from own stock (Demo value if not full backend logic)
+  const ownStockRevenue = stats.totalRevenue - suppliers.reduce((sum, s) => sum + (s.total_sold || 0), 0);
+  const myNetProfit = ownStockRevenue + consignmentCommissions;
 
   return (
     <div>
@@ -109,7 +143,59 @@ export default function DashboardPage() {
         <StatCard icon={Store} label="Active Vendors" value={stats.totalVendors?.toLocaleString() || '0'} change={3.8} color="#34A853" bgColor="rgba(52,168,83,0.15)" />
       </div>
 
-      {/* Charts Row */}
+      {/* Financial Settlement Overview */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
+        <div className="card" style={{ 
+          padding: 24, 
+          background: 'linear-gradient(135deg, #1E293B, #0F172A)', 
+          color: 'white',
+          border: 'none',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>My Net Profit</div>
+              <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8, color: '#10B981', letterSpacing: -1 }}>{fmt(myNetProfit)}</div>
+            </div>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TrendingUp size={24} color="#10B981" />
+            </div>
+          </div>
+          <div style={{ fontSize: 13, marginTop: 16, color: '#94A3B8', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 6 }}>
+              <Package size={12} /> {fmt(ownStockRevenue)} (Own Stock)
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 6 }}>
+              <Handshake size={12} /> {fmt(consignmentCommissions)} (Commissions)
+            </span>
+          </div>
+        </div>
+
+        <div className="card" style={{ 
+          padding: 24, 
+          background: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)',
+          border: '1px solid #FDE68A',
+          boxShadow: '0 10px 25px rgba(217, 119, 6, 0.05)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <div style={{ fontSize: 13, color: '#D97706', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Owed To Suppliers</div>
+              <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8, color: '#B45309', letterSpacing: -1 }}>{fmt(owedToSuppliers)}</div>
+            </div>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(217, 119, 6, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Handshake size={24} color="#D97706" />
+            </div>
+          </div>
+          <div style={{ fontSize: 14, marginTop: 16, color: '#B45309', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Unpaid settlements for {suppliers.length} active partners</span>
+            <a href="/suppliers" style={{ color: '#D97706', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: 4 }}>
+              View Details <ArrowUpRight size={14} />
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {/* Middle Row: Charts & Quick Actions */}
       <div className="chart-row" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, marginBottom: 24 }}>
         <div className="card">
           <div className="card-header">
@@ -123,6 +209,56 @@ export default function DashboardPage() {
             <MiniBarChart />
           </div>
         </div>
+
+        <div className="flex-col gap-4">
+          <div className="card" style={{ flex: 1 }}>
+            <div className="card-header">
+              <span className="card-title">Quick Actions</span>
+            </div>
+            <div className="card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              {[
+                { label: 'New Product', icon: Plus, path: '/products', color: 'var(--primary-blue)' },
+                { label: 'Add Category', icon: Tag, path: '/categories', color: 'var(--primary-green)' },
+                { label: 'Verify Vendors', icon: Store, path: '/vendors', color: 'var(--warning)' },
+                { label: 'Manage Users', icon: Users, path: '/users', color: 'var(--primary-blue)' },
+              ].map((a) => (
+                <a key={a.label} href={a.path} className="btn btn-ghost" style={{ 
+                  flexDirection: 'column', height: 'auto', padding: '16px 8px', 
+                  gap: 8, fontSize: 12, border: '1px solid var(--border-light)'
+                }}>
+                  <div style={{ color: a.color }}><a.icon size={20} /></div>
+                  {a.label}
+                </a>
+              ))}
+            </div>
+          </div>
+          
+          <div className="card">
+            <div className="card-header" style={{ padding: '12px 20px' }}>
+              <span className="card-title" style={{ fontSize: 14 }}>System Status</span>
+            </div>
+            <div className="card-body" style={{ padding: '16px 20px' }}>
+              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+                <span className="text-sm">API Gateway</span>
+                <span className="badge badge-green">Healthy</span>
+              </div>
+              <div className="flex items-center justify-between" style={{ marginBottom: 12 }}>
+                <span className="text-sm">Real-time DB</span>
+                <span className="badge badge-green">Active</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Storage (92%)</span>
+                <div style={{ width: 80, height: 6, background: 'var(--surface-bg)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: '92%', height: '100%', background: 'var(--warning)' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Row */}
+      <div className="chart-row" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, marginBottom: 24 }}>
         <div className="card">
           <div className="card-header">
             <span className="card-title">Order Distribution</span>
@@ -131,41 +267,6 @@ export default function DashboardPage() {
             <DonutChart />
           </div>
         </div>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="chart-row" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20 }}>
-        {/* Recent Orders */}
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">Recent Transactions</span>
-            <a href="/orders" className="btn btn-ghost btn-sm">Manage All</a>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Transaction ID</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentOrders.length > 0 ? recentOrders.map((o) => (
-                  <tr key={o.id}>
-                    <td><span style={{ color: 'var(--primary-blue)', fontWeight: 700 }}>#{o.id.slice(0, 6)}</span></td>
-                    <td style={{ fontWeight: 600 }}>{o.profiles?.full_name || 'Guest User'}</td>
-                    <td style={{ fontWeight: 800, color: 'var(--text-primary)' }}>{fmt(o.total)}</td>
-                    <td><span className={`badge ${STATUS_BADGE[o.status] || 'badge-gray'}`}>{o.status}</span></td>
-                    <td className="text-muted" style={{ fontSize: 13 }}>{new Date(o.created_at).toLocaleDateString()}</td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan="5" style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)' }}>No recent orders found</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Top Products */}
         <div className="card">
           <div className="card-header">
             <span className="card-title">Performance Leaders</span>

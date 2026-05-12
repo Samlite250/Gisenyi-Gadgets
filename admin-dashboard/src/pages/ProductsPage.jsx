@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [] };
+const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [], supplier_id: null };
 
 const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -28,7 +29,19 @@ export default function ProductsPage() {
     } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+  const fetchSuppliers = useCallback(async () => {
+    try {
+      const { data } = await supabase.from('suppliers').select('*').order('name');
+      if (data) setSuppliers(data);
+    } catch (err) {
+      console.warn('Suppliers fetch error:', err.message);
+    }
+  }, []);
+
+  useEffect(() => { 
+    fetchProducts(); 
+    fetchSuppliers();
+  }, [fetchProducts, fetchSuppliers]);
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -47,7 +60,8 @@ export default function ProductsPage() {
       description: p.description || '',
       is_featured: p.is_featured,
       is_active: p.is_active,
-      images: p.images || []
+      images: p.images || [],
+      supplier_id: p.supplier_id || null
     });
     setShowModal(true);
   };
@@ -138,7 +152,7 @@ export default function ProductsPage() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Ownership</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
@@ -163,6 +177,19 @@ export default function ProductsPage() {
                     <span className={`badge ${p.stock > 10 ? 'badge-green' : p.stock > 0 ? 'badge-yellow' : 'badge-red'}`}>
                       {p.stock} units
                     </span>
+                  </td>
+                  <td>
+                    {p.supplier_id ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#F59E0B', fontWeight: 600 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B' }}></span>
+                        Consigned
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#10B981', fontWeight: 600 }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981' }}></span>
+                        Own Stock
+                      </div>
+                    )}
                   </td>
                   <td>
                     <span className={`badge ${p.is_active ? 'badge-green' : 'badge-gray'}`}>
@@ -208,6 +235,20 @@ export default function ProductsPage() {
                   <div className="form-group">
                     <label className="form-label">Brand</label>
                     <input className="input" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Samsung, Apple..." />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">Ownership / Supplier</label>
+                    <select 
+                      className="input" 
+                      value={form.supplier_id || ''} 
+                      onChange={(e) => setForm({ ...form, supplier_id: e.target.value || null })}
+                      style={{ appearance: 'auto' }}
+                    >
+                      <option value="">🟢 Own Stock (100% Profit)</option>
+                      {suppliers.map(s => (
+                        <option key={s.id} value={s.id}>🟡 Consigned from: {s.name} ({s.commission_rate}% commission)</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Stock *</label>

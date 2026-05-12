@@ -12,7 +12,7 @@ const DEMO_VENDORS = [
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default function VendorsPage() {
-  const [vendors, setVendors]     = useState(DEMO_VENDORS);
+  const [vendors, setVendors]     = useState([]);
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState('');
   const [selected, setSelected]   = useState(null);

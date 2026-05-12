@@ -1,20 +1,24 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
-  TouchableOpacity, Alert, Dimensions,
+  TouchableOpacity, Alert, Dimensions, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CheckCircle2,
-  Maximize2, X, ZoomIn
+  Maximize2, X
 } from 'lucide-react-native';
 import { Modal } from 'react-native';
-import FloatingSupport from '../components/FloatingSupport';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import { DEMO_PRODUCTS, DEMO_REVIEWS } from '../constants/dummyData';
+
+const FALLBACK_REVIEWS = [
+  { id: 'r1', user: 'Jean Pierre', rating: 5, date: '2024-03-15', comment: 'Excellent product! The delivery was very fast to Gisenyi.', avatar: 'https://i.pravatar.cc/150?u=jp' },
+  { id: 'r2', user: 'Marie Claire', rating: 4, date: '2024-03-10', comment: 'Good quality but the price is a bit high. Still worth it.', avatar: 'https://i.pravatar.cc/150?u=mc' },
+];
 
 const { width } = Dimensions.get('window');
 
@@ -48,7 +52,60 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [isZoomVisible, setIsZoomVisible] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [reviews, setReviews] = useState(FALLBACK_REVIEWS);
+  const [loadingRelated, setLoadingRelated] = useState(true);
   const scrollRef = useRef(null);
+
+  // Fetch related products & reviews from Supabase
+  useEffect(() => {
+    const fetchRelated = async () => {
+      try {
+        setLoadingRelated(true);
+        // Build query: same category, exclude current product
+        let qb = supabase
+          .from('products')
+          .select('id, name, price, images, rating, brand, category_id')
+          .eq('is_active', true)
+          .neq('id', product.id)
+          .limit(10);
+
+        // Filter by category_id if it looks like a UUID; otherwise try slug match
+        const catId = product.category_id;
+        if (catId) {
+          const isUUID = /^[0-9a-f-]{36}$/.test(catId);
+          if (isUUID) {
+            qb = qb.eq('category_id', catId);
+          } else {
+            // Resolve slug → UUID first
+            const { data: catRow } = await supabase
+              .from('categories')
+              .select('id')
+              .or(`slug.eq.${catId},name.ilike.${catId}`)
+              .maybeSingle();
+            if (catRow?.id) qb = qb.eq('category_id', catRow.id);
+          }
+        }
+
+        const { data } = await qb;
+        if (data && data.length > 0) {
+          const parsed = data.map(p => {
+            let imgs = [];
+            try { imgs = typeof p.images === 'string' ? JSON.parse(p.images) : (Array.isArray(p.images) ? p.images : []); } catch(e) {}
+            const validImg = imgs.filter(i => typeof i === 'string' && i.startsWith('http'));
+            return { ...p, images: validImg.length > 0 ? validImg : ['https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=600'] };
+          });
+          setRelatedProducts(parsed);
+        }
+      } catch (err) {
+        console.warn('Related products fetch error:', err.message);
+      } finally {
+        setLoadingRelated(false);
+      }
+    };
+
+    fetchRelated();
+  }, [product.id, product.category_id]);
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
   const discount = product.compare_price
@@ -293,26 +350,26 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
 
             {/* Review List */}
-            {DEMO_REVIEWS.slice(0, 2).map((rev) => (
+            {reviews.slice(0, 2).map((rev) => (
               <View key={rev.id} style={styles.reviewItem}>
                 <View style={styles.reviewHeader}>
-                  <Image source={{ uri: rev.avatar }} style={styles.reviewAvatar} />
+                  <Image source={{ uri: rev.avatar || `https://i.pravatar.cc/150?u=${rev.id}` }} style={styles.reviewAvatar} />
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.reviewUser}>{rev.user}</Text>
+                    <Text style={styles.reviewUser}>{rev.user || rev.reviewer_name}</Text>
                     <View style={styles.starsRow}>
                       {[1, 2, 3, 4, 5].map(s => (
                         <Star key={s} size={10} color={s <= rev.rating ? '#FBBC04' : '#E5E7EB'} fill={s <= rev.rating ? '#FBBC04' : 'none'} />
                       ))}
                     </View>
                   </View>
-                  <Text style={styles.reviewDate}>{rev.date}</Text>
+                  <Text style={styles.reviewDate}>{rev.date || rev.created_at?.split('T')[0]}</Text>
                 </View>
                 <Text style={styles.reviewComment}>{rev.comment}</Text>
               </View>
             ))}
             
             <TouchableOpacity style={styles.viewMoreReviews}>
-              <Text style={styles.viewMoreText}>View All {product.review_count || 24} Reviews</Text>
+              <Text style={styles.viewMoreText}>View All {product.review_count || reviews.length} Reviews</Text>
             </TouchableOpacity>
           </View>
 
@@ -324,16 +381,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
-              {DEMO_PRODUCTS
-                .filter(p => {
-                  // Match by category_id or brand to ensure something always shows
-                  const sameCat = p.category_id === product.category_id;
-                  const sameBrand = p.brand === product.brand;
-                  return (sameCat || sameBrand) && p.id !== product.id;
-                })
-                .slice(0, 10) // Show more items
-                .map((p) => (
+            {loadingRelated ? (
+              <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 20 }} />
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
+                {relatedProducts.length > 0 ? relatedProducts.map((p) => (
                   <TouchableOpacity 
                     key={p.id} 
                     style={styles.relatedCard}
@@ -341,10 +393,13 @@ export default function ProductDetailsScreen({ route, navigation }) {
                   >
                     <Image source={{ uri: p.images[0] }} style={styles.relatedImage} />
                     <Text style={styles.relatedName} numberOfLines={1}>{p.name}</Text>
-                    <Text style={styles.relatedPrice}>RWF {p.price.toLocaleString()}</Text>
+                    <Text style={styles.relatedPrice}>RWF {Number(p.price).toLocaleString()}</Text>
                   </TouchableOpacity>
-                ))}
-            </ScrollView>
+                )) : (
+                  <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>No related products found.</Text>
+                )}
+              </ScrollView>
+            )}
           </View>
         </View>
       </ScrollView>
@@ -370,8 +425,6 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <Text style={styles.buyBtnText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
-
-      <FloatingSupport />
 
       {/* Full Screen Zoom Modal */}
       <Modal visible={isZoomVisible} transparent={false} animationType="fade" onRequestClose={() => setIsZoomVisible(false)}>

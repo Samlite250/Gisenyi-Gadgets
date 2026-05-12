@@ -98,7 +98,16 @@ export default function SearchScreen({ navigation, route }) {
         
         setResults(dummy);
       } else {
-        setResults(data);
+        const parsedData = data.map(p => {
+          let parsedImages = [];
+          try {
+            if (typeof p.images === 'string') parsedImages = JSON.parse(p.images);
+            else if (Array.isArray(p.images)) parsedImages = p.images;
+          } catch(e) {}
+          const hasImg = parsedImages.length > 0 && typeof parsedImages[0] === 'string' && parsedImages[0].startsWith('http');
+          return { ...p, images: hasImg ? parsedImages : ['https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=600'] };
+        });
+        setResults(parsedData);
       }
 
       Animated.timing(fadeAnim, {
@@ -141,11 +150,10 @@ export default function SearchScreen({ navigation, route }) {
         activeOpacity={0.9}
       >
         <View style={styles.imageContainer}>
-          {item.images?.[0] ? (
-            <Image source={{ uri: item.images[0] }} style={styles.productImage} />
-          ) : (
-            <View style={styles.placeholderImg}><ShoppingBag size={24} color={COLORS.textMuted} /></View>
-          )}
+          <Image 
+            source={{ uri: item.images?.[0] || 'https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=600' }} 
+            style={styles.productImage} 
+          />
           {discount > 0 && <View style={styles.discountPill}><Text style={styles.discountVal}>-{discount}%</Text></View>}
         </View>
         <View style={styles.productDetails}>

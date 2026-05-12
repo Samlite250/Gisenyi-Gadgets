@@ -9,7 +9,6 @@ import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin } from 'lucide
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import FloatingSupport from '../components/FloatingSupport';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#F59E0B', bg: '#FEF3C7', icon: Clock },
@@ -217,7 +216,6 @@ export default function OrdersScreen({ navigation }) {
           </View>
         }
       />
-      <FloatingSupport />
     </SafeAreaView>
   );
 }

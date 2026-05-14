@@ -110,7 +110,6 @@ export default function SuppliersPage() {
   };
 
   const handleDelete = async (s) => {
-    if (!window.confirm(`Remove ${s.name} from suppliers?`)) return;
     setDeleting(s.id);
     try {
       const { error } = await supabase.from('suppliers').delete().eq('id', s.id);

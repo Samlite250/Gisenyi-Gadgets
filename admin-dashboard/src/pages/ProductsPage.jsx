@@ -144,7 +144,6 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this product?')) return;
     setDeleting(id);
     try {
       const { error } = await supabase.from('products').delete().eq('id', id);

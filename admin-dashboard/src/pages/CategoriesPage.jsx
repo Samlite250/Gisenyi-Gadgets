@@ -59,7 +59,6 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this category? This might affect products using it.')) return;
     try {
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) throw error;

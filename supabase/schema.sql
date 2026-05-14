@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS public.order_items CASCADE;
 DROP TABLE IF EXISTS public.orders CASCADE;
 DROP TABLE IF EXISTS public.products CASCADE;
 DROP TABLE IF EXISTS public.categories CASCADE;
+DROP TABLE IF EXISTS public.suppliers CASCADE;
 DROP TABLE IF EXISTS public.vendors CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
 DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
@@ -52,6 +53,21 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ─── SUPPLIERS (CONSIGNMENT) ──────────────────────────────────
+CREATE TABLE public.suppliers (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name            TEXT NOT NULL,
+  phone           TEXT NOT NULL,
+  business_name   TEXT,
+  location        TEXT,
+  commission_rate NUMERIC(5,2) DEFAULT 15,
+  notes           TEXT,
+  is_active       BOOLEAN NOT NULL DEFAULT true,
+  products_count  INTEGER DEFAULT 0,
+  total_sold      NUMERIC(12,2) DEFAULT 0,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- ─── VENDORS ──────────────────────────────────────────────────
 CREATE TABLE public.vendors (
@@ -99,6 +115,7 @@ INSERT INTO public.categories (name, slug, icon, sort_order) VALUES
 CREATE TABLE public.products (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   vendor_id       UUID REFERENCES public.vendors(id) ON DELETE SET NULL,
+  supplier_id     UUID REFERENCES public.suppliers(id) ON DELETE SET NULL,
   category_id     UUID REFERENCES public.categories(id) ON DELETE SET NULL,
   name            TEXT NOT NULL,
   description     TEXT,
@@ -204,6 +221,7 @@ CREATE TRIGGER set_orders_updated_at     BEFORE UPDATE ON public.orders      FOR
 
 -- ─── ROW LEVEL SECURITY (RLS) ──────────────────────────────────
 ALTER TABLE public.profiles      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.suppliers     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vendors       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products      ENABLE ROW LEVEL SECURITY;
@@ -217,22 +235,31 @@ ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Profiles: own read"   ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Profiles: own update" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
--- Categories & Products: publicly readable
+-- Categories & Products: publicly readable + admin all access
 CREATE POLICY "Categories: public read" ON public.categories FOR SELECT USING (true);
+CREATE POLICY "Categories: admin all"   ON public.categories USING (true) WITH CHECK (true);
+
 CREATE POLICY "Products: public read"   ON public.products   FOR SELECT USING (is_active = true);
+CREATE POLICY "Products: admin all"     ON public.products   USING (true) WITH CHECK (true);
+
+-- Suppliers: admin all access
+CREATE POLICY "Suppliers: admin all access" ON public.suppliers USING (true) WITH CHECK (true);
 
 -- Vendors: publicly readable
 CREATE POLICY "Vendors: public read" ON public.vendors FOR SELECT USING (is_active = true);
+CREATE POLICY "Vendors: admin all"   ON public.vendors USING (true) WITH CHECK (true);
 
--- Orders: users see own orders
+-- Orders: users see own orders + admin all access
 CREATE POLICY "Orders: own read"   ON public.orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Orders: own insert" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Orders: admin all"  ON public.orders USING (true) WITH CHECK (true);
 
--- Order Items: users see items in their orders
+-- Order Items: users see items in their orders + admin all access
 CREATE POLICY "Order items: own read" ON public.order_items
   FOR SELECT USING (
     order_id IN (SELECT id FROM public.orders WHERE user_id = auth.uid())
   );
+CREATE POLICY "Order items: admin all" ON public.order_items USING (true) WITH CHECK (true);
 
 -- Reviews: public read, own write
 CREATE POLICY "Reviews: public read"  ON public.reviews FOR SELECT USING (true);

@@ -12,6 +12,7 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEdit] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -54,10 +55,11 @@ export default function ProductsPage() {
     fetchCategories();
   }, [fetchProducts, fetchSuppliers, fetchCategories]);
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.brand?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = products.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.brand?.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || p.categories?.name === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   const totalProducts = products.length;
   const activeProducts = products.filter(p => p.is_active).length;
@@ -172,6 +174,27 @@ export default function ProductsPage() {
             <div className="stat-label">{label}</div>
             <div className="stat-value" style={{ color }}>{value}</div>
           </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+        <button 
+          className={`btn ${selectedCategory === 'All' ? 'btn-primary' : 'btn-ghost'}`}
+          onClick={() => setSelectedCategory('All')}
+          style={{ whiteSpace: 'nowrap' }}
+        >
+          All Products
+        </button>
+        {categories.map(c => (
+          <button 
+            key={c.id}
+            className={`btn ${selectedCategory === c.name ? 'btn-primary' : 'btn-ghost'}`}
+            onClick={() => setSelectedCategory(c.name)}
+            style={{ whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6, background: selectedCategory === c.name ? '' : '#fff', border: selectedCategory === c.name ? '' : '1px solid var(--border)' }}
+          >
+            {c.icon && <span>{c.icon}</span>}
+            {c.name}
+          </button>
         ))}
       </div>
 

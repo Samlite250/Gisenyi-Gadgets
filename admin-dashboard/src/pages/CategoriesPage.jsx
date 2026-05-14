@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Tag } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
 
 const EMPTY_FORM = { name: '', slug: '', icon: '', image_url: '', is_active: true, sort_order: 0 };
@@ -45,16 +46,16 @@ export default function CategoriesPage() {
         const { error } = await supabase.from('categories').update(payload).eq('id', editCat.id);
         if (error) throw error;
         setCategories((prev) => prev.map((c) => c.id === editCat.id ? { ...c, ...payload } : c));
-        alert('Category updated successfully!');
+        toast.success('Category updated successfully!');
       } else {
         const { data, error } = await supabase.from('categories').insert(payload).select().single();
         if (error) throw error;
         setCategories((prev) => [...prev, data]);
-        alert('Category added successfully!');
+        toast.success('Category added successfully!');
       }
       setShowModal(false);
     } catch (err) {
-      alert(err.message);
+      toast.error(err.message);
     } finally { setSaving(false); }
   };
 
@@ -63,8 +64,8 @@ export default function CategoriesPage() {
       const { error } = await supabase.from('categories').delete().eq('id', id);
       if (error) throw error;
       setCategories((prev) => prev.filter((c) => c.id !== id));
-      alert('Category deleted successfully!');
-    } catch (err) { alert(err.message); }
+      toast.success('Category deleted successfully!');
+    } catch (err) { toast.error(err.message); }
   };
 
   if (loading) return <div className="p-8 text-center">Loading Categories...</div>;

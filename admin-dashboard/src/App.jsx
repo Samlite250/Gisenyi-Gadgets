@@ -3,6 +3,7 @@ import {
   BrowserRouter as Router, Routes, Route,
   NavLink, useNavigate,
 } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
   Store, Star, Settings, LogOut, Menu, X,
@@ -176,6 +177,7 @@ export default function App() {
           </main>
         </div>
       </div>
+      <Toaster position="top-right" />
     </Router>
   );
 }

@@ -4,6 +4,7 @@ import {
   User, Percent, Package, TrendingUp, Eye,
   ChevronRight, Building2, CheckCircle
 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
 
 const DEMO_SUPPLIERS = [
@@ -85,7 +86,7 @@ export default function SuppliersPage() {
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.phone.trim()) {
-      alert('Name and phone are required.');
+      toast.error('Name and phone are required.');
       return;
     }
     setSaving(true);
@@ -94,16 +95,16 @@ export default function SuppliersPage() {
         const { error } = await supabase.from('suppliers').update(form).eq('id', editTarget.id);
         if (error) throw error;
         setSuppliers(prev => prev.map(s => s.id === editTarget.id ? { ...s, ...form } : s));
-        alert('Supplier updated successfully!');
+        toast.success('Supplier updated successfully!');
       } else {
         const { data, error } = await supabase.from('suppliers').insert(form).select().single();
         if (error) throw error;
         setSuppliers(prev => [data, ...prev]);
-        alert('Supplier added successfully!');
+        toast.success('Supplier added successfully!');
       }
       setShowModal(false);
     } catch (err) {
-      alert('Error saving supplier: ' + err.message);
+      toast.error('Error saving supplier: ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -115,8 +116,8 @@ export default function SuppliersPage() {
       const { error } = await supabase.from('suppliers').delete().eq('id', s.id);
       if (error) throw error;
       setSuppliers(prev => prev.filter(x => x.id !== s.id));
-      alert('Supplier removed successfully!');
-    } catch (err) { alert(err.message); }
+      toast.success('Supplier removed successfully!');
+    } catch (err) { toast.error(err.message); }
     setDeleting(null);
   };
 
@@ -125,7 +126,7 @@ export default function SuppliersPage() {
       const { error } = await supabase.from('suppliers').update({ is_active: !s.is_active }).eq('id', s.id);
       if (error) throw error;
       setSuppliers(prev => prev.map(x => x.id === s.id ? { ...x, is_active: !x.is_active } : x));
-    } catch (err) { alert(err.message); }
+    } catch (err) { toast.error(err.message); }
   };
 
   const filtered = suppliers.filter(s =>

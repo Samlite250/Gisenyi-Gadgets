@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, X, Image as ImageIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
 
 const EMPTY_BANNER = { type: 'banner', title: '', subtitle: '', button_text: 'Shop Now', color: '#1E293B', image_url: '', sort_order: 0, is_active: true };
@@ -49,16 +50,16 @@ export default function BannersPage() {
         const { data, error } = await supabase.from('banners').update({ ...form, sort_order: Number(form.sort_order) }).eq('id', editItem.id).select().single();
         if (error) throw error;
         setItems(prev => prev.map(b => b.id === editItem.id ? data : b));
-        alert('Item updated successfully!');
+        toast.success('Item updated successfully!');
       } else {
         const { data, error } = await supabase.from('banners').insert({ ...form, sort_order: Number(form.sort_order) }).select().single();
         if (error) throw error;
         setItems(prev => [...prev, data]);
-        alert('Item added successfully!');
+        toast.success('Item added successfully!');
       }
       setShowModal(false);
     } catch (err) {
-      alert(err.message || 'Failed to save.');
+      toast.error(err.message);
     } finally { setSaving(false); }
   };
 
@@ -67,8 +68,8 @@ export default function BannersPage() {
       const { error } = await supabase.from('banners').delete().eq('id', id);
       if (error) throw error;
       setItems(prev => prev.filter(b => b.id !== id));
-      alert('Item deleted successfully!');
-    } catch (err) { alert(err.message); }
+      toast.success('Item deleted successfully!');
+    } catch (err) { toast.error(err.message); }
   };
 
   const toggleActive = async (item) => {
@@ -77,7 +78,7 @@ export default function BannersPage() {
       const { error } = await supabase.from('banners').update({ is_active: updated.is_active }).eq('id', item.id);
       if (error) throw error;
       setItems(prev => prev.map(b => b.id === item.id ? updated : b));
-    } catch (err) { alert(err.message); }
+    } catch (err) { toast.error(err.message); }
   };
 
   return (

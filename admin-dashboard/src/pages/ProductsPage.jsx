@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Package, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
 
 const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [], supplier_id: null, category_id: null };
@@ -103,7 +104,7 @@ export default function ProductsPage() {
         .upload(filePath, file);
 
       if (error) {
-        alert('Error uploading image: ' + error.message);
+        toast.error('Error uploading image: ' + error.message);
       } else {
         const { data: { publicUrl } } = supabase.storage
           .from('product-images')
@@ -129,17 +130,17 @@ export default function ProductsPage() {
         const { error } = await supabase.from('products').update(payload).eq('id', editProduct.id);
         if (error) throw error;
         setProducts((prev) => prev.map((p) => p.id === editProduct.id ? { ...p, ...payload } : p));
-        alert('Product updated successfully!');
+        toast.success('Product updated successfully!');
       } else {
         const { data, error } = await supabase.from('products').insert(payload).select('*, categories(name), suppliers(name)').single();
         if (error) throw error;
         setProducts((prev) => [data, ...prev]);
-        alert('Product created successfully!');
+        toast.success('Product created successfully!');
       }
       if (editProduct) fetchProducts(); // refresh relations
       setShowModal(false);
     } catch (err) {
-      alert(err.message || 'Failed to save product.');
+      toast.error(err.message || 'Failed to save product.');
     } finally { setSaving(false); }
   };
 
@@ -149,8 +150,8 @@ export default function ProductsPage() {
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      alert('Product deleted successfully!');
-    } catch (err) { alert(err.message); }
+      toast.success('Product deleted successfully!');
+    } catch (err) { toast.error(err.message); }
     finally { setDeleting(null); }
   };
 

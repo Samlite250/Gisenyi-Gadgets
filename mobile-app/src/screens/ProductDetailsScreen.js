@@ -2,21 +2,20 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, Alert, Dimensions, ActivityIndicator,
-  TextInput, FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CheckCircle2,
-  Maximize2, X, Camera, Send, ImageIcon
+  Maximize2, X,
 } from 'lucide-react-native';
 import { Modal } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { ReviewCard, WriteReviewModal } from '../components/ReviewComponents';
 
 const { width } = Dimensions.get('window');
 

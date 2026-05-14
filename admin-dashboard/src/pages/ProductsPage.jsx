@@ -2,13 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [], supplier_id: null };
+const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [], supplier_id: null, category_id: null };
 
 const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -38,10 +39,20 @@ export default function ProductsPage() {
     }
   }, []);
 
+  const fetchCategories = useCallback(async () => {
+    try {
+      const { data } = await supabase.from('categories').select('*').order('name');
+      if (data) setCategories(data);
+    } catch (err) {
+      console.warn('Categories fetch error:', err.message);
+    }
+  }, []);
+
   useEffect(() => { 
     fetchProducts(); 
     fetchSuppliers();
-  }, [fetchProducts, fetchSuppliers]);
+    fetchCategories();
+  }, [fetchProducts, fetchSuppliers, fetchCategories]);
 
   const filtered = products.filter((p) =>
     p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -61,7 +72,8 @@ export default function ProductsPage() {
       is_featured: p.is_featured,
       is_active: p.is_active,
       images: p.images || [],
-      supplier_id: p.supplier_id || null
+      supplier_id: p.supplier_id || null,
+      category_id: p.category_id || null
     });
     setShowModal(true);
   };
@@ -235,6 +247,21 @@ export default function ProductsPage() {
                   <div className="form-group">
                     <label className="form-label">Brand</label>
                     <input className="input" value={form.brand} onChange={(e) => setForm({ ...form, brand: e.target.value })} placeholder="Samsung, Apple..." />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Category *</label>
+                    <select 
+                      className="input" 
+                      required
+                      value={form.category_id || ''} 
+                      onChange={(e) => setForm({ ...form, category_id: e.target.value || null })}
+                      style={{ appearance: 'auto' }}
+                    >
+                      <option value="">— Select Category —</option>
+                      {categories.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Ownership / Supplier</label>

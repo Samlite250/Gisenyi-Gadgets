@@ -126,12 +126,17 @@ export default function ProductsPage() {
     try {
       const payload = { ...form, price: Number(form.price), compare_price: form.compare_price ? Number(form.compare_price) : null, stock: Number(form.stock) };
       if (editProduct) {
-        await supabase.from('products').update(payload).eq('id', editProduct.id);
+        const { error } = await supabase.from('products').update(payload).eq('id', editProduct.id);
+        if (error) throw error;
         setProducts((prev) => prev.map((p) => p.id === editProduct.id ? { ...p, ...payload } : p));
+        alert('Product updated successfully!');
       } else {
-        const { data } = await supabase.from('products').insert(payload).select().single();
-        setProducts((prev) => [data || { ...payload, id: Date.now().toString() }, ...prev]);
+        const { data, error } = await supabase.from('products').insert(payload).select('*, categories(name), suppliers(name)').single();
+        if (error) throw error;
+        setProducts((prev) => [data, ...prev]);
+        alert('Product created successfully!');
       }
+      if (editProduct) fetchProducts(); // refresh relations
       setShowModal(false);
     } catch (err) {
       alert(err.message || 'Failed to save product.');
@@ -142,8 +147,10 @@ export default function ProductsPage() {
     if (!confirm('Delete this product?')) return;
     setDeleting(id);
     try {
-      await supabase.from('products').delete().eq('id', id);
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (error) throw error;
       setProducts((prev) => prev.filter((p) => p.id !== id));
+      alert('Product deleted successfully!');
     } catch (err) { alert(err.message); }
     finally { setDeleting(null); }
   };

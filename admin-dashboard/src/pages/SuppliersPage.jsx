@@ -94,10 +94,12 @@ export default function SuppliersPage() {
         const { error } = await supabase.from('suppliers').update(form).eq('id', editTarget.id);
         if (error) throw error;
         setSuppliers(prev => prev.map(s => s.id === editTarget.id ? { ...s, ...form } : s));
+        alert('Supplier updated successfully!');
       } else {
         const { data, error } = await supabase.from('suppliers').insert(form).select().single();
         if (error) throw error;
         setSuppliers(prev => [data, ...prev]);
+        alert('Supplier added successfully!');
       }
       setShowModal(false);
     } catch (err) {
@@ -111,15 +113,20 @@ export default function SuppliersPage() {
     if (!window.confirm(`Remove ${s.name} from suppliers?`)) return;
     setDeleting(s.id);
     try {
-      await supabase.from('suppliers').delete().eq('id', s.id);
-    } catch { /* local delete */ }
-    setSuppliers(prev => prev.filter(x => x.id !== s.id));
+      const { error } = await supabase.from('suppliers').delete().eq('id', s.id);
+      if (error) throw error;
+      setSuppliers(prev => prev.filter(x => x.id !== s.id));
+      alert('Supplier removed successfully!');
+    } catch (err) { alert(err.message); }
     setDeleting(null);
   };
 
-  const handleToggleActive = (s) => {
-    setSuppliers(prev => prev.map(x => x.id === s.id ? { ...x, is_active: !x.is_active } : x));
-    supabase.from('suppliers').update({ is_active: !s.is_active }).eq('id', s.id).catch(() => {});
+  const handleToggleActive = async (s) => {
+    try {
+      const { error } = await supabase.from('suppliers').update({ is_active: !s.is_active }).eq('id', s.id);
+      if (error) throw error;
+      setSuppliers(prev => prev.map(x => x.id === s.id ? { ...x, is_active: !x.is_active } : x));
+    } catch (err) { alert(err.message); }
   };
 
   const filtered = suppliers.filter(s =>

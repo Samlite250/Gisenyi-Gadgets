@@ -46,11 +46,15 @@ export default function BannersPage() {
     setSaving(true);
     try {
       if (editItem) {
-        const { data } = await supabase.from('banners').update({ ...form, sort_order: Number(form.sort_order) }).eq('id', editItem.id).select().single();
+        const { data, error } = await supabase.from('banners').update({ ...form, sort_order: Number(form.sort_order) }).eq('id', editItem.id).select().single();
+        if (error) throw error;
         setItems(prev => prev.map(b => b.id === editItem.id ? data : b));
+        alert('Item updated successfully!');
       } else {
-        const { data } = await supabase.from('banners').insert({ ...form, sort_order: Number(form.sort_order) }).select().single();
+        const { data, error } = await supabase.from('banners').insert({ ...form, sort_order: Number(form.sort_order) }).select().single();
+        if (error) throw error;
         setItems(prev => [...prev, data]);
+        alert('Item added successfully!');
       }
       setShowModal(false);
     } catch (err) {
@@ -60,14 +64,21 @@ export default function BannersPage() {
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this item?')) return;
-    await supabase.from('banners').delete().eq('id', id);
-    setItems(prev => prev.filter(b => b.id !== id));
+    try {
+      const { error } = await supabase.from('banners').delete().eq('id', id);
+      if (error) throw error;
+      setItems(prev => prev.filter(b => b.id !== id));
+      alert('Item deleted successfully!');
+    } catch (err) { alert(err.message); }
   };
 
   const toggleActive = async (item) => {
-    const updated = { ...item, is_active: !item.is_active };
-    await supabase.from('banners').update({ is_active: updated.is_active }).eq('id', item.id);
-    setItems(prev => prev.map(b => b.id === item.id ? updated : b));
+    try {
+      const updated = { ...item, is_active: !item.is_active };
+      const { error } = await supabase.from('banners').update({ is_active: updated.is_active }).eq('id', item.id);
+      if (error) throw error;
+      setItems(prev => prev.map(b => b.id === item.id ? updated : b));
+    } catch (err) { alert(err.message); }
   };
 
   return (

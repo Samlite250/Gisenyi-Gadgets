@@ -42,11 +42,15 @@ export default function CategoriesPage() {
     try {
       const payload = { ...form, sort_order: Number(form.sort_order) };
       if (editCat) {
-        await supabase.from('categories').update(payload).eq('id', editCat.id);
+        const { error } = await supabase.from('categories').update(payload).eq('id', editCat.id);
+        if (error) throw error;
         setCategories((prev) => prev.map((c) => c.id === editCat.id ? { ...c, ...payload } : c));
+        alert('Category updated successfully!');
       } else {
-        const { data } = await supabase.from('categories').insert(payload).select().single();
+        const { data, error } = await supabase.from('categories').insert(payload).select().single();
+        if (error) throw error;
         setCategories((prev) => [...prev, data]);
+        alert('Category added successfully!');
       }
       setShowModal(false);
     } catch (err) {
@@ -57,8 +61,10 @@ export default function CategoriesPage() {
   const handleDelete = async (id) => {
     if (!confirm('Delete this category? This might affect products using it.')) return;
     try {
-      await supabase.from('categories').delete().eq('id', id);
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
       setCategories((prev) => prev.filter((c) => c.id !== id));
+      alert('Category deleted successfully!');
     } catch (err) { alert(err.message); }
   };
 

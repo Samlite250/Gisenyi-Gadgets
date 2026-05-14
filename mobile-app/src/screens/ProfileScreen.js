@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView,
-  TouchableOpacity, Image, Alert,
+  TouchableOpacity, Image, Alert, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -56,18 +56,27 @@ export default function ProfileScreen({ navigation }) {
     name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 
   const handleLogout = () => {
-    Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Sign Out', style: 'destructive',
-        onPress: async () => {
-          setLoggingOut(true);
-          try { await signOut(); }
-          catch (err) { Alert.alert('Error', err.message); }
-          finally { setLoggingOut(false); }
-        },
-      },
-    ]);
+    const performLogout = async () => {
+      setLoggingOut(true);
+      try {
+        await signOut();
+      } catch (err) {
+        Alert.alert('Error', err.message);
+      } finally {
+        setLoggingOut(false);
+      }
+    };
+
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to sign out?')) {
+        performLogout();
+      }
+    } else {
+      Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Sign Out', style: 'destructive', onPress: performLogout },
+      ]);
+    }
   };
 
   return (
@@ -153,47 +162,53 @@ export default function ProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   headerBanner: {
     backgroundColor: COLORS.primaryBlue,
     paddingTop: 60, paddingBottom: 32,
     paddingHorizontal: SIZES.lg,
-    flexDirection: 'row', alignItems: 'center', gap: 14,
+    flexDirection: 'row', alignItems: 'center', gap: 16,
   },
   avatarWrap: {
-    width: 68, height: 68, borderRadius: 34,
-    borderWidth: 2.5, borderColor: 'rgba(255,255,255,0.7)',
+    width: 72, height: 72, borderRadius: 36,
+    borderWidth: 3, borderColor: 'rgba(255,255,255,0.4)',
     overflow: 'hidden', backgroundColor: '#3B5EAB',
   },
   avatar: { width: '100%', height: '100%' },
   avatarInitials: { justifyContent: 'center', alignItems: 'center' },
-  initialsText: { fontSize: 24, fontWeight: '800', color: '#fff' },
-  userNameWrap: { flex: 1, gap: 3 },
-  name: { fontSize: 19, fontWeight: '800', color: '#fff' },
-  email: { fontSize: 13, color: 'rgba(255,255,255,0.75)' },
+  initialsText: { fontSize: 26, fontWeight: '900', color: '#fff' },
+  userNameWrap: { flex: 1, gap: 4 },
+  name: { fontSize: 20, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  email: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '600' },
   editBtn: {
     width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center', alignItems: 'center',
   },
   statsRow: {
-    flexDirection: 'row', backgroundColor: '#fff',
-    paddingVertical: 18, paddingHorizontal: SIZES.lg,
-    borderBottomWidth: 1, borderBottomColor: '#F0F0F0',
+    flexDirection: 'row', backgroundColor: '#FFFFFF',
+    paddingVertical: 20, paddingHorizontal: SIZES.lg,
+    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
     marginBottom: 8,
+    ...SHADOWS.sm,
   },
   statItem: { flex: 1, alignItems: 'center', gap: 4 },
-  statDivider: { width: 1, backgroundColor: '#E5E7EB' },
-  statVal: { fontSize: 18, fontWeight: '800', color: COLORS.textPrimary },
-  statLabel: { fontSize: 12, color: COLORS.textSecondary, fontWeight: '500' },
-  menu: { backgroundColor: '#fff', marginTop: 8 },
+  statDivider: { width: 1, backgroundColor: 'rgba(0,0,0,0.05)' },
+  statVal: { fontSize: 18, fontWeight: '900', color: COLORS.textPrimary },
+  statLabel: { fontSize: 11, color: COLORS.textSecondary, fontWeight: '700', textTransform: 'uppercase' },
+  menu: { backgroundColor: 'transparent', marginTop: 12, paddingHorizontal: SIZES.lg },
   menuItem: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between',
-    padding: SIZES.lg,
-    borderBottomWidth: 1, borderBottomColor: '#F9FAFB',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...SHADOWS.sm,
   },
-  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: SIZES.md },
-  menuIconBox: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
-  menuTitle: { fontSize: 15, fontWeight: '600', color: COLORS.textPrimary },
+  menuLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  menuIconBox: { width: 40, height: 40, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  menuTitle: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
 });

@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView, Platform, ScrollView, Alert, Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { Mail, Lock, User, Check } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useAuth } from '../context/AuthContext';
@@ -95,7 +96,9 @@ export default function RegisterScreen({ navigation }) {
             <View style={styles.errorBanner}><Text style={styles.errorText}>{error}</Text></View>
           ) : null}
 
-          <View style={styles.form}>
+          {/* Glass Form Card */}
+          <BlurView intensity={70} tint="light" style={styles.formCard}>
+            <View style={styles.form}>
             <Field 
               icon={User} 
               value={form.fullName} 
@@ -159,7 +162,8 @@ export default function RegisterScreen({ navigation }) {
                 <Text style={styles.loginLink}>Login</Text>
               </TouchableOpacity>
             </View>
-          </View>
+            </View>
+          </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -167,7 +171,7 @@ export default function RegisterScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   scroll: { flexGrow: 1, padding: 24, paddingBottom: 40, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 32, marginTop: 10 },
   logoWrap: { marginBottom: 20 },
@@ -178,6 +182,13 @@ const styles = StyleSheet.create({
     padding: 12, marginBottom: 20,
   },
   errorText: { color: '#EA4335', fontSize: 13, textAlign: 'center' },
+  formCard: {
+    borderRadius: 24,
+    padding: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
   form: { gap: 16 },
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',

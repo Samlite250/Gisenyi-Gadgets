@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
-  TouchableOpacity, Alert, Dimensions, ActivityIndicator,
+  TouchableOpacity, Alert, Dimensions, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -420,7 +420,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         </View>
       </ScrollView>
 
-      {/* Bottom Buttons */}
+      {/* Action Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[styles.cartBtn, inCart && { backgroundColor: COLORS.primaryGreen }]}
@@ -492,7 +492,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   topBar: {
     flexDirection: 'row', justifyContent: 'space-between',
     padding: SIZES.md, paddingBottom: 0,
@@ -554,11 +554,14 @@ const styles = StyleSheet.create({
   descSection: { marginTop: SIZES.md },
   descText: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, lineHeight: 22 },
   footer: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', gap: SIZES.md,
-    padding: SIZES.lg, paddingBottom: SIZES.xl,
+    flexDirection: 'row',
+    padding: SIZES.lg,
+    paddingBottom: Platform.OS === 'ios' ? 34 : SIZES.lg,
+    gap: 12,
     backgroundColor: '#fff',
-    borderTopWidth: 1, borderTopColor: '#eee',
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+    ...SHADOWS.lg,
   },
   storagePill: {
     paddingHorizontal: 16, paddingVertical: 8,
@@ -567,16 +570,6 @@ const styles = StyleSheet.create({
   },
   storagePillActive: { backgroundColor: COLORS.primaryBlue, borderColor: COLORS.primaryBlue },
   storagePillText: { fontSize: 13, fontWeight: '700', color: COLORS.textSecondary },
-  cartBtn: {
-    flex: 1, height: 54, backgroundColor: COLORS.primaryBlue, borderRadius: SIZES.radiusSm,
-    justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8,
-  },
-  cartBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
-  buyBtn: {
-    flex: 1, height: 54, backgroundColor: COLORS.primaryGreen, borderRadius: SIZES.radiusSm,
-    justifyContent: 'center', alignItems: 'center', flexDirection: 'row', gap: 8,
-  },
-  buyBtnText: { color: '#fff', fontSize: SIZES.fontMd, fontWeight: '700' },
   thumbnailContainer: {
     paddingVertical: 12,
     backgroundColor: '#fff',
@@ -603,15 +596,50 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
   },
+  cartBtn: {
+    flex: 1,
+    height: 56,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    ...SHADOWS.sm,
+  },
+  buyBtn: {
+    flex: 1.5,
+    height: 56,
+    backgroundColor: COLORS.primaryBlue,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...SHADOWS.md,
+  },
+  cartBtnText: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '700' },
+  buyBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
   relatedSection: { marginTop: SIZES.lg, gap: SIZES.sm },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.sm },
   sectionTitle: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },
   seeAll: { fontSize: SIZES.fontSm, color: COLORS.primaryBlue, fontWeight: '600' },
   relatedScroll: { gap: 16, paddingBottom: 8 },
-  relatedCard: { width: 120, gap: 4 },
-  relatedImage: { width: 120, height: 120, borderRadius: 12, backgroundColor: '#f9f9f9' },
-  relatedName: { fontSize: 13, fontWeight: '600', color: COLORS.textPrimary },
-  relatedPrice: { fontSize: 12, fontWeight: '700', color: COLORS.primaryGreen },
+  relatedCard: { 
+    width: 130, 
+    gap: 6, 
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 18, 
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...SHADOWS.sm,
+  },
+  relatedImage: { width: 114, height: 114, borderRadius: 12, backgroundColor: '#f9f9f9' },
+  relatedName: { fontSize: 12, fontWeight: '700', color: COLORS.textPrimary },
+  relatedPrice: { fontSize: 11, fontWeight: '800', color: COLORS.primaryBlue },
   reviewsSection: { marginTop: SIZES.lg, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: SIZES.lg },
   ratingOverview: { flexDirection: 'row', gap: 24, marginBottom: 20, alignItems: 'center' },
   avgRatingBox: { alignItems: 'center', gap: 4 },
@@ -623,7 +651,14 @@ const styles = StyleSheet.create({
   barLabel: { fontSize: 11, color: COLORS.textSecondary, width: 25 },
   barBg: { flex: 1, height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' },
   barFill: { height: '100%', backgroundColor: '#FBBC04' },
-  reviewItem: { marginBottom: 16, backgroundColor: '#FAFAFA', padding: 12, borderRadius: 12 },
+  reviewItem: { 
+    marginBottom: 16, 
+    backgroundColor: '#F8FAFC', 
+    padding: 14, 
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
   reviewHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   reviewAvatar: { width: 32, height: 32, borderRadius: 16 },
   reviewUser: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary },

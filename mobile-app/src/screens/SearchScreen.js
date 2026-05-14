@@ -4,6 +4,7 @@ import {
   TouchableOpacity, Image, ScrollView, Animated,
   ActivityIndicator, RefreshControl,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Search, SlidersHorizontal, Star, X, Heart,
@@ -13,7 +14,6 @@ import {
 import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-
 import SkeletonLoader from '../components/SkeletonLoader';
 
 const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gaming', 'Offers'];

@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
-  TouchableOpacity, Image, FlatList, RefreshControl,
+  TouchableOpacity, Image, FlatList, RefreshControl, Platform,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Bell, Search, ShoppingBag, Heart, 
   ChevronRight, Star, MessageSquare,
   Smartphone, Laptop, Headphones, Watch, Gamepad2, 
-  Cpu, Camera, MapPin, Tablet
+  Cpu, Camera, MapPin, Tablet, Sliders
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -33,34 +34,36 @@ const getFallbackImage = (id) => {
 
 // ProductCard MUST be outside the parent component to prevent re-mount shaking
 const ProductCard = ({ product, style, onPress, onWishlist, wishlisted, fmt }) => (
-  <TouchableOpacity
-    style={[styles.productCard, style]}
-    onPress={onPress}
-    activeOpacity={0.85}
-  >
-    <View style={styles.productImageWrap}>
-      <Image
-        source={{ uri: product.images[0] }}
-        style={styles.productImage}
-        resizeMode="contain"
-      />
-      <TouchableOpacity style={styles.heartBtn} onPress={onWishlist}>
-        <Heart size={16} color={wishlisted ? COLORS.error : '#666'} fill={wishlisted ? COLORS.error : 'none'} />
-      </TouchableOpacity>
-    </View>
-    <View style={styles.productInfo}>
-      <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
-      <View style={styles.ratingRow}>
-        <View style={styles.starWrap}>
-          <Star size={10} color="#FBBC04" fill="#FBBC04" />
-          <Text style={styles.ratingText}>{product.rating}</Text>
-        </View>
-        <View style={styles.priceBadge}>
-          <Text style={styles.productPriceSmall}>{fmt(product.price)}</Text>
+  <View style={[styles.productCard, style]}>
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={{ flex: 1 }}
+    >
+      <View style={styles.productImageWrap}>
+        <Image
+          source={{ uri: product.images[0] }}
+          style={styles.productImage}
+          resizeMode="contain"
+        />
+        <TouchableOpacity style={styles.heartBtn} onPress={onWishlist}>
+          <Heart size={16} color={wishlisted ? COLORS.error : '#666'} fill={wishlisted ? COLORS.error : 'none'} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.productInfo}>
+        <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+        <View style={styles.ratingRow}>
+          <View style={styles.starWrap}>
+            <Star size={10} color="#FBBC04" fill="#FBBC04" />
+            <Text style={styles.ratingText}>{product.rating}</Text>
+          </View>
+          <View style={styles.priceBadge}>
+            <Text style={styles.productPriceSmall}>{fmt(product.price)}</Text>
+          </View>
         </View>
       </View>
-    </View>
-  </TouchableOpacity>
+    </TouchableOpacity>
+  </View>
 );
 
 export default function HomeScreen({ navigation }) {
@@ -76,6 +79,8 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
 
   const displayName = profile?.full_name?.split(' ')[0]
@@ -228,16 +233,30 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* Search Bar */}
-        <TouchableOpacity style={styles.searchBar} activeOpacity={0.9} onPress={() => navigation.navigate('Search')}>
-          <Search size={18} color={COLORS.textMuted} />
-          <TextInput
-            placeholder="Search products..."
-            placeholderTextColor={COLORS.textMuted}
-            style={styles.searchInput}
-            pointerEvents="none"
-            editable={false}
-          />
-        </TouchableOpacity>
+        <View style={[styles.searchBarWrapper, isSearchFocused && styles.searchBarWrapperFocused]}>
+          <View style={styles.searchBar}>
+            <Search size={20} color={isSearchFocused ? COLORS.primaryBlue : COLORS.textMuted} />
+            <TextInput
+              placeholder="Search gadgets, brands..."
+              placeholderTextColor={COLORS.textMuted}
+              style={styles.searchInput}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onFocus={() => setIsSearchFocused(true)}
+              onBlur={() => setIsSearchFocused(false)}
+              returnKeyType="search"
+            />
+            {searchQuery.length > 0 ? (
+              <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 8 }}>
+                <Text style={{ color: COLORS.primaryBlue, fontWeight: '700', fontSize: 13 }}>Clear</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity style={styles.filterBtn}>
+                <Sliders size={18} color={COLORS.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
 
         {/* Special Offers — from DB */}
         {offers.length > 0 && (
@@ -341,27 +360,58 @@ export default function HomeScreen({ navigation }) {
                   style={styles.catItem}
                   onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
                 >
-                  <View style={[styles.catIconWrap, isActive && { backgroundColor: '#3B82F6', borderColor: '#3B82F6' }]}>
-                    <Icon size={28} color={isActive ? '#fff' : '#4285F4'} strokeWidth={2.4} />
+                  <View style={styles.catIconCircle}>
+                    <Icon size={28} color={isActive ? '#FFFFFF' : '#64748B'} strokeWidth={2.2} />
                   </View>
-                  <Text style={[styles.catName, isActive && { color: '#3B82F6', fontWeight: '700' }]}>{c.name}</Text>
+                  <Text style={[styles.catName, isActive && { color: '#3B82F6' }]}>{c.name}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
         </ScrollView>
 
-        {/* Featured Products */}
+        {/* Products Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {activeCategory === 'all' ? 'Featured Products' : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products'}
+            {searchQuery ? `Results for "${searchQuery}"` : (activeCategory === 'all' ? 'Featured Products' : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products')}
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
-            <Text style={styles.seeAll}>See all</Text>
-          </TouchableOpacity>
+          {!searchQuery && (
+            <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
+              <Text style={styles.seeAll}>See all</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
+        <ScrollView horizontal={!searchQuery} showsHorizontalScrollIndicator={false} contentContainerStyle={searchQuery ? styles.searchResultGrid : styles.hScroll}>
           {(() => {
+            const query = searchQuery.toLowerCase();
+            const filtered = allProducts.filter(p => 
+              p.name.toLowerCase().includes(query) || 
+              (p.brand && p.brand.toLowerCase().includes(query)) ||
+              (p.description && p.description.toLowerCase().includes(query))
+            );
+
+            if (searchQuery) {
+              if (filtered.length === 0) {
+                return (
+                  <View style={styles.noResults}>
+                    <Search size={40} color={COLORS.textMuted} />
+                    <Text style={styles.noResultsText}>No products found matching "{searchQuery}"</Text>
+                  </View>
+                );
+              }
+              return filtered.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  style={styles.searchResultCard}
+                  onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                  onWishlist={() => toggleWishlist(p)}
+                  wishlisted={isInWishlist(p.id)}
+                  fmt={fmt}
+                />
+              ));
+            }
+
             const selectedCat = categories.find(c => c.id === activeCategory);
             if (activeCategory !== 'all') {
               return allProducts
@@ -425,42 +475,43 @@ export default function HomeScreen({ navigation }) {
         </View>
         <View style={styles.discoveryGrid}>
           {allProducts.slice(0, 40).map((p) => (
-            <TouchableOpacity 
-              key={p.id} 
-              style={styles.discoveryCard}
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate('ProductDetails', { product: p })}
-            >
-              <View style={styles.discoveryImageWrap}>
-                <Image 
-                  source={{ uri: (p.images && p.images[0]) || getFallbackImage(p.id) }} 
-                  style={styles.discoveryImage} 
-                  resizeMode="contain" 
-                />
-                <TouchableOpacity style={styles.discoveryHeart} onPress={() => toggleWishlist(p)}>
-                  <Heart size={14} color={isInWishlist(p.id) ? COLORS.error : '#666'} fill={isInWishlist(p.id) ? COLORS.error : 'none'} />
-                </TouchableOpacity>
-                {p.compare_price > p.price && (
-                  <View style={styles.discoveryBadge}>
-                    <Text style={styles.discoveryBadgeText}>OFFER</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.discoveryInfo}>
-                <Text style={styles.discoveryName} numberOfLines={1}>{p.name}</Text>
-                <View style={styles.discoveryMeta}>
-                  <Text style={styles.discoveryPrice}>{fmt(p.price)}</Text>
-                  <View style={styles.discoveryRating}>
-                    <Star size={10} color="#FBBC04" fill="#FBBC04" />
-                    <Text style={styles.discoveryRatingText}>{p.rating}</Text>
-                  </View>
+            <View key={p.id} style={styles.discoveryCard}>
+              <TouchableOpacity 
+                activeOpacity={0.9}
+                onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                style={{ flex: 1 }}
+              >
+                <View style={styles.discoveryImageWrap}>
+                  <Image 
+                    source={{ uri: (p.images && p.images[0]) || getFallbackImage(p.id) }} 
+                    style={styles.discoveryImage} 
+                    resizeMode="contain" 
+                  />
+                  <TouchableOpacity style={styles.discoveryHeart} onPress={() => toggleWishlist(p)}>
+                    <Heart size={14} color={isInWishlist(p.id) ? COLORS.error : '#666'} fill={isInWishlist(p.id) ? COLORS.error : 'none'} />
+                  </TouchableOpacity>
+                  {p.compare_price > p.price && (
+                    <View style={styles.discoveryBadge}>
+                      <Text style={styles.discoveryBadgeText}>OFFER</Text>
+                    </View>
+                  )}
                 </View>
-                <TouchableOpacity style={styles.discoveryAddBtn} onPress={() => addToCart(p)}>
-                  <ShoppingBag size={14} color="#fff" />
-                  <Text style={styles.discoveryAddText}>Add</Text>
-                </TouchableOpacity>
-              </View>
-            </TouchableOpacity>
+                <View style={styles.discoveryInfo}>
+                  <Text style={styles.discoveryName} numberOfLines={1}>{p.name}</Text>
+                  <View style={styles.discoveryMeta}>
+                    <Text style={styles.discoveryPrice}>{fmt(p.price)}</Text>
+                    <View style={styles.discoveryRating}>
+                      <Star size={10} color="#FBBC04" fill="#FBBC04" />
+                      <Text style={styles.discoveryRatingText}>{p.rating}</Text>
+                    </View>
+                  </View>
+                  <TouchableOpacity style={styles.discoveryAddBtn} onPress={() => addToCart(p)}>
+                    <ShoppingBag size={14} color="#fff" />
+                    <Text style={styles.discoveryAddText}>Add</Text>
+                  </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
+            </View>
           ))}
         </View>
 
@@ -471,7 +522,7 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     paddingHorizontal: SIZES.lg, paddingTop: SIZES.md, paddingBottom: SIZES.sm,
@@ -510,14 +561,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#EF4444', borderWidth: 1.5, borderColor: '#FFFFFF',
   },
 
-  searchBar: {
-    flexDirection: 'row', alignItems: 'center', gap: SIZES.sm,
-    backgroundColor: '#FFFFFF', borderRadius: 16,
-    marginHorizontal: SIZES.lg, marginVertical: SIZES.md,
-    paddingHorizontal: SIZES.md, height: 52,
-    ...SHADOWS.sm, borderWidth: 1, borderColor: '#F0F0F0'
+  searchBarWrapper: {
+    marginHorizontal: SIZES.lg,
+    marginVertical: SIZES.md,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 20px rgba(0,0,0,0.05)' },
+      default: SHADOWS.md
+    }),
   },
-  searchInput: { flex: 1, fontSize: SIZES.fontSm, color: '#1A1A1A', outlineStyle: 'none' },
+  searchBarWrapperFocused: {
+    borderColor: COLORS.primaryBlue,
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      web: { boxShadow: '0px 8px 25px rgba(66, 133, 244, 0.15)' },
+      default: SHADOWS.lg
+    }),
+  },
+  searchBar: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#1A1A1A',
+    ...Platform.select({
+      web: { outlineStyle: 'none' }
+    }),
+  },
+  filterBtn: {
+    width: 40,
+    height: 40,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
+  },
 
   bannerContainer: { paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
   banner: {
@@ -537,8 +628,20 @@ const styles = StyleSheet.create({
 
   catRow: { flexDirection: 'row', paddingHorizontal: SIZES.lg, paddingRight: 40, marginBottom: SIZES.lg, gap: 16 },
   catItem: { alignItems: 'center', gap: 10, width: 75 },
-  catIconWrap: { width: 68, height: 68, borderRadius: 22, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm, borderWidth: 1.5, borderColor: '#F8FAFC', overflow: 'hidden' },
-  catIconImg: { width: 44, height: 44, borderRadius: 12 },
+  catIconCircle: { 
+    width: 64, 
+    height: 64, 
+    borderRadius: 32, 
+    backgroundColor: '#F8FAFC', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    borderWidth: 1.5, 
+    borderColor: '#F1F5F9', 
+  },
+  catIconCircleActive: {
+    backgroundColor: COLORS.primaryBlue,
+    borderColor: COLORS.primaryBlue,
+  },
   catName: { fontSize: 11, fontWeight: '700', color: '#64748B', textAlign: 'center' },
 
   hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
@@ -546,14 +649,14 @@ const styles = StyleSheet.create({
 
   productCard: { 
     backgroundColor: '#FFFFFF', 
-    borderRadius: 24, 
+    borderRadius: 20, 
     padding: 8, 
-    ...SHADOWS.md, 
     borderWidth: 1, 
-    borderColor: 'rgba(0,0,0,0.03)',
+    borderColor: '#F1F5F9',
     marginVertical: 6,
     width: 170,
     height: 250,
+    ...SHADOWS.sm,
   },
   productImageWrap: { 
     height: 150,
@@ -644,6 +747,28 @@ const styles = StyleSheet.create({
   flashPrice: { fontSize: 15, fontWeight: '900', color: '#EF4444' },
   flashOldPrice: { fontSize: 12, color: '#999999', textDecorationLine: 'line-through', fontWeight: '600' },
   flashImage: { width: 90, height: 90, borderRadius: 12, alignSelf: 'center' },
+  searchResultGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: SIZES.lg,
+    justifyContent: 'space-between',
+  },
+  searchResultCard: {
+    width: '48%',
+    marginBottom: 16,
+  },
+  noResults: {
+    width: '100%',
+    padding: 40,
+    alignItems: 'center',
+    gap: 12,
+  },
+  noResultsText: {
+    color: COLORS.textMuted,
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '600',
+  },
 
   discoveryGrid: {
     flexDirection: 'row',
@@ -653,13 +778,12 @@ const styles = StyleSheet.create({
   },
   discoveryCard: {
     width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     marginBottom: 16,
-    ...SHADOWS.md,
     borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.02)',
-    overflow: 'hidden',
+    borderColor: '#F1F5F9',
+    ...SHADOWS.sm,
   },
   discoveryImageWrap: {
     height: 140,

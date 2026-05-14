@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { View, Text, Platform, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Home, Search, ShoppingCart, ListOrdered, User } from 'lucide-react-native';
-import { View, Text } from 'react-native';
 
 // Auth
 import { useAuth } from '../context/AuthContext';
@@ -40,14 +41,14 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const COLORS = {
-  PrimaryBlue: '#4285F4',
-  PrimaryGreen: '#34A853',
-  DarkBackground: '#FFFFFF',
-  CardBackground: '#FFFFFF',
-  TextPrimary: '#202124',
-  TextSecondary: '#5F6368',
-  BackgroundLight: '#F5F5F5',
-  Danger: '#EA4335'
+  primaryBlue: '#4285F4',
+  primaryGreen: '#34A853',
+  darkBackground: '#FFFFFF',
+  cardBackground: '#FFFFFF',
+  textPrimary: '#202124',
+  textSecondary: '#5F6368',
+  backgroundLight: '#F5F5F5',
+  danger: '#EA4335'
 };
 
 // ─── Cart Badge ───────────────────────────────────────────────
@@ -62,7 +63,7 @@ function CartTabIcon({ color }) {
             position: 'absolute',
             top: -6,
             right: -8,
-            backgroundColor: COLORS.PrimaryBlue,
+            backgroundColor: COLORS.primaryBlue,
             borderRadius: 10,
             minWidth: 18,
             height: 18,
@@ -89,22 +90,23 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.CardBackground,
+          backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#F0F0F0',
-          elevation: 0,
-          shadowOpacity: 0,
-          height: 64,
-          paddingBottom: 10,
-          paddingTop: 8,
+          borderTopColor: '#F3F4F6',
+          height: Platform.OS === 'ios' ? 88 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+          paddingTop: 10,
+          elevation: 8,
         },
-        tabBarActiveTintColor: COLORS.PrimaryBlue,
-        tabBarInactiveTintColor: COLORS.TextSecondary,
+        tabBarActiveTintColor: COLORS.primaryBlue,
+        tabBarInactiveTintColor: COLORS.textSecondary,
         tabBarLabelStyle: {
           fontSize: 11,
-          fontFamily: 'System', // Will use Poppins if loaded
           fontWeight: '600',
           marginTop: 2,
+        },
+        tabBarIconStyle: {
+          marginBottom: -2,
         },
       }}
     >
@@ -153,7 +155,7 @@ function AuthStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: COLORS.DarkBackground },
+        contentStyle: { backgroundColor: 'transparent' },
         animation: 'slide_from_right',
       }}
     >
@@ -170,7 +172,7 @@ function AppStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: COLORS.BackgroundLight },
+        contentStyle: { backgroundColor: 'transparent' },
         animation: 'slide_from_right',
       }}
     >

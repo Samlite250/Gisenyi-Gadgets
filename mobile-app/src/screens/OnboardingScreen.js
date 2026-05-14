@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { Smartphone, Headphones, Watch } from 'lucide-react-native';
 
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 
 const SLIDES = [
   {
@@ -11,18 +12,21 @@ const SLIDES = [
     title: 'Buy the best\ngadgets easily',
     description: 'Find electronics, accessories, clothes and more at the best prices.',
     icon: Smartphone,
+    color: '#3B82F6',
   },
   {
     id: '2',
     title: 'Fast & Secure\nPayments',
     description: 'Multiple payment methods including Mobile Money and Cards.',
     icon: Headphones,
+    color: '#10B981',
   },
   {
     id: '3',
     title: 'Quick Delivery\nto your Door',
     description: 'Track your orders in real-time and get them delivered fast.',
     icon: Watch,
+    color: '#F59E0B',
   }
 ];
 
@@ -42,118 +46,164 @@ export default function OnboardingScreen({ navigation, onFinish }) {
   };
 
   const CurrentIcon = SLIDES[currentIndex].icon;
+  const activeColor = SLIDES[currentIndex].color;
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <CurrentIcon size={120} color="#0b66f8ff" strokeWidth={1} />
-        </View>
-        
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{SLIDES[currentIndex].title}</Text>
-          <Text style={styles.description}>{SLIDES[currentIndex].description}</Text>
-        </View>
+    <View style={styles.container}>
+      {/* Background blobs */}
+      <View style={[styles.blob, styles.blob1, { backgroundColor: activeColor + '30' }]} />
+      <View style={[styles.blob, styles.blob2, { backgroundColor: activeColor + '20' }]} />
 
-        <View style={styles.pagination}>
-          {SLIDES.map((_, index) => (
-            <View 
-              key={index} 
-              style={[
-                styles.dot, 
-                currentIndex === index && styles.activeDot
-              ]} 
-            />
-          ))}
-        </View>
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.content}>
+          <View style={styles.iconContainer}>
+            <BlurView intensity={40} style={styles.iconGlass}>
+              <CurrentIcon size={100} color={activeColor} strokeWidth={1.5} />
+            </BlurView>
+          </View>
+          
+          <BlurView intensity={70} tint="light" style={styles.textGlass}>
+            <View style={styles.textContainer}>
+              <Text style={styles.title}>{SLIDES[currentIndex].title}</Text>
+              <Text style={styles.description}>{SLIDES[currentIndex].description}</Text>
+            </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>
-            {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+            <View style={styles.pagination}>
+              {SLIDES.map((_, index) => (
+                <View 
+                  key={index} 
+                  style={[
+                    styles.dot, 
+                    currentIndex === index && [styles.activeDot, { backgroundColor: activeColor }]
+                  ]} 
+                />
+              ))}
+            </View>
+
+            <TouchableOpacity 
+              style={[styles.button, { backgroundColor: activeColor }]} 
+              onPress={handleNext}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.buttonText}>
+                {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
+              </Text>
+            </TouchableOpacity>
+          </BlurView>
+        </View>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Light Theme Background
+    backgroundColor: '#F8FAFC',
+  },
+  safe: {
+    flex: 1,
+  },
+  blob: {
+    position: 'absolute',
+    borderRadius: 1000,
+  },
+  blob1: {
+    width: 400,
+    height: 400,
+    top: -100,
+    right: -100,
+  },
+  blob2: {
+    width: 350,
+    height: 350,
+    bottom: -50,
+    left: -100,
   },
   content: {
     flex: 1,
     padding: 24,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 48,
   },
   iconContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: '#F5F5F5', // Light gray background to replace illustration space
-    borderRadius: 24,
-    marginBottom: 40,
-    marginTop: 20,
+  },
+  iconGlass: {
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  textGlass: {
+    width: '100%',
+    borderRadius: 32,
+    padding: 32,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.6)',
   },
   textContainer: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
     width: '100%',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '800', // Poppins Bold
-    color: '#202124',
+    fontSize: 30,
+    fontWeight: '900',
+    color: '#0F172A',
     textAlign: 'center',
     marginBottom: 16,
-    lineHeight: 36,
+    lineHeight: 38,
   },
   description: {
     fontSize: 16,
-    color: '#5F6368',
+    color: '#475569',
     textAlign: 'center',
     lineHeight: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
   },
   pagination: {
     flexDirection: 'row',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#E2E8F0', // Light Gray
+    backgroundColor: '#CBD5E1',
     marginHorizontal: 4,
   },
   activeDot: {
-    width: 24,
-    backgroundColor: '#4285F4',
+    width: 28,
   },
   button: {
-    backgroundColor: '#4285F4',
     width: '100%',
-    padding: 16,
-    borderRadius: 12,
+    padding: 18,
+    borderRadius: 16,
     alignItems: 'center',
-    elevation: 2,
     ...Platform.select({
-      web: { boxShadow: '0px 4px 8px rgba(66,133,244,0.3)' },
+      web: { boxShadow: '0px 10px 20px rgba(0,0,0,0.1)' },
       default: {
-        shadowColor: '#4285F4',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.1,
+        shadowRadius: 15,
+        elevation: 5,
       },
     }),
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
   },
 });

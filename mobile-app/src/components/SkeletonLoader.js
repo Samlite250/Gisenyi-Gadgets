@@ -34,7 +34,7 @@ export default function SkeletonLoader({ width, height, borderRadius = 8, style 
 
 const styles = StyleSheet.create({
   skeleton: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: 'rgba(226, 232, 240, 0.4)', // Glassmorphism-friendly semi-transparent gray
     overflow: 'hidden',
   },
 });

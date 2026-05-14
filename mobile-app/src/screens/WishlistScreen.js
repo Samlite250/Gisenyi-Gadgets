@@ -4,6 +4,7 @@ import {
   Image, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { ChevronLeft, Heart, ShoppingCart } from 'lucide-react-native';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
@@ -55,13 +56,13 @@ export default function WishlistScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+      <BlurView intensity={70} tint="light" style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Wishlist</Text>
         <Text style={styles.headerCount}>{wishlistItems.length}</Text>
-      </View>
+      </BlurView>
 
       <FlatList
         data={wishlistItems}
@@ -89,11 +90,12 @@ export default function WishlistScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row', alignItems: 'center', gap: SIZES.md,
     padding: SIZES.lg, paddingTop: 40,
-    borderBottomWidth: 1, borderBottomColor: '#F5F5F5',
+    borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)',
+    overflow: 'hidden',
   },
   backBtn: { padding: 4 },
   headerTitle: { flex: 1, fontSize: 20, fontWeight: '700', color: COLORS.textPrimary },

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, CheckCircle2, Circle, Clock, Package, Truck, MapPin } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
@@ -52,13 +53,13 @@ export default function OrderTrackingScreen({ route, navigation }) {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+      <BlurView intensity={70} tint="light" style={styles.header}>
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={24} color="#FFFFFF" />
+          <ChevronLeft size={24} color="#1E293B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>ORDER TRACKING</Text>
         <View style={{ width: 44 }} />
-      </View>
+      </BlurView>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
@@ -72,8 +73,8 @@ export default function OrderTrackingScreen({ route, navigation }) {
           )}
         </View>
 
-        {/* Summary row */}
-        <View style={styles.summaryCard}>
+        {/* Summary row Glass Card */}
+        <BlurView intensity={60} tint="light" style={styles.summaryCard}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total</Text>
             <Text style={styles.summaryValue}>RWF {Number(order.total || 0).toLocaleString()}</Text>
@@ -88,7 +89,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
             <Text style={styles.summaryLabel}>Items</Text>
             <Text style={styles.summaryValue}>{order.order_items?.length || '—'}</Text>
           </View>
-        </View>
+        </BlurView>
 
         <View style={styles.timeline}>
           {ALL_STEPS.map((step, index) => {
@@ -139,45 +140,48 @@ export default function OrderTrackingScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F172A' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', padding: 24, paddingBottom: 16,
+    overflow: 'hidden',
   },
   iconBtn: {
-    width: 44, height: 44, backgroundColor: '#1E293B',
+    width: 44, height: 44, backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 22, justifyContent: 'center', alignItems: 'center',
   },
-  headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#FFFFFF', letterSpacing: 1 },
+  headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#1E293B', letterSpacing: 1 },
   content: { padding: 24, paddingBottom: 40 },
   orderInfo: { marginBottom: 24 },
-  orderId: { fontSize: 24, fontWeight: 'bold', color: '#FFFFFF', marginBottom: 8 },
-  orderDate: { fontSize: 14, color: '#94A3B8' },
+  orderId: { fontSize: 24, fontWeight: 'bold', color: '#1E293B', marginBottom: 8 },
+  orderDate: { fontSize: 14, color: '#64748B' },
   cancelledBadge: { marginTop: 10, backgroundColor: '#7F1D1D', paddingVertical: 6, paddingHorizontal: 14, borderRadius: 8, alignSelf: 'flex-start' },
   cancelledText: { color: '#FCA5A5', fontWeight: '700', fontSize: 13 },
   summaryCard: {
-    flexDirection: 'row', backgroundColor: '#1E293B', borderRadius: 14,
+    flexDirection: 'row', borderRadius: 14,
     padding: 16, marginBottom: 36, alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { fontSize: 11, color: '#94A3B8', fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
-  summaryValue: { fontSize: 14, color: '#FFFFFF', fontWeight: '700' },
-  summaryDivider: { width: 1, height: 30, backgroundColor: '#334155' },
+  summaryLabel: { fontSize: 11, color: '#64748B', fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
+  summaryValue: { fontSize: 14, color: '#1E293B', fontWeight: '700' },
+  summaryDivider: { width: 1, height: 30, backgroundColor: 'rgba(0,0,0,0.1)' },
   timeline: { marginBottom: 32 },
   timelineItem: { flexDirection: 'row', marginBottom: 28 },
   timelineIconContainer: { alignItems: 'center', marginRight: 16 },
   stepCircle: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: '#1E293B', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 2, borderColor: '#334155',
+    backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center',
+    borderWidth: 2, borderColor: '#E2E8F0',
   },
   stepCircleDone: { backgroundColor: '#34A853', borderColor: '#34A853' },
   stepCircleActive: { backgroundColor: '#4285F4', borderColor: '#4285F4' },
-  timelineLine: { width: 2, height: 36, backgroundColor: '#1E293B', marginTop: 6 },
+  timelineLine: { width: 2, height: 36, backgroundColor: '#E2E8F0', marginTop: 6 },
   timelineLineCompleted: { backgroundColor: '#34A853' },
   timelineContent: { flex: 1, paddingTop: 6 },
-  statusLabel: { fontSize: 16, fontWeight: '600', color: '#475569', marginBottom: 4 },
-  statusLabelCompleted: { color: '#FFFFFF' },
+  statusLabel: { fontSize: 16, fontWeight: '600', color: '#64748B', marginBottom: 4 },
+  statusLabelCompleted: { color: '#1E293B' },
   statusTime: { fontSize: 13, color: '#64748B' },
   viewDetailsBtn: {
     backgroundColor: '#4285F4', height: 56, borderRadius: 16,

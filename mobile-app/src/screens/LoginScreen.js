@@ -3,6 +3,7 @@ import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, Image
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -66,73 +67,75 @@ export default function LoginScreen({ navigation }) {
             <View style={styles.errorBanner}><Text style={styles.errorText}>{error}</Text></View>
           ) : null}
 
-          {/* Form */}
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="samuel@example.com"
-                  placeholderTextColor={COLORS.textMuted}
-                  value={email}
-                  onChangeText={(t) => { setEmail(t); setError(''); }}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  onFocus={() => setFocusedField('email')}
-                  onBlur={() => setFocusedField(null)}
-                />
+          {/* Glass Form Card */}
+          <BlurView intensity={70} tint="light" style={styles.formCard}>
+            <View style={styles.form}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Email</Text>
+                <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="samuel@example.com"
+                    placeholderTextColor={COLORS.textMuted}
+                    value={email}
+                    onChangeText={(t) => { setEmail(t); setError(''); }}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </View>
               </View>
-            </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="••••••••"
-                  placeholderTextColor={COLORS.textMuted}
-                  value={password}
-                  onChangeText={(t) => { setPassword(t); setError(''); }}
-                  secureTextEntry={!showPassword}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField(null)}
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
-                  {showPassword ? <EyeOff size={18} color={COLORS.textSecondary} /> : <Eye size={18} color={COLORS.textSecondary} />}
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>Password</Text>
+                <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor={COLORS.textMuted}
+                    value={password}
+                    onChangeText={(t) => { setPassword(t); setError(''); }}
+                    secureTextEntry={!showPassword}
+                    onFocus={() => setFocusedField('password')}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
+                    {showPassword ? <EyeOff size={18} color={COLORS.textSecondary} /> : <Eye size={18} color={COLORS.textSecondary} />}
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.loginBtn, loading && styles.btnDisabled]}
+                onPress={handleLogin} disabled={loading}
+              >
+                <Text style={styles.loginBtnText}>{loading ? 'Logging in...' : 'Login'}</Text>
+              </TouchableOpacity>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or continue with</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <TouchableOpacity style={styles.googleBtn}>
+                <GoogleIcon size={20} />
+                <Text style={styles.googleBtnText}>Continue with Google</Text>
+              </TouchableOpacity>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Don't have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                  <Text style={styles.registerText}>Sign up</Text>
                 </TouchableOpacity>
               </View>
             </View>
-
-            <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.loginBtn, loading && styles.btnDisabled]}
-              onPress={handleLogin} disabled={loading}
-            >
-              <Text style={styles.loginBtnText}>{loading ? 'Logging in...' : 'Login'}</Text>
-            </TouchableOpacity>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity style={styles.googleBtn}>
-              <GoogleIcon size={20} />
-              <Text style={styles.googleBtnText}>Continue with Google</Text>
-            </TouchableOpacity>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.registerText}>Sign up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+          </BlurView>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -140,7 +143,7 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.darkBg },
+  container: { flex: 1, backgroundColor: 'transparent' },
   scrollContent: { flexGrow: 1, padding: 24, paddingBottom: 40, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
   logoWrap: { marginBottom: 24 },
@@ -148,6 +151,13 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 14, color: COLORS.textSecondary },
   errorBanner: { backgroundColor: '#FEE2E2', padding: 12, borderRadius: 8, marginBottom: 20 },
   errorText: { color: COLORS.error, fontSize: 13, textAlign: 'center' },
+  formCard: {
+    borderRadius: 24,
+    padding: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
   form: { gap: 16 },
   inputGroup: { gap: 8 },
   label: { fontSize: 13, fontWeight: '500', color: COLORS.textSecondary, marginLeft: 2 },

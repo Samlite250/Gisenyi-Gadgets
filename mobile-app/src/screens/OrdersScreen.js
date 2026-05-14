@@ -4,6 +4,7 @@ import {
   TouchableOpacity, RefreshControl, Image,
   Dimensions,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
@@ -82,8 +83,8 @@ export default function OrdersScreen({ navigation }) {
     const itemCount = item.order_items?.length || 0;
 
     return (
-      <TouchableOpacity
-        style={styles.orderCard}
+      <BlurView intensity={40} tint="light" style={styles.orderCard}>
+        <TouchableOpacity
         onPress={() => navigation.navigate('OrderTracking', { order: item })}
         activeOpacity={0.7}
       >
@@ -136,7 +137,8 @@ export default function OrdersScreen({ navigation }) {
             <ChevronRight size={16} color={COLORS.primaryBlue} />
           </View>
         </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </BlurView>
     );
   };
 
@@ -148,17 +150,19 @@ export default function OrdersScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Refined Header */}
-      <View style={styles.header}>
+      {/* Glass Header */}
+      <BlurView intensity={70} tint="light" style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>My Orders</Text>
           <Text style={styles.headerCount}>
             You have <Text style={{ fontWeight: '700' }}>{filteredOrders.length}</Text> {activeFilter === 'All' ? 'total' : activeFilter.toLowerCase()} order{filteredOrders.length !== 1 ? 's' : ''}.
           </Text>
         </View>
-      </View>
+      </BlurView>
 
       {/* Pill-shaped Filter Tabs Wrapper (Fixes Stretching on Web) */}
-      <View style={styles.filterContainer}>
+      {/* Pill-shaped Filter Tabs Wrapper with Glass Effect */}
+      <BlurView intensity={60} tint="light" style={styles.filterContainer}>
         <FlatList
           data={FILTERS}
           horizontal
@@ -178,7 +182,7 @@ export default function OrdersScreen({ navigation }) {
             );
           }}
         />
-      </View>
+      </BlurView>
 
       <FlatList
         data={filteredOrders}
@@ -216,12 +220,14 @@ export default function OrdersScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FAFAFA' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   header: {
     paddingHorizontal: SIZES.lg,
     paddingTop: 30,
     paddingBottom: 20,
-    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.05)',
+    overflow: 'hidden',
   },
   headerTitle: { fontSize: 28, fontWeight: '800', color: COLORS.textPrimary, letterSpacing: -0.5 },
   headerCount: { fontSize: 15, color: COLORS.textSecondary, marginTop: 4 },
@@ -230,10 +236,10 @@ const styles = StyleSheet.create({
   filterContainer: {
     height: 60,
     maxHeight: 60,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: 'rgba(0,0,0,0.05)',
     paddingBottom: 10,
+    overflow: 'hidden',
   },
   filterList: { paddingHorizontal: SIZES.lg, alignItems: 'center' },
   filterChip: {
@@ -260,12 +266,13 @@ const styles = StyleSheet.create({
   list: { padding: SIZES.lg, gap: 16 },
 
   orderCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    borderRadius: 20,
     padding: SIZES.md,
-    ...SHADOWS.sm,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F9FAFB',
+    borderColor: 'rgba(255, 255, 255, 0.6)',
+    overflow: 'hidden',
   },
   orderHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   orderIdWrap: { flexDirection: 'row', alignItems: 'center', gap: 12 },

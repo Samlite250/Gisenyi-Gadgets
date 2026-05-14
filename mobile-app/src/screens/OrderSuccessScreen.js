@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CheckCircle2, Package, Home, ListOrdered, Truck } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { BlurView } from 'expo-blur';
 import { useCart } from '../context/CartContext';
 
 export default function OrderSuccessScreen({ navigation, route }) {
@@ -78,51 +79,55 @@ export default function OrderSuccessScreen({ navigation, route }) {
           </Text>
         </Animated.View>
 
-        {/* Order Details Card */}
-        <Animated.View style={[styles.orderCard, { opacity: fadeAnim }]}>
-          <View style={styles.orderRow}>
-            <Text style={styles.orderLabel}>Order ID</Text>
-            <Text style={styles.orderValue}>{orderId}</Text>
-          </View>
-          <View style={styles.divider} />
-          <View style={styles.orderRow}>
-            <Text style={styles.orderLabel}>Estimated Delivery</Text>
-            <Text style={styles.orderValue}>{estimatedDelivery}</Text>
-          </View>
-          {total > 0 && (
-            <>
-              <View style={styles.divider} />
-              <View style={styles.orderRow}>
-                <Text style={styles.orderLabel}>Total Paid</Text>
-                <Text style={[styles.orderValue, { color: COLORS.primaryGreen }]}>
-                  RWF {total.toLocaleString()}
-                </Text>
-              </View>
-            </>
-          )}
+        {/* Order Details Glass Card */}
+        <Animated.View style={[{ width: '100%', opacity: fadeAnim }]}>
+          <BlurView intensity={70} tint="light" style={styles.orderCard}>
+            <View style={styles.orderRow}>
+              <Text style={styles.orderLabel}>Order ID</Text>
+              <Text style={styles.orderValue}>{orderId}</Text>
+            </View>
+            <View style={styles.divider} />
+            <View style={styles.orderRow}>
+              <Text style={styles.orderLabel}>Estimated Delivery</Text>
+              <Text style={styles.orderValue}>{estimatedDelivery}</Text>
+            </View>
+            {total > 0 && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.orderRow}>
+                  <Text style={styles.orderLabel}>Total Paid</Text>
+                  <Text style={[styles.orderValue, { color: COLORS.primaryGreen }]}>
+                    RWF {total.toLocaleString()}
+                  </Text>
+                </View>
+              </>
+            )}
+          </BlurView>
         </Animated.View>
 
-        {/* Steps */}
-        <Animated.View style={[styles.stepsCard, { opacity: fadeAnim }]}>
-          <Text style={styles.stepsTitle}>What happens next?</Text>
-          {[
-            { icon: CheckCircle2, label: 'Order Confirmed', done: true, color: COLORS.primaryGreen },
-            { icon: Package, label: 'Being Packed', done: false, color: COLORS.textSecondary },
-            { icon: Truck, label: 'Out for Delivery', done: false, color: COLORS.textSecondary },
-            { icon: Home, label: 'Delivered', done: false, color: COLORS.textSecondary },
-          ].map((step, i) => (
-            <View key={i} style={styles.stepRow}>
-              <step.icon size={20} color={step.color} />
-              <Text style={[styles.stepLabel, step.done && styles.stepLabelDone]}>
-                {step.label}
-              </Text>
-              {step.done && (
-                <View style={styles.stepBadge}>
-                  <Text style={styles.stepBadgeText}>Done</Text>
-                </View>
-              )}
-            </View>
-          ))}
+        {/* Steps Glass Card */}
+        <Animated.View style={[{ width: '100%', opacity: fadeAnim }]}>
+          <BlurView intensity={60} tint="light" style={styles.stepsCard}>
+            <Text style={styles.stepsTitle}>What happens next?</Text>
+            {[
+              { icon: CheckCircle2, label: 'Order Confirmed', done: true, color: COLORS.primaryGreen },
+              { icon: Package, label: 'Being Packed', done: false, color: COLORS.textSecondary },
+              { icon: Truck, label: 'Out for Delivery', done: false, color: COLORS.textSecondary },
+              { icon: Home, label: 'Delivered', done: false, color: COLORS.textSecondary },
+            ].map((step, i) => (
+              <View key={i} style={styles.stepRow}>
+                <step.icon size={20} color={step.color} />
+                <Text style={[styles.stepLabel, step.done && styles.stepLabelDone]}>
+                  {step.label}
+                </Text>
+                {step.done && (
+                  <View style={styles.stepBadge}>
+                    <Text style={styles.stepBadgeText}>Done</Text>
+                  </View>
+                )}
+              </View>
+            ))}
+          </BlurView>
         </Animated.View>
 
         {/* Actions */}
@@ -151,7 +156,7 @@ export default function OrderSuccessScreen({ navigation, route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: 'transparent' },
   scrollContent: {
     flexGrow: 1,
     alignItems: 'center',
@@ -172,18 +177,21 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, fontWeight: '800', color: COLORS.textPrimary },
   subtitle: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
   orderCard: {
-    width: '100%', padding: SIZES.lg,
-    backgroundColor: '#F9FAFB', borderRadius: 12,
-    borderWidth: 1, borderColor: '#F3F4F6',
+    padding: SIZES.lg,
+    borderRadius: 20,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.5)',
+    overflow: 'hidden',
   },
   orderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   orderLabel: { fontSize: 14, color: COLORS.textSecondary },
   orderValue: { fontSize: 14, fontWeight: '700', color: COLORS.textPrimary },
   divider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 8 },
   stepsCard: {
-    width: '100%', padding: SIZES.lg,
-    backgroundColor: '#fff', borderRadius: 12,
-    borderWidth: 1, borderColor: '#F3F4F6', gap: SIZES.md,
+    padding: SIZES.lg,
+    borderRadius: 20,
+    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.5)', 
+    gap: SIZES.md,
+    overflow: 'hidden',
   },
   stepsTitle: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
   stepRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

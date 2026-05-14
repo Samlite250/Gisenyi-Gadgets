@@ -1,24 +1,22 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, Alert, Dimensions, ActivityIndicator,
+  TextInput, FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CheckCircle2,
-  Maximize2, X
+  Maximize2, X, Camera, Send, ImageIcon
 } from 'lucide-react-native';
 import { Modal } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-
-const FALLBACK_REVIEWS = [
-  { id: 'r1', user: 'Jean Pierre', rating: 5, date: '2024-03-15', comment: 'Excellent product! The delivery was very fast to Gisenyi.', avatar: 'https://i.pravatar.cc/150?u=jp' },
-  { id: 'r2', user: 'Marie Claire', rating: 4, date: '2024-03-10', comment: 'Good quality but the price is a bit high. Still worth it.', avatar: 'https://i.pravatar.cc/150?u=mc' },
-];
 
 const { width } = Dimensions.get('window');
 
@@ -53,11 +51,32 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [activeImage, setActiveImage] = useState(0);
   const [isZoomVisible, setIsZoomVisible] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
-  const [reviews, setReviews] = useState(FALLBACK_REVIEWS);
+  const { user } = useAuth();
+  const [reviews, setReviews] = useState([]);
   const [loadingRelated, setLoadingRelated] = useState(true);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const scrollRef = useRef(null);
 
-  // Fetch related products & reviews from Supabase
+  // Fetch reviews
+  const fetchReviews = useCallback(async () => {
+    if (!product.id || product.id === 'demo-1') return;
+    setLoadingReviews(true);
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, rating, comment, image_url, created_at, user_id, profiles(full_name)')
+        .eq('product_id', product.id)
+        .order('created_at', { ascending: false });
+      if (!error && data) setReviews(data);
+    } catch (e) { console.warn('Reviews fetch:', e.message); }
+    finally { setLoadingReviews(false); }
+  }, [product.id]);
+
+  useEffect(() => { fetchReviews(); }, [fetchReviews]);
+
+  // Fetch related products
   useEffect(() => {
     const fetchRelated = async () => {
       try {
@@ -321,24 +340,24 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <View style={styles.reviewsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Customer Reviews</Text>
-              <TouchableOpacity>
-                <Text style={styles.seeAll}>Write a review</Text>
+              <TouchableOpacity onPress={() => setShowReviewModal(true)}>
+                <Text style={styles.seeAll}>✏️ Write a review</Text>
               </TouchableOpacity>
             </View>
-            
+
             {/* Rating Overview */}
             <View style={styles.ratingOverview}>
               <View style={styles.avgRatingBox}>
                 <Text style={styles.avgRatingText}>{product.rating || '4.5'}</Text>
                 <View style={styles.starsRow}>
-                  {[1, 2, 3, 4, 5].map(s => (
+                  {[1,2,3,4,5].map(s => (
                     <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
                   ))}
                 </View>
-                <Text style={styles.totalReviewsText}>{product.review_count || 24} reviews</Text>
+                <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} reviews</Text>
               </View>
               <View style={styles.ratingBars}>
-                {[5, 4, 3, 2, 1].map(r => (
+                {[5,4,3,2,1].map(r => (
                   <View key={r} style={styles.barRow}>
                     <Text style={styles.barLabel}>{r} ★</Text>
                     <View style={styles.barBg}>
@@ -350,27 +369,25 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
 
             {/* Review List */}
-            {reviews.slice(0, 2).map((rev) => (
-              <View key={rev.id} style={styles.reviewItem}>
-                <View style={styles.reviewHeader}>
-                  <Image source={{ uri: rev.avatar || `https://i.pravatar.cc/150?u=${rev.id}` }} style={styles.reviewAvatar} />
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.reviewUser}>{rev.user || rev.reviewer_name}</Text>
-                    <View style={styles.starsRow}>
-                      {[1, 2, 3, 4, 5].map(s => (
-                        <Star key={s} size={10} color={s <= rev.rating ? '#FBBC04' : '#E5E7EB'} fill={s <= rev.rating ? '#FBBC04' : 'none'} />
-                      ))}
-                    </View>
-                  </View>
-                  <Text style={styles.reviewDate}>{rev.date || rev.created_at?.split('T')[0]}</Text>
-                </View>
-                <Text style={styles.reviewComment}>{rev.comment}</Text>
+            {loadingReviews ? (
+              <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 16 }} />
+            ) : reviews.length === 0 ? (
+              <View style={styles.noReviews}>
+                <Text style={styles.noReviewsText}>No reviews yet. Be the first!</Text>
               </View>
-            ))}
-            
-            <TouchableOpacity style={styles.viewMoreReviews}>
-              <Text style={styles.viewMoreText}>View All {product.review_count || reviews.length} Reviews</Text>
-            </TouchableOpacity>
+            ) : (
+              (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
+                <ReviewCard key={rev.id} rev={rev} />
+              ))
+            )}
+
+            {reviews.length > 3 && (
+              <TouchableOpacity style={styles.viewMoreReviews} onPress={() => setShowAllReviews(v => !v)}>
+                <Text style={styles.viewMoreText}>
+                  {showAllReviews ? 'Show Less' : `View All ${reviews.length} Reviews`}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Related Products Section */}
@@ -462,12 +479,21 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </View>
         </SafeAreaView>
       </Modal>
+
+      {/* Write Review Modal */}
+      <WriteReviewModal
+        visible={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        product={product}
+        user={user}
+        onSubmitted={fetchReviews}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.darkBg },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   topBar: {
     flexDirection: 'row', justifyContent: 'space-between',
     padding: SIZES.md, paddingBottom: 0,

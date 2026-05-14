@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, Image, FlatList, RefreshControl,
@@ -70,26 +70,12 @@ export default function HomeScreen({ navigation }) {
   const [categories, setCategories] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [allProducts, setAllProducts] = useState([]);
+  const [banners, setBanners] = useState([]);
+  const [offers, setOffers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeBanner, setActiveBanner] = useState(0);
   const [activeCategory, setActiveCategory] = useState('all');
 
-  // Real countdown timer for flash deal (2 hours from now on first render)
-  const deadlineRef = useRef(Date.now() + 2 * 60 * 60 * 1000);
-  const [flashTimer, setFlashTimer] = useState('02 : 00 : 00');
-  useEffect(() => {
-    const tick = () => {
-      const diff = Math.max(0, deadlineRef.current - Date.now());
-      const h = String(Math.floor(diff / 3600000)).padStart(2, '0');
-      const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-      const s = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-      setFlashTimer(`${h} : ${m} : ${s}`);
-    };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, []);
 
   const displayName = profile?.full_name?.split(' ')[0]
     || user?.user_metadata?.full_name?.split(' ')[0]
@@ -97,9 +83,14 @@ export default function HomeScreen({ navigation }) {
 
   const fetchData = useCallback(async () => {
     try {
-      const [{ data: cats, error: catErr }, { data: products, error: prodErr }] = await Promise.all([
+      const [
+        { data: cats, error: catErr },
+        { data: products, error: prodErr },
+        { data: bannersData },
+      ] = await Promise.all([
         supabase.from('categories').select('*').eq('is_active', true).order('sort_order'),
         supabase.from('products').select('*').eq('is_active', true).order('created_at', { ascending: false }).limit(40),
+        supabase.from('banners').select('*').eq('is_active', true).order('sort_order'),
       ]);
 
       if (catErr) throw catErr;
@@ -107,6 +98,11 @@ export default function HomeScreen({ navigation }) {
 
       // ── Categories ────────────────────────────────────────────────
       setCategories(cats || []);
+
+      // ── Banners & Offers ──────────────────────────────────────────
+      const allBanners = bannersData || [];
+      setBanners(allBanners.filter(b => b.type === 'banner'));
+      setOffers(allBanners.filter(b => b.type === 'offer'));
 
       // ── Products ─────────────────────────────────────────────────
       const dbProducts = (products || []).map(p => {
@@ -209,16 +205,71 @@ export default function HomeScreen({ navigation }) {
           />
         </TouchableOpacity>
 
-        {/* Promo Banner */}
-        <View style={[styles.banner, { backgroundColor: '#1E293B', marginHorizontal: SIZES.lg, marginBottom: SIZES.lg }]}>
-          <View style={styles.bannerContent}>
-            <Text style={styles.bannerSubtitle}>Gisenyi Gadgets</Text>
-            <Text style={styles.bannerTitle}>Best Tech{`\n`}Deals in RW</Text>
-            <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}>
-              <Text style={styles.bannerButtonText}>Shop Now</Text>
-            </TouchableOpacity>
+        {/* Special Offers — from DB */}
+        {offers.length > 0 && (
+          <>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Special Offers</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
+              {offers.map((offer) => (
+                <TouchableOpacity
+                  key={offer.id}
+                  style={[styles.offerCard, { backgroundColor: offer.color }]}
+                  activeOpacity={0.9}
+                  onPress={() => navigation.navigate('Search', { category: offer.link_category })}
+                >
+                  <View style={styles.offerImageHalf}>
+                    <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
+                  </View>
+                  <View style={styles.offerContentHalf}>
+                    <View style={styles.offerBadge}>
+                      <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                    </View>
+                    <Text style={styles.offerLabel}>{offer.label}</Text>
+                    <Text style={styles.offerTagline} numberOfLines={1}>{offer.tagline}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
+
+        {/* Banners Carousel — from DB */}
+        {banners.length > 0 && (
+          <View style={styles.bannerContainerWrap}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SIZES.lg, gap: 16 }}>
+              {banners.map((b) => (
+                <View key={b.id} style={[styles.banner, { backgroundColor: b.color }]}>
+                  <View style={styles.bannerContent}>
+                    <Text style={styles.bannerSubtitle}>{b.subtitle}</Text>
+                    <Text style={styles.bannerTitle}>{b.title}</Text>
+                    <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}>
+                      <Text style={styles.bannerButtonText}>{b.button_text}</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Image source={{ uri: b.image_url }} style={styles.bannerImage} />
+                </View>
+              ))}
+            </ScrollView>
           </View>
-        </View>
+        )}
+
+        {/* Fallback if no banners in DB yet */}
+        {banners.length === 0 && offers.length === 0 && (
+          <View style={[styles.banner, { backgroundColor: '#1E293B', marginHorizontal: SIZES.lg, marginBottom: SIZES.lg }]}>
+            <View style={styles.bannerContent}>
+              <Text style={styles.bannerSubtitle}>Gisenyi Gadgets</Text>
+              <Text style={styles.bannerTitle}>{`Best Tech\nDeals in RW`}</Text>
+              <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}>
+                <Text style={styles.bannerButtonText}>Shop Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {/* Categories */}
         <View style={styles.sectionHeader}>

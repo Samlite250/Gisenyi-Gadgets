@@ -14,6 +14,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { DEMO_PRODUCTS } from '../constants/dummyData';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gaming', 'Offers'];
 
@@ -26,6 +27,7 @@ export default function SearchScreen({ navigation, route }) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState('Relevance');
+  const [priceRange, setPriceRange] = useState('All Prices');
   const [showFilters, setShowFilters] = useState(false);
   const [recentSearches, setRecentSearches] = useState(['Samsung', 'iPhone', 'Headphones']);
 
@@ -65,10 +67,15 @@ export default function SearchScreen({ navigation, route }) {
         qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%`);
       }
 
-      // Filter by UUID only — never send the raw slug
+      // Filter by UUID only
       if (categoryUUID) {
         qb = qb.eq('category_id', categoryUUID);
       }
+
+      // Price filtering
+      if (priceRange === 'Under 50K') qb = qb.lte('price', 50000);
+      else if (priceRange === '50K - 200K') qb = qb.gte('price', 50000).lte('price', 200000);
+      else if (priceRange === 'Over 200K') qb = qb.gte('price', 200000);
 
       // Sorting
       if (sortBy === 'Price: Low→High') qb = qb.order('price', { ascending: true });
@@ -91,6 +98,11 @@ export default function SearchScreen({ navigation, route }) {
           dummy = dummy.filter(p => p.category_id === catSlug || p.category_id === categoryUUID);
         }
         
+        // Filtering dummy
+        if (priceRange === 'Under 50K') dummy = dummy.filter(p => p.price <= 50000);
+        else if (priceRange === '50K - 200K') dummy = dummy.filter(p => p.price > 50000 && p.price <= 200000);
+        else if (priceRange === 'Over 200K') dummy = dummy.filter(p => p.price > 200000);
+
         // Sorting dummy
         if (sortBy === 'Price: Low→High') dummy.sort((a,b) => a.price - b.price);
         else if (sortBy === 'Price: High→Low') dummy.sort((a,b) => b.price - a.price);
@@ -120,7 +132,7 @@ export default function SearchScreen({ navigation, route }) {
     } finally {
       setLoading(false);
     }
-  }, [sortBy]);
+  }, [sortBy, priceRange]);
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -206,9 +218,10 @@ export default function SearchScreen({ navigation, route }) {
         </TouchableOpacity>
       </View>
 
-      {/* Quick Filters / Sort */}
+      {/* Advanced Filters / Sort */}
       {showFilters && (
         <View style={styles.filterBar}>
+          <Text style={styles.filterSectionTitle}>Sort By</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
             {['Relevance', 'Price: Low→High', 'Price: High→Low', 'Top Rated'].map((sort) => (
               <TouchableOpacity
@@ -220,14 +233,36 @@ export default function SearchScreen({ navigation, route }) {
               </TouchableOpacity>
             ))}
           </ScrollView>
+
+          <Text style={styles.filterSectionTitle}>Price Range</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+            {['All Prices', 'Under 50K', '50K - 200K', 'Over 200K'].map((pr) => (
+              <TouchableOpacity
+                key={pr}
+                style={[styles.sortChip, priceRange === pr && styles.sortChipActive]}
+                onPress={() => setPriceRange(pr)}
+              >
+                <Text style={[styles.sortText, priceRange === pr && styles.sortTextActive]}>{pr}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       )}
 
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primaryBlue} />
-          <Text style={styles.loadingText}>Searching live database...</Text>
-        </View>
+        <ScrollView style={{ paddingHorizontal: SIZES.lg, paddingTop: 16 }}>
+          {[1, 2, 3, 4, 5].map(i => (
+            <View key={i} style={styles.productCard}>
+              <SkeletonLoader width={100} height={100} borderRadius={12} />
+              <View style={{ flex: 1, gap: 8, justifyContent: 'center' }}>
+                <SkeletonLoader width={80} height={10} borderRadius={4} />
+                <SkeletonLoader width={160} height={16} borderRadius={6} />
+                <SkeletonLoader width={100} height={14} borderRadius={4} />
+                <SkeletonLoader width={120} height={20} borderRadius={6} style={{ marginTop: 8 }} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       ) : results.length > 0 ? (
         <Animated.FlatList
           data={results}
@@ -310,7 +345,8 @@ const styles = StyleSheet.create({
   },
   filterToggleActive: { backgroundColor: COLORS.primaryBlue },
 
-  filterBar: { borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 12 },
+  filterBar: { borderBottomWidth: 1, borderBottomColor: '#F3F4F6', paddingBottom: 16, gap: 12, marginTop: 8 },
+  filterSectionTitle: { fontSize: 13, fontWeight: '700', color: COLORS.textPrimary, paddingHorizontal: SIZES.lg, marginBottom: 2 },
   filterScroll: { paddingHorizontal: SIZES.lg, gap: 10 },
   sortChip: {
     paddingHorizontal: 16, paddingVertical: 8,

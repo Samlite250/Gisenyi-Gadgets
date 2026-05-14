@@ -15,6 +15,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import SkeletonLoader from '../components/SkeletonLoader';
 
 
 const FALLBACK_IMAGES = [
@@ -139,22 +140,44 @@ export default function HomeScreen({ navigation }) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <View style={[styles.avatar, { backgroundColor: '#E5E7EB' }]} />
+          <SkeletonLoader width={48} height={48} borderRadius={24} />
           <View style={{ gap: 6 }}>
-            <View style={{ width: 80, height: 12, backgroundColor: '#E5E7EB', borderRadius: 6 }} />
-            <View style={{ width: 140, height: 20, backgroundColor: '#E5E7EB', borderRadius: 8 }} />
+            <SkeletonLoader width={80} height={12} borderRadius={6} />
+            <SkeletonLoader width={140} height={20} borderRadius={8} />
           </View>
         </View>
-        <View style={[styles.searchBar, { backgroundColor: '#F3F4F6', borderWidth: 0 }]} />
-        <ScrollView showsVerticalScrollIndicator={false} style={{ padding: SIZES.lg }}>
-          <View style={{ width: 150, height: 24, backgroundColor: '#E5E7EB', borderRadius: 6, marginBottom: 20 }} />
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            {[1, 2, 3].map(i => (
-              <View key={i} style={{ width: 140, height: 180, backgroundColor: '#F3F4F6', borderRadius: 20 }} />
-            ))}
+        <SkeletonLoader width={'90%'} height={50} borderRadius={16} style={{ alignSelf: 'center', marginBottom: SIZES.lg }} />
+        
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Banner Skeleton */}
+          <SkeletonLoader width={'90%'} height={170} borderRadius={24} style={{ alignSelf: 'center', marginBottom: SIZES.lg }} />
+          
+          {/* Categories Skeleton */}
+          <View style={{ paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg }}>
+            <SkeletonLoader width={120} height={24} borderRadius={6} style={{ marginBottom: 16 }} />
+            <View style={{ flexDirection: 'row', gap: 16 }}>
+              {[1, 2, 3, 4].map(i => (
+                <View key={i} style={{ alignItems: 'center', gap: 8 }}>
+                  <SkeletonLoader width={68} height={68} borderRadius={22} />
+                  <SkeletonLoader width={50} height={10} borderRadius={4} />
+                </View>
+              ))}
+            </View>
           </View>
-          <View style={{ width: 150, height: 24, backgroundColor: '#E5E7EB', borderRadius: 6, marginVertical: 30 }} />
-          <View style={{ height: 170, backgroundColor: '#F3F4F6', borderRadius: 24 }} />
+
+          {/* Featured Skeleton */}
+          <View style={{ paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg }}>
+            <SkeletonLoader width={150} height={24} borderRadius={6} style={{ marginBottom: 16 }} />
+            <View style={{ flexDirection: 'row', gap: 16 }}>
+              {[1, 2, 3].map(i => (
+                <View key={i} style={{ gap: 8 }}>
+                  <SkeletonLoader width={170} height={150} borderRadius={20} />
+                  <SkeletonLoader width={140} height={14} borderRadius={4} />
+                  <SkeletonLoader width={80} height={16} borderRadius={4} />
+                </View>
+              ))}
+            </View>
+          </View>
         </ScrollView>
       </SafeAreaView>
     );

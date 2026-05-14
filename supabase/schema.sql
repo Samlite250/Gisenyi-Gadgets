@@ -179,6 +179,7 @@ CREATE TABLE public.reviews (
   rating      INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
   title       TEXT,
   body        TEXT,
+  image_url   TEXT,
   is_verified BOOLEAN NOT NULL DEFAULT false,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE(product_id, user_id, order_id)

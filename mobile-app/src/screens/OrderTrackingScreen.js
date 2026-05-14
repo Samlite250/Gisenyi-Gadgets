@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, CheckCircle2, Circle, Clock, Package, Truck, MapPin } from 'lucide-react-native';
+import { supabase } from '../services/supabase';
 
 const ALL_STEPS = [
   { key: 'placed', label: 'Order Placed', icon: Package },
@@ -24,7 +25,28 @@ const fmt = (iso) =>
   iso ? new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending';
 
 export default function OrderTrackingScreen({ route, navigation }) {
-  const order = route?.params?.order || {};
+  const [order, setOrder] = useState(route?.params?.order || {});
+
+  useEffect(() => {
+    if (!order.id) return;
+
+    // Subscribe to real-time changes for this specific order
+    const orderSubscription = supabase
+      .channel(`order_tracking_${order.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${order.id}` },
+        (payload) => {
+          setOrder((prev) => ({ ...prev, ...payload.new }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(orderSubscription);
+    };
+  }, [order.id]);
+
   const completedSteps = STATUS_STEP_MAP[order.status] ?? 1;
   const isCancelled = order.status === 'cancelled';
 

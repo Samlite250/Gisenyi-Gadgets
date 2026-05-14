@@ -126,29 +126,10 @@ export default function OrdersScreen({ navigation }) {
     );
   };
 
-  // Demo orders shown before Supabase is configured
-  const DEMO_ORDERS = [
-    {
-      id: 'demo-1', order_number: '#GGS123456',
-      status: 'delivered', created_at: new Date(Date.now() - 7 * 86400000).toISOString(),
-      total: 195000, order_items: [{ product_name: 'Samsung Galaxy S24 Ultra', quantity: 1 }],
-    },
-    {
-      id: 'demo-2', order_number: '#GGS789012',
-      status: 'shipped', created_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-      total: 120000, order_items: [{ product_name: 'AirPods Pro Gen 2', quantity: 1 }, { product_name: 'Silicone Phone Case', quantity: 2 }],
-    },
-    {
-      id: 'demo-3', order_number: '#GGS345678',
-      status: 'pending', created_at: new Date().toISOString(),
-      total: 45000, order_items: [{ product_name: 'Fast Charging USB-C Hub', quantity: 1 }],
-    },
-  ];
 
-  const displayOrders = orders.length > 0 ? orders : (loading ? [] : DEMO_ORDERS);
-  const filteredDemo = activeFilter === 'All'
-    ? displayOrders
-    : displayOrders.filter((o) => o.status?.toLowerCase() === activeFilter.toLowerCase());
+  const filteredOrders = activeFilter === 'All'
+    ? orders
+    : orders.filter((o) => o.status?.toLowerCase() === activeFilter.toLowerCase());
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -157,7 +138,7 @@ export default function OrdersScreen({ navigation }) {
         <View>
           <Text style={styles.headerTitle}>My Orders</Text>
           <Text style={styles.headerCount}>
-            You have <Text style={{ fontWeight: '700' }}>{filteredDemo.length}</Text> {activeFilter === 'All' ? 'total' : activeFilter.toLowerCase()} order{filteredDemo.length !== 1 ? 's' : ''}.
+            You have <Text style={{ fontWeight: '700' }}>{filteredOrders.length}</Text> {activeFilter === 'All' ? 'total' : activeFilter.toLowerCase()} order{filteredOrders.length !== 1 ? 's' : ''}.
           </Text>
         </View>
       </View>
@@ -186,10 +167,10 @@ export default function OrdersScreen({ navigation }) {
       </View>
 
       <FlatList
-        data={filteredDemo}
+        data={filteredOrders}
         keyExtractor={(item) => item.id}
         renderItem={renderOrder}
-        contentContainerStyle={filteredDemo.length === 0 ? { flex: 1 } : styles.list}
+        contentContainerStyle={filteredOrders.length === 0 ? { flex: 1 } : styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primaryBlue} />}
         ListEmptyComponent={

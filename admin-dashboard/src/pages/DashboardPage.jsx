@@ -5,29 +5,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const DEMO_STATS = {
-  totalRevenue: 24560000,
-  totalOrders: 1256,
-  totalUsers: 3842,
-  totalProducts: 184,
-  totalVendors: 48,
-};
-
-const RECENT_ORDERS = [
-  { id: '#GGS001', customer: 'Samuel Niyomugabo', product: 'iPhone 15 Pro Max', amount: 1200000, status: 'delivered', date: '2026-04-22' },
-  { id: '#GGS002', customer: 'Amelia Uwase', product: 'MacBook Air M3', amount: 1450000, status: 'shipped', date: '2026-04-22' },
-  { id: '#GGS003', customer: 'Jean Baptiste', product: 'AirPods Pro', amount: 120000, status: 'pending', date: '2026-04-23' },
-  { id: '#GGS004', customer: 'Grace Mutoni', product: 'Samsung S24 Ultra', amount: 850000, status: 'processing', date: '2026-04-23' },
-  { id: '#GGS005', customer: 'Eric Habimana', product: 'Sony WH-1000XM5', amount: 195000, status: 'delivered', date: '2026-04-21' },
-];
-
-const TOP_PRODUCTS = [
-  { name: 'Samsung Galaxy S24 Ultra', sales: 87, revenue: 73950000 },
-  { name: 'iPhone 15 Pro Max', sales: 54, revenue: 64800000 },
-  { name: 'MacBook Air M3', sales: 31, revenue: 44950000 },
-  { name: 'Sony WH-1000XM5', sales: 120, revenue: 23400000 },
-  { name: 'AirPods Pro (3rd Gen)', sales: 143, revenue: 17160000 },
-];
 
 const STATUS_BADGE = {
   delivered: 'badge-green',
@@ -36,6 +13,7 @@ const STATUS_BADGE = {
   pending: 'badge-gray',
   cancelled: 'badge-red',
 };
+
 
 const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
@@ -67,7 +45,9 @@ function StatCard({ icon: Icon, label, value, change, color, bgColor }) {
 }
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState(DEMO_STATS);
+  const [stats, setStats] = useState({
+    totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0, totalVendors: 0,
+  });
   const [recentOrders, setRecentOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -254,6 +234,40 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Recent Orders Table */}
+      <div className="card" style={{ marginBottom: 24 }}>
+        <div className="card-header">
+          <span className="card-title">Recent Orders</span>
+          <a href="/orders" className="btn btn-ghost btn-sm">View All</a>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentOrders.length > 0 ? recentOrders.map((o) => (
+                <tr key={o.id}>
+                  <td style={{ fontWeight: 700, color: 'var(--primary-blue)' }}>{o.order_number}</td>
+                  <td>{o.profiles?.full_name || '—'}</td>
+                  <td style={{ fontWeight: 700 }}>{fmt(o.total)}</td>
+                  <td><span className={`badge ${STATUS_BADGE[o.status] || 'badge-gray'}`}>{o.status}</span></td>
+                  <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>{new Date(o.created_at).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                </tr>
+              )) : (
+                <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 32 }}>No orders yet. Orders placed through the app will appear here.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 

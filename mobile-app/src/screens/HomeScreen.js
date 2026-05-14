@@ -6,9 +6,9 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   Bell, Search, ShoppingBag, Heart, 
-  ChevronRight, Star, ArrowRight, MessageSquare,
+  ChevronRight, Star, MessageSquare,
   Smartphone, Laptop, Headphones, Watch, Gamepad2, 
-  Cpu, Camera, Zap, MapPin, Tablet
+  Cpu, Camera, MapPin, Tablet
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -16,7 +16,6 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
-import { DEMO_CATEGORIES, BANNERS, SPECIAL_OFFERS, DEMO_PRODUCTS } from '../constants/dummyData';
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=600', // iPhone
@@ -107,7 +106,7 @@ export default function HomeScreen({ navigation }) {
       if (prodErr) throw prodErr;
 
       // ── Categories ────────────────────────────────────────────────
-      setCategories(cats?.length ? cats : DEMO_CATEGORIES);
+      setCategories(cats || []);
 
       // ── Products ─────────────────────────────────────────────────
       const dbProducts = (products || []).map(p => {
@@ -120,15 +119,14 @@ export default function HomeScreen({ navigation }) {
         return { ...p, images: hasImg ? parsedImages : [getFallbackImage(p.id)] };
       });
 
-      const source = dbProducts.length > 0 ? dbProducts : DEMO_PRODUCTS;
-      setFeaturedProducts(source.filter(p => p.is_featured));
-      setAllProducts(source);
+      setFeaturedProducts(dbProducts.filter(p => p.is_featured));
+      setAllProducts(dbProducts);
 
     } catch (err) {
-      console.warn('Supabase fetch error — using demo data:', err.message);
-      setCategories(DEMO_CATEGORIES);
-      setFeaturedProducts(DEMO_PRODUCTS.filter(p => p.is_featured));
-      setAllProducts(DEMO_PRODUCTS);
+      console.warn('Supabase fetch error:', err.message);
+      setCategories([]);
+      setFeaturedProducts([]);
+      setAllProducts([]);
     } finally {
       setRefreshing(false);
       setLoading(false);
@@ -211,49 +209,15 @@ export default function HomeScreen({ navigation }) {
           />
         </TouchableOpacity>
 
-        {/* Special Offers */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Special Offers</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-            <Text style={styles.seeAll}>See all</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
-          {SPECIAL_OFFERS.map((offer) => (
-            <TouchableOpacity
-              key={offer.id}
-              style={[styles.offerCard, { backgroundColor: offer.color }]}
-              activeOpacity={0.9}
-              onPress={() => navigation.navigate('Search', { category: offer.category })}
-            >
-              <View style={styles.offerImageHalf}>
-                <Image source={{ uri: offer.image }} style={styles.offerImgFull} resizeMode="cover" />
-              </View>
-              <View style={styles.offerContentHalf}>
-                <View style={styles.offerBadge}>
-                  <Text style={styles.offerDiscount}>{offer.discount}</Text>
-                </View>
-                <Text style={styles.offerLabel}>{offer.label}</Text>
-                <Text style={styles.offerTagline} numberOfLines={1}>{offer.tagline}</Text>
-              </View>
+        {/* Promo Banner */}
+        <View style={[styles.banner, { backgroundColor: '#1E293B', marginHorizontal: SIZES.lg, marginBottom: SIZES.lg }]}>
+          <View style={styles.bannerContent}>
+            <Text style={styles.bannerSubtitle}>Gisenyi Gadgets</Text>
+            <Text style={styles.bannerTitle}>Best Tech{`\n`}Deals in RW</Text>
+            <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}>
+              <Text style={styles.bannerButtonText}>Shop Now</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Banners */}
-        <View style={styles.bannerContainerWrap}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SIZES.lg, gap: 16 }}>
-            {BANNERS.map((b) => (
-              <View key={b.id} style={[styles.banner, { backgroundColor: b.color }]}>
-                <View style={styles.bannerContent}>
-                  <Text style={styles.bannerSubtitle}>{b.subtitle}</Text>
-                  <Text style={styles.bannerTitle}>{b.title}</Text>
-                  <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}><Text style={styles.bannerButtonText}>{b.buttonText}</Text></TouchableOpacity>
-                </View>
-                <Image source={{ uri: b.image }} style={styles.bannerImage} />
-              </View>
-            ))}
-          </ScrollView>
+          </View>
         </View>
 
         {/* Categories */}
@@ -313,12 +277,9 @@ export default function HomeScreen({ navigation }) {
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
           {(() => {
-            const allItems = featuredProducts.length > 0 ? featuredProducts : DEMO_PRODUCTS;
             const selectedCat = categories.find(c => c.id === activeCategory);
-
-            // If specific category selected, show all items in that category
             if (activeCategory !== 'all') {
-              return allItems
+              return allProducts
                 .filter(p => p.category_id === activeCategory || (selectedCat && p.category_id === selectedCat.slug))
                 .map((p) => (
                   <ProductCard
@@ -332,40 +293,21 @@ export default function HomeScreen({ navigation }) {
                   />
                 ));
             }
-            return allItems
-              .filter(p => p.is_featured)
-              .map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  style={styles.featuredCard}
-                  onPress={() => navigation.navigate('ProductDetails', { product: p })}
-                  onWishlist={() => toggleWishlist(p)}
-                  wishlisted={isInWishlist(p.id)}
-                  fmt={fmt}
-                />
-              ));
+            return featuredProducts.map((p) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                style={styles.featuredCard}
+                onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                onWishlist={() => toggleWishlist(p)}
+                wishlisted={isInWishlist(p.id)}
+                fmt={fmt}
+              />
+            ));
           })()}
         </ScrollView>
 
-        {/* Flash Deal */}
-        <TouchableOpacity style={styles.flashDealContainer} activeOpacity={0.9} onPress={() => navigation.navigate('ProductDetails', { product: DEMO_PRODUCTS[5] })}>
-          <View style={styles.flashDealContent}>
-            <View style={styles.flashHeader}>
-              <View style={styles.flashBadgeWrap}>
-                <Zap size={10} color="#fff" fill="#fff" />
-                <Text style={styles.flashBadgeText}>FLASH DEAL</Text>
-              </View>
-              <Text style={styles.flashTimer}>{flashTimer}</Text>
-            </View>
-            <Text style={styles.flashTitle}>Sony WH-1000XM5</Text>
-            <View style={styles.priceRow}>
-              <Text style={styles.flashPrice}>RWF 35,000</Text>
-              <Text style={styles.flashOldPrice}>50,000</Text>
-            </View>
-          </View>
-          <Image source={{ uri: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?q=80&w=300' }} style={styles.flashImage} />
-        </TouchableOpacity>
+
 
         {/* Live Support Help Section */}
         <View style={styles.sectionHeader}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Edit2, Trash2, X, Package } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, X, Package, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [], supplier_id: null, category_id: null };
@@ -22,7 +22,7 @@ export default function ProductsPage() {
     try {
       const { data } = await supabase
         .from('products')
-        .select('*, categories(name)')
+        .select('*, categories(name), suppliers(name)')
         .order('created_at', { ascending: false });
       if (data) setProducts(data);
     } catch (err) {
@@ -58,6 +58,11 @@ export default function ProductsPage() {
     p.name.toLowerCase().includes(search.toLowerCase()) ||
     p.brand?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalProducts = products.length;
+  const activeProducts = products.filter(p => p.is_active).length;
+  const outOfStock = products.filter(p => p.stock === 0).length;
+  const totalValue = products.reduce((acc, p) => acc + (p.price * p.stock), 0);
 
   const openAdd = () => { setEdit(null); setForm(EMPTY_FORM); setShowModal(true); };
   const openEdit = (p) => {
@@ -153,6 +158,23 @@ export default function ProductsPage() {
         </button>
       </div>
 
+      <div className="stats-grid" style={{ marginBottom: 20 }}>
+        {[
+          { label: 'Total Products', value: totalProducts, icon: Package, color: '#3B82F6' },
+          { label: 'Active Listings', value: activeProducts, icon: CheckCircle, color: '#10B981' },
+          { label: 'Out of Stock', value: outOfStock, icon: AlertCircle, color: '#EF4444' },
+          { label: 'Total Stock Value', value: fmt(totalValue), icon: TrendingUp, color: '#8B5CF6' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div className="stat-card" key={label} style={{ position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', right: 16, top: 16, color, opacity: 0.15 }}>
+              <Icon size={42} />
+            </div>
+            <div className="stat-label">{label}</div>
+            <div className="stat-value" style={{ color }}>{value}</div>
+          </div>
+        ))}
+      </div>
+
       <div className="card">
         <div className="card-header">
           <div className="search-wrap" style={{ width: 280 }}>
@@ -192,9 +214,12 @@ export default function ProductsPage() {
                   </td>
                   <td>
                     {p.supplier_id ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#F59E0B', fontWeight: 600 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B' }}></span>
-                        Consigned
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#F59E0B', fontWeight: 600 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F59E0B' }}></span>
+                          Consigned
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{p.suppliers?.name || 'Unknown Supplier'}</div>
                       </div>
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#10B981', fontWeight: 600 }}>

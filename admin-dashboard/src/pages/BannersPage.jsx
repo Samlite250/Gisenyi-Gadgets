@@ -63,7 +63,7 @@ export default function BannersPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this item?')) return;
+    if (!window.confirm('Delete this item?')) return;
     try {
       const { error } = await supabase.from('banners').delete().eq('id', id);
       if (error) throw error;

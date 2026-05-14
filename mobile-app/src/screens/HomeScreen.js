@@ -132,6 +132,17 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // ── Real-time subscriptions ────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('home_realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'banners' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => fetchData())
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [fetchData]);
+
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
   // ProductCard is now defined outside this component — no re-mount shaking

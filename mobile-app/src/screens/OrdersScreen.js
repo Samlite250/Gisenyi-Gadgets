@@ -55,6 +55,20 @@ export default function OrdersScreen({ navigation }) {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
+  // ── Real-time: auto-refresh when admin changes any order status ──────────
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`orders_user_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` },
+        () => fetchOrders()
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [user, fetchOrders]);
+
   const onRefresh = () => { setRefreshing(true); fetchOrders(); };
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;

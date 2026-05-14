@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { Search, Eye, Radio } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = ['All', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
 const STATUS_BADGE = {
@@ -33,28 +34,48 @@ export default function OrdersPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
+  // ── Real-time: incoming orders notify + auto-refresh ───────────────────
+  const isFirstLoad = useRef(true);
+  useEffect(() => {
+    const channel = supabase
+      .channel('admin_orders_live')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
+        if (!isFirstLoad.current) {
+          toast.success(`📦 New order ${payload.new.order_number} received!`, { duration: 5000 });
+        }
+        fetchOrders();
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, () => fetchOrders())
+      .subscribe(() => { isFirstLoad.current = false; });
+    return () => supabase.removeChannel(channel);
+  }, [fetchOrders]);
+
   const handleStatusChange = async (orderId, newStatus) => {
     setUpdatingId(orderId);
+    const tid = toast.loading('Updating status…');
     try {
       const { data: order } = await supabase.from('orders').select('user_id, order_number').eq('id', orderId).single();
-      
       await supabase.from('orders').update({ status: newStatus }).eq('id', orderId);
-      
-      // Notify the user
+
+      // Push notification to the customer
       if (order) {
         await supabase.from('notifications').insert({
           user_id: order.user_id,
           title: 'Order Updated',
           body: `Your order ${order.order_number} is now ${newStatus}.`,
           type: 'order',
-          metadata: { orderId, status: newStatus }
+          metadata: { orderId, status: newStatus },
         });
       }
 
       setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status: newStatus } : o));
       if (selected?.id === orderId) setSelected((s) => ({ ...s, status: newStatus }));
-    } catch (err) { alert(err.message); }
-    finally { setUpdatingId(null); }
+      toast.success(`Status updated to "${newStatus}"`, { id: tid });
+    } catch (err) {
+      toast.error(err.message, { id: tid });
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const filtered = orders.filter((o) => {
@@ -68,8 +89,14 @@ export default function OrdersPage() {
     <div>
       <div className="page-header">
         <div>
-          <h2 className="page-title">Orders</h2>
-          <p className="page-subtitle">{orders.length} total orders</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <h2 className="page-title">Orders</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'rgba(52,168,83,0.12)', borderRadius: 20, padding: '3px 10px' }}>
+              <Radio size={11} color="#34A853" />
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#34A853', letterSpacing: 0.5 }}>LIVE</span>
+            </div>
+          </div>
+          <p className="page-subtitle">{orders.length} total orders · updates in real-time</p>
         </div>
       </div>
 

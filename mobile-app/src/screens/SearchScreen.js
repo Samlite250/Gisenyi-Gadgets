@@ -13,7 +13,7 @@ import {
 import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import { DEMO_PRODUCTS } from '../constants/dummyData';
+
 import SkeletonLoader from '../components/SkeletonLoader';
 
 const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gaming', 'Offers'];
@@ -86,41 +86,17 @@ export default function SearchScreen({ navigation, route }) {
       const { data, error } = await qb.limit(20);
 
       if (error) throw error;
-      
-      if (!data || data.length === 0) {
-        // Fallback to dummy data
-        let dummy = DEMO_PRODUCTS;
-        if (q.trim()) {
-          const lowerQ = q.toLowerCase();
-          dummy = dummy.filter(p => p.name.toLowerCase().includes(lowerQ) || p.brand?.toLowerCase().includes(lowerQ));
-        }
-        if (catSlug && catSlug !== 'all') {
-          dummy = dummy.filter(p => p.category_id === catSlug || p.category_id === categoryUUID);
-        }
-        
-        // Filtering dummy
-        if (priceRange === 'Under 50K') dummy = dummy.filter(p => p.price <= 50000);
-        else if (priceRange === '50K - 200K') dummy = dummy.filter(p => p.price > 50000 && p.price <= 200000);
-        else if (priceRange === 'Over 200K') dummy = dummy.filter(p => p.price > 200000);
 
-        // Sorting dummy
-        if (sortBy === 'Price: Low→High') dummy.sort((a,b) => a.price - b.price);
-        else if (sortBy === 'Price: High→Low') dummy.sort((a,b) => b.price - a.price);
-        else if (sortBy === 'Top Rated') dummy.sort((a,b) => parseFloat(b.rating) - parseFloat(a.rating));
-        
-        setResults(dummy);
-      } else {
-        const parsedData = data.map(p => {
-          let parsedImages = [];
-          try {
-            if (typeof p.images === 'string') parsedImages = JSON.parse(p.images);
-            else if (Array.isArray(p.images)) parsedImages = p.images;
-          } catch(e) {}
-          const hasImg = parsedImages.length > 0 && typeof parsedImages[0] === 'string' && parsedImages[0].startsWith('http');
-          return { ...p, images: hasImg ? parsedImages : ['https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=600'] };
-        });
-        setResults(parsedData);
-      }
+      const parsedData = (data || []).map(p => {
+        let parsedImages = [];
+        try {
+          if (typeof p.images === 'string') parsedImages = JSON.parse(p.images);
+          else if (Array.isArray(p.images)) parsedImages = p.images;
+        } catch(e) {}
+        const hasImg = parsedImages.length > 0 && typeof parsedImages[0] === 'string' && parsedImages[0].startsWith('http');
+        return { ...p, images: hasImg ? parsedImages : ['https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=600'] };
+      });
+      setResults(parsedData);
 
       Animated.timing(fadeAnim, {
         toValue: 1, duration: 400, useNativeDriver: false,

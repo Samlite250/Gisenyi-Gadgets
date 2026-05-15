@@ -118,7 +118,7 @@ export default function SuppliersPage() {
       setSuppliers(prev => prev.filter(x => x.id !== s.id));
       toast.success('Supplier removed successfully!');
     } catch (err) { toast.error(err.message); }
-    setDeleting(null);
+    finally { setDeleting(null); }
   };
 
   const handleToggleActive = async (s) => {

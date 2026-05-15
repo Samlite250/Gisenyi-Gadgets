@@ -1,26 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router, Routes, Route,
-  NavLink, useNavigate,
+  NavLink, useLocation,
 } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import {
   LayoutDashboard, Package, ShoppingCart, Users,
-  Store, Star, Settings, LogOut, Menu, X,
-  ShoppingBag, Bell, MessageCircle, Tag, Handshake, Image,
+  Store, Star, Settings, LogOut, Menu,
+  Bell, MessageCircle, Tag, Handshake, Image,
+  Search, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 
-import DashboardPage from './pages/DashboardPage';
-import ProductsPage from './pages/ProductsPage';
-import OrdersPage from './pages/OrdersPage';
-import UsersPage from './pages/UsersPage';
-import VendorsPage from './pages/VendorsPage';
-import ReviewsPage from './pages/ReviewsPage';
-import SettingsPage from './pages/SettingsPage';
-import SupportPage from './pages/SupportPage';
+import DashboardPage  from './pages/DashboardPage';
+import ProductsPage   from './pages/ProductsPage';
+import OrdersPage     from './pages/OrdersPage';
+import UsersPage      from './pages/UsersPage';
+import VendorsPage    from './pages/VendorsPage';
+import ReviewsPage    from './pages/ReviewsPage';
+import SettingsPage   from './pages/SettingsPage';
+import SupportPage    from './pages/SupportPage';
 import CategoriesPage from './pages/CategoriesPage';
-import SuppliersPage from './pages/SuppliersPage';
-import BannersPage from './pages/BannersPage';
+import SuppliersPage  from './pages/SuppliersPage';
+import BannersPage    from './pages/BannersPage';
 
 const NAV_ITEMS = [
   { path: '/',           icon: LayoutDashboard, label: 'Dashboard'  },
@@ -36,12 +37,17 @@ const NAV_ITEMS = [
   { path: '/settings',   icon: Settings,        label: 'Settings'   },
 ];
 
-
-
-export default function App() {
-  const [collapsed, setCollapsed] = useState(false); // Default to expanded for label visibility
+function AppInner() {
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const location = useLocation();
+
+  const pageTitle = NAV_ITEMS.find((item) =>
+    item.path === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(item.path)
+  )?.label || 'Dashboard';
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,41 +59,41 @@ export default function App() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const toggleSidebar = () => {
-    if (isMobile) {
-      setMobileOpen(!mobileOpen);
-    } else {
-      setCollapsed(!collapsed);
-    }
-  };
+  const showLabels = !collapsed || isMobile;
 
   return (
-    <Router>
+    <>
       <div className="app-layout">
-        {/* Mobile Overlay */}
-        <div 
-          className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`} 
-          onClick={() => setMobileOpen(false)} 
+
+        {/* Mobile overlay */}
+        <div
+          className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`}
+          onClick={() => setMobileOpen(false)}
         />
 
+        {/* ── Sidebar ── */}
         <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+
+          {/* Header row: logo + brand + toggle */}
           <div className="sidebar-header">
-            <div style={{ 
+            {/* Logo */}
+            <div style={{
               width: 42, height: 42, borderRadius: 12,
-              background: '#fff',
+              background: '#fff', flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, overflow: 'hidden',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+              overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
             }}>
-              <img 
-                src="/logo.png" 
-                alt="Logo" 
-                style={{ width: '85%', height: '85%', objectFit: 'contain' }} 
+              <img
+                src="/logo.png"
+                alt="Logo"
+                style={{ width: '85%', height: '85%', objectFit: 'contain' }}
               />
             </div>
-            {(!collapsed || mobileOpen) && (
+
+            {/* Brand text — hidden when collapsed on desktop */}
+            {showLabels && (
               <div className="sidebar-brand">
-                <div className="sidebar-brand-name" style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}>
+                <div className="sidebar-brand-name" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span style={{ color: 'var(--primary-blue)', textTransform: 'uppercase', fontSize: 13, fontWeight: 900 }}>Gisenyi</span>
                   <span style={{ color: 'var(--primary-green)', textTransform: 'uppercase', fontSize: 13, fontWeight: 900 }}>Gadgets</span>
                 </div>
@@ -97,34 +103,54 @@ export default function App() {
                 </div>
               </div>
             )}
+
+            {/* Desktop collapse toggle */}
+            {!isMobile && (
+              <button
+                onClick={() => setCollapsed((c) => !c)}
+                title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                className="sidebar-toggle"
+                style={collapsed ? {} : { marginLeft: 'auto' }}
+              >
+                {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+              </button>
+            )}
           </div>
 
+          {/* Nav links */}
           <nav className="sidebar-nav">
             {NAV_ITEMS.map(({ path, icon: Icon, label }) => (
               <NavLink
                 key={path}
                 to={path}
                 end={path === '/'}
+                title={collapsed ? label : ''}
                 onClick={() => isMobile && setMobileOpen(false)}
-                className={({ isActive }) =>
-                  `nav-item ${isActive ? 'nav-item-active' : ''}`
-                }
+                className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}
               >
                 <Icon size={20} />
-                {(!collapsed || isMobile) && <span>{label}</span>}
+                {showLabels && <span>{label}</span>}
               </NavLink>
             ))}
           </nav>
 
-          <div className="mt-auto" style={{ padding: '16px 14px', borderTop: '1px solid var(--border)' }}>
-            <button className="nav-item nav-item-logout" style={{ width: '100%', margin: 0 }}>
+          {/* Sign out */}
+          <div style={{ padding: '16px 14px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
+            <button 
+              className="nav-item nav-item-logout" 
+              style={{ width: '100%', margin: 0 }}
+              title={collapsed ? "Sign Out" : ""}
+            >
               <LogOut size={20} />
-              {(!collapsed || isMobile) && <span>Sign Out</span>}
+              {showLabels && <span>Sign Out</span>}
             </button>
           </div>
         </aside>
 
+        {/* ── Main area ── */}
         <div className="main-area">
+
+          {/* Topbar */}
           <header className="topbar">
             <div className="topbar-left" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
               {isMobile && (
@@ -132,23 +158,22 @@ export default function App() {
                   <Menu size={20} />
                 </button>
               )}
-              <h1 className="topbar-title">Overview</h1>
+              <h1 className="topbar-title">{pageTitle}</h1>
               {!isMobile && (
                 <div className="search-wrap" style={{ width: 300 }}>
-                  <div className="search-icon">
-                    <Bell size={16} />
-                  </div>
+                  <Search size={15} className="search-icon" />
                   <input type="text" className="input input-sm" placeholder="Search orders, products..." />
                 </div>
               )}
             </div>
+
             <div className="topbar-right">
               <button className="topbar-btn">
                 <Bell size={20} />
                 <span className="notif-dot" />
               </button>
               <div style={{ width: 1, height: 24, background: 'var(--border)', margin: '0 8px' }} />
-              <div className="flex items-center gap-3">
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {!isMobile && (
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Samuel Admin</div>
@@ -160,24 +185,34 @@ export default function App() {
             </div>
           </header>
 
+          {/* Page content */}
           <main className="page-content">
             <Routes>
-              <Route path="/"           element={<DashboardPage />} />
-              <Route path="/products"   element={<ProductsPage />}  />
+              <Route path="/"           element={<DashboardPage />}  />
+              <Route path="/products"   element={<ProductsPage />}   />
               <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/orders"     element={<OrdersPage />}    />
-              <Route path="/suppliers"  element={<SuppliersPage />} />
-              <Route path="/users"      element={<UsersPage />}     />
-              <Route path="/vendors"    element={<VendorsPage />}   />
-              <Route path="/reviews"    element={<ReviewsPage />}   />
+              <Route path="/orders"     element={<OrdersPage />}     />
+              <Route path="/suppliers"  element={<SuppliersPage />}  />
+              <Route path="/users"      element={<UsersPage />}      />
+              <Route path="/vendors"    element={<VendorsPage />}    />
+              <Route path="/reviews"    element={<ReviewsPage />}    />
               <Route path="/banners"    element={<BannersPage />}    />
-              <Route path="/support"    element={<SupportPage />}   />
-              <Route path="/settings"   element={<SettingsPage />}  />
+              <Route path="/support"    element={<SupportPage />}    />
+              <Route path="/settings"   element={<SettingsPage />}   />
             </Routes>
           </main>
         </div>
       </div>
+
       <Toaster position="top-right" />
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <AppInner />
     </Router>
   );
 }

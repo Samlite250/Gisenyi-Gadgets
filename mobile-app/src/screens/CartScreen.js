@@ -4,14 +4,28 @@ import {
   Image, TouchableOpacity, TextInput, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react-native';
+import { Minus, Plus, Trash2, ShoppingBag, Ticket, CheckCircle2 } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function CartScreen({ navigation }) {
-  const { cartItems, updateQuantity, removeFromCart, subtotal, shippingFee, total } = useCart();
+  const { 
+    cartItems, updateQuantity, removeFromCart, 
+    subtotal, shippingFee, total, 
+    promoDiscount, activePromo, applyPromoCode 
+  } = useCart();
+  const [promoInput, setPromoInput] = React.useState('');
+  const [promoMsg, setPromoMsg] = React.useState(null);
 
-  const fmt = (n) => `RWF ${n.toLocaleString()}`;
+  const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
+
+  const handleApplyPromo = () => {
+    if (!promoInput.trim()) return;
+    const res = applyPromoCode(promoInput);
+    setPromoMsg(res);
+    if (res.success) setPromoInput('');
+    setTimeout(() => setPromoMsg(null), 3000);
+  };
 
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
@@ -96,15 +110,33 @@ export default function CartScreen({ navigation }) {
       {cartItems.length > 0 && (
         <View style={styles.footer}>
           {/* Promotion Code Section */}
-          <View style={styles.promoSection}>
-            <TextInput 
-              style={styles.promoInput} 
-              placeholder="Promo Code" 
-              placeholderTextColor={COLORS.textMuted} 
-            />
-            <TouchableOpacity style={styles.promoBtn}>
-              <Text style={styles.promoBtnText}>Apply</Text>
-            </TouchableOpacity>
+          <View style={styles.promoContainer}>
+            <View style={[styles.promoSection, activePromo && styles.promoSectionActive]}>
+              <View style={styles.promoInputWrapper}>
+                <Ticket size={20} color={activePromo ? COLORS.primaryGreen : COLORS.textMuted} />
+                <TextInput 
+                  style={styles.promoInput} 
+                  placeholder={activePromo ? `Code ${activePromo} Active` : "Promo Code"} 
+                  placeholderTextColor={COLORS.textMuted}
+                  value={promoInput}
+                  onChangeText={setPromoInput}
+                  autoCapitalize="characters"
+                  editable={!activePromo}
+                />
+              </View>
+              <TouchableOpacity 
+                style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
+                onPress={handleApplyPromo}
+                disabled={!!activePromo}
+              >
+                {activePromo ? <CheckCircle2 size={18} color="#fff" /> : <Text style={styles.promoBtnText}>Apply</Text>}
+              </TouchableOpacity>
+            </View>
+            {promoMsg && (
+              <Text style={[styles.promoMsg, promoMsg.success ? styles.promoMsgSuccess : styles.promoMsgError]}>
+                {promoMsg.message}
+              </Text>
+            )}
           </View>
 
           <View style={styles.summaryRows}>
@@ -118,6 +150,12 @@ export default function CartScreen({ navigation }) {
                 {shippingFee === 0 ? 'FREE' : fmt(shippingFee)}
               </Text>
             </View>
+            {promoDiscount > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Discount ({activePromo})</Text>
+                <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
+              </View>
+            )}
             <View style={styles.divider} />
             <View style={styles.summaryRow}>
               <Text style={styles.totalLabel}>Total</Text>
@@ -210,16 +248,38 @@ const styles = StyleSheet.create({
   emptySub: { fontSize: 14, color: COLORS.textSecondary },
   shopBtn: { backgroundColor: COLORS.primaryBlue, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginTop: 12 },
   shopBtnText: { color: '#fff', fontWeight: '700' },
+  promoContainer: { marginBottom: 20 },
   promoSection: {
-    flexDirection: 'row', gap: 12, marginBottom: 20,
+    flexDirection: 'row', 
+    gap: 12, 
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 6,
+    paddingLeft: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
   },
-  promoInputContainer: {
-    flex: 1, height: 48, backgroundColor: 'rgba(255, 255, 255, 0.5)', borderRadius: 12,
-    paddingHorizontal: 16, justifyContent: 'center',
-    borderWidth: 1, borderColor: 'rgba(255, 255, 255, 0.8)',
+  promoSectionActive: {
+    borderColor: COLORS.primaryGreen,
+    backgroundColor: 'rgba(52, 168, 83, 0.05)',
+  },
+  promoInputWrapper: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  promoInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
   },
   promoBtn: {
     backgroundColor: COLORS.textPrimary,
+    height: 44,
     paddingHorizontal: 20,
     borderRadius: 12,
     justifyContent: 'center',
@@ -230,4 +290,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
+  promoMsg: { fontSize: 12, fontWeight: '600', marginTop: 6, marginLeft: 8 },
+  promoMsgSuccess: { color: COLORS.primaryGreen },
+  promoMsgError: { color: COLORS.error },
 });

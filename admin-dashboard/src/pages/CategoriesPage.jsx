@@ -68,7 +68,7 @@ export default function CategoriesPage() {
     } catch (err) { toast.error(err.message); }
   };
 
-  if (loading) return <div className="p-8 text-center">Loading Categories...</div>;
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading Categories...</div>;
 
   return (
     <div>

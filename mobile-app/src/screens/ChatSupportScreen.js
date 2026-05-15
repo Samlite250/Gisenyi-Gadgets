@@ -4,13 +4,14 @@ import {
   TouchableOpacity, Image, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Send, Phone, MoreVertical, CheckCheck } from 'lucide-react-native';
+import { ChevronLeft, Send, Phone, MoreVertical, CheckCheck, User } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { supabase } from '../services/supabase';
 
 const INITIAL_MESSAGES = [
-  { id: 1, text: 'Hello! Welcome to Gisenyi Gadgets Support.', sender: 'support', time: '09:00 AM' },
-  { id: 2, text: 'How can we help you today?', sender: 'support', time: '09:00 AM' },
+  { id: 1, content: 'Hello! Welcome to Gisenyi Gadgets Support.', is_admin: true, created_at: new Date().toISOString() },
+  { id: 2, content: 'How can we help you today?', is_admin: true, created_at: new Date().toISOString() },
 ];
 
 export default function ChatSupportScreen({ navigation }) {
@@ -18,6 +19,7 @@ export default function ChatSupportScreen({ navigation }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [replyTo, setReplyTo] = useState(null);
   const scrollRef = useRef();
 
   // 1. Fetch history and setup real-time
@@ -32,7 +34,7 @@ export default function ChatSupportScreen({ navigation }) {
         .order('created_at', { ascending: true });
 
       if (error) console.warn(error);
-      else setMessages(data);
+      else setMessages(data || []);
       setLoading(false);
     };
 
@@ -47,7 +49,7 @@ export default function ChatSupportScreen({ navigation }) {
         table: 'chat_messages',
         filter: `user_id=eq.${profile.id}` 
       }, (payload) => {
-        // Only add if not already in state (to avoid double adding own messages)
+        // Only add if not already in state
         setMessages(prev => {
           if (prev.some(m => m.id === payload.new.id)) return prev;
           return [...prev, payload.new];
@@ -63,18 +65,44 @@ export default function ChatSupportScreen({ navigation }) {
     
     const newMessage = {
       user_id: profile.id,
-      text: input,
-      sender: 'user',
+      content: input.trim(),
+      is_admin: false,
     };
 
     const tempInput = input;
+    const replyId = replyTo?.id;
     setInput('');
+    setReplyTo(null);
 
-    const { error } = await supabase.from('chat_messages').insert(newMessage);
+    const { error } = await supabase.from('chat_messages').insert({
+      ...newMessage,
+      reply_to_id: replyId
+    });
     if (error) {
       alert(error.message);
       setInput(tempInput);
     }
+  };
+
+  const handleReact = async (msgId, emoji) => {
+    const msg = messages.find(m => String(m.id) === String(msgId));
+    if (!msg || msg.is_admin === false) return; // Customers only react to admin messages
+
+    const newReactions = { ...(msg.reactions || {}) };
+    const userKey = profile.id;
+    
+    if (newReactions[userKey] === emoji) {
+      delete newReactions[userKey];
+    } else {
+      newReactions[userKey] = emoji;
+    }
+
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ reactions: newReactions })
+      .eq('id', msgId);
+
+    if (error) console.warn(error);
   };
 
   useEffect(() => {
@@ -90,15 +118,14 @@ export default function ChatSupportScreen({ navigation }) {
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <View style={styles.avatarWrap}>
-            <Image 
-              source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=100' }} 
-              style={styles.avatar} 
-            />
+            <View style={{ width: 40, height: 40, borderRadius: 12, backgroundColor: COLORS.primaryBlue, alignItems: 'center', justifyContent: 'center' }}>
+               <User size={24} color="#fff" />
+            </View>
             <View style={styles.onlineDot} />
           </View>
           <View>
-            <Text style={styles.headerName}>Support Agent</Text>
-            <Text style={styles.headerStatus}>Online</Text>
+            <Text style={styles.headerName}>Gadgets Support</Text>
+            <Text style={styles.headerStatus}>Active Now</Text>
           </View>
         </View>
         <View style={styles.headerActions}>
@@ -118,32 +145,98 @@ export default function ChatSupportScreen({ navigation }) {
         >
           <Text style={styles.dateDivider}>Today</Text>
           
-          {messages.map((m) => (
-            <View 
-              key={m.id} 
-              style={[
-                styles.messageRow, 
-                m.sender === 'user' ? styles.userRow : styles.supportRow
-              ]}
-            >
-              <View style={[
-                styles.bubble, 
-                m.sender === 'user' ? styles.userBubble : styles.supportBubble
-              ]}>
-                <Text style={[
-                  styles.messageText,
-                  m.sender === 'user' ? styles.userText : styles.supportText
+          {messages.map((m) => {
+            const quotedMsg = m.reply_to_id ? messages.find(msg => String(msg.id) === String(m.reply_to_id)) : null;
+            const reactionCounts = m.reactions ? Object.values(m.reactions).reduce((acc, emoji) => {
+              acc[emoji] = (acc[emoji] || 0) + 1;
+              return acc;
+            }, {}) : {};
+
+            return (
+              <View 
+                key={m.id} 
+                style={[
+                  styles.messageRow, 
+                  !m.is_admin ? styles.userRow : styles.supportRow
+                ]}
+              >
+                <View style={[
+                  styles.bubbleContainer,
+                  !m.is_admin ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }
                 ]}>
-                  {m.text}
-                </Text>
-                <View style={styles.bubbleFooter}>
-                  <Text style={styles.timeText}>{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
-                  {m.sender === 'user' && <CheckCheck size={12} color="#fff" style={{ opacity: 0.8 }} />}
+                  <View style={[
+                    styles.bubble, 
+                    !m.is_admin ? styles.userBubble : styles.supportBubble
+                  ]}>
+                    {quotedMsg && (
+                      <View style={[
+                        styles.quoteContainer,
+                        !m.is_admin ? styles.userQuote : styles.supportQuote
+                      ]}>
+                        <Text style={[styles.quoteName, !m.is_admin && { color: '#fff' }]}>
+                          {quotedMsg.is_admin ? 'Support' : 'You'}
+                        </Text>
+                        <Text style={[styles.quoteText, !m.is_admin && { color: 'rgba(255,255,255,0.8)' }]} numberOfLines={1}>
+                          {quotedMsg.content}
+                        </Text>
+                      </View>
+                    )}
+                    <Text style={[
+                      styles.messageText,
+                      !m.is_admin ? styles.userText : styles.supportText
+                    ]}>
+                      {m.content}
+                    </Text>
+                    <View style={styles.bubbleFooter}>
+                      <Text style={[styles.timeText, m.is_admin && { color: COLORS.textMuted }]}>{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                      {!m.is_admin && <CheckCheck size={12} color="#fff" style={{ opacity: 0.8 }} />}
+                    </View>
+
+                    {/* Reactions Display */}
+                    {Object.keys(reactionCounts).length > 0 && (
+                      <View style={styles.reactionsBadge}>
+                        {Object.entries(reactionCounts).map(([emoji, count]) => (
+                          <Text key={emoji} style={styles.reactionEmoji}>{emoji} {count > 1 ? count : ''}</Text>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Actions: Reply & React */}
+                  <View style={styles.messageActions}>
+                    <TouchableOpacity onPress={() => setReplyTo(m)}>
+                      <Text style={styles.actionLink}>Reply</Text>
+                    </TouchableOpacity>
+                    
+                    {m.is_admin && (
+                      <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <TouchableOpacity onPress={() => handleReact(m.id, '👍')}>
+                          <Text style={styles.actionLink}>👍</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleReact(m.id, '🎉')}>
+                          <Text style={styles.actionLink}>🎉</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
+            );
+          })}
         </ScrollView>
+
+        {/* Reply Preview */}
+        {replyTo && (
+          <View style={styles.replyPreview}>
+            <View style={{ borderLeftWidth: 4, borderLeftColor: COLORS.primaryBlue, paddingLeft: 8 }}>
+              <Text style={styles.replyTitle}>Replying to {replyTo.is_admin ? 'Support' : 'yourself'}</Text>
+              <Text style={styles.replyText} numberOfLines={1}>{replyTo.content}</Text>
+            </View>
+            <TouchableOpacity onPress={() => setReplyTo(null)}>
+              <Text style={{ fontSize: 18, color: COLORS.textMuted }}>×</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Input Bar */}
         <View style={styles.inputContainer}>
@@ -196,12 +289,45 @@ const styles = StyleSheet.create({
   messageRow: { flexDirection: 'row', width: '100%' },
   userRow: { justifyContent: 'flex-end' },
   supportRow: { justifyContent: 'flex-start' },
-  bubble: { maxWidth: '80%', padding: 12, borderRadius: 20 },
-  userBubble: { backgroundColor: COLORS.primaryBlue, borderBottomRightRadius: 4 },
-  supportBubble: { backgroundColor: '#fff', borderBottomLeftRadius: 4, ...SHADOWS.sm },
-  messageText: { fontSize: 14, lineHeight: 20 },
+  bubble: { maxWidth: '90%', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
+  userBubble: { backgroundColor: COLORS.primaryBlue, borderBottomRightRadius: 6 },
+  supportBubble: { backgroundColor: '#fff', borderBottomLeftRadius: 6, ...SHADOWS.sm, borderWidth: 1, borderColor: '#E5E7EB' },
+  messageText: { fontSize: 15, lineHeight: 22 },
   userText: { color: '#fff' },
   supportText: { color: COLORS.textPrimary },
+  quoteContainer: {
+    padding: 10,
+    borderRadius: 12,
+    marginBottom: 8,
+    borderLeftWidth: 4,
+  },
+  userQuote: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderLeftColor: '#fff',
+  },
+  supportQuote: {
+    backgroundColor: '#F3F4F6',
+    borderLeftColor: COLORS.primaryBlue,
+  },
+  quoteName: { fontSize: 11, fontWeight: '700', marginBottom: 2, color: COLORS.primaryBlue },
+  quoteText: { fontSize: 12, color: COLORS.textMuted },
+  bubbleContainer: { maxWidth: '90%' },
+  messageActions: { flexDirection: 'row', gap: 12, marginTop: 4, paddingHorizontal: 4 },
+  actionLink: { fontSize: 11, fontWeight: '700', color: COLORS.primaryBlue },
+  reactionsBadge: {
+    position: 'absolute', bottom: -10, right: 0,
+    backgroundColor: '#fff', borderRadius: 10,
+    paddingHorizontal: 6, paddingVertical: 2,
+    flexDirection: 'row', gap: 4,
+    ...SHADOWS.sm, borderWidth: 1, borderColor: '#E5E7EB'
+  },
+  reactionEmoji: { fontSize: 10 },
+  replyPreview: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 12, backgroundColor: '#F9FAFB', borderTopWidth: 1, borderTopColor: '#E5E7EB'
+  },
+  replyTitle: { fontSize: 12, fontWeight: '700', color: COLORS.primaryBlue },
+  replyText: { fontSize: 12, color: COLORS.textMuted },
   bubbleFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 4 },
   timeText: { fontSize: 10, color: 'rgba(255,255,255,0.7)', fontWeight: '500' },
   supportBubbleFooter: { color: COLORS.textMuted },

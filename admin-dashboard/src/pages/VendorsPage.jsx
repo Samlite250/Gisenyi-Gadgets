@@ -2,12 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search, CheckCircle, XCircle, Eye } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
-const DEMO_VENDORS = [
-  { id: 'v1', shop_name: 'TechHub Gisenyi',  owner_id: 'u2', email: 'techhub@gmail.com',   phone: '+250 788 111 000', location: 'Gisenyi',  is_verified: true,  is_active: true,  rating: 4.8, total_sales: 245, created_at: '2026-01-20T08:00:00Z', profiles: { full_name: 'Amelia Uwase'  } },
-  { id: 'v2', shop_name: 'Kigali Electronics',owner_id: 'u5', email: 'kigalielec@gmail.com', phone: '+250 788 222 000', location: 'Kigali',   is_verified: true,  is_active: true,  rating: 4.5, total_sales: 189, created_at: '2026-02-01T09:00:00Z', profiles: { full_name: 'Eric Habimana' } },
-  { id: 'v3', shop_name: 'Rwanda Gadgets',   owner_id: 'u3', email: 'rwgadgets@gmail.com',  phone: '+250 788 333 000', location: 'Musanze',  is_verified: false, is_active: true,  rating: 4.2, total_sales: 67,  created_at: '2026-03-10T11:00:00Z', profiles: { full_name: 'Jean Baptiste' } },
-  { id: 'v4', shop_name: 'Smart Store RW',   owner_id: 'u6', email: 'smartstore@gmail.com', phone: '+250 788 444 000', location: 'Butare',   is_verified: false, is_active: false, rating: 0,   total_sales: 0,   created_at: '2026-04-01T10:00:00Z', profiles: { full_name: 'Claire Ingabire'} },
-];
+
 
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' });
 
@@ -20,10 +15,15 @@ export default function VendorsPage() {
 
   const fetchVendors = useCallback(async () => {
     try {
-      const { data } = await supabase.from('vendors').select('*, profiles(full_name)').order('created_at', { ascending: false });
-      if (data?.length) setVendors(data);
-    } catch { /* keep demo */ }
-    finally { setLoading(false); }
+      const { data, error } = await supabase.from('vendors').select('*, profiles(full_name)').order('created_at', { ascending: false });
+      if (!error) {
+        setVendors(data || []);
+      }
+    } catch (err) {
+      console.warn('Fetch error:', err.message);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchVendors(); }, [fetchVendors]);

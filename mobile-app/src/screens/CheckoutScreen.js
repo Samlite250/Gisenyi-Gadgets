@@ -20,11 +20,24 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutScreen({ navigation }) {
   const { user, profile } = useAuth();
-  const { cartItems, subtotal, shippingFee, total } = useCart();
+  const { cartItems, subtotal, shippingFee, total, promoDiscount, activePromo } = useCart();
   const [selectedPayment, setSelectedPayment] = useState('mtn');
   const [placing, setPlacing] = useState(false);
+  const [settings, setSettings] = useState({});
 
-  const fmt = (n) => `RWF ${n.toLocaleString()}`;
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      const { data } = await supabase.from('platform_settings').select('*');
+      if (data) {
+        const s = {};
+        data.forEach(item => s[item.key] = item.value);
+        setSettings(s);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
   const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Customer';
   const displayPhone = profile?.phone || '—';
   const displayAddress = profile?.address
@@ -62,6 +75,7 @@ export default function CheckoutScreen({ navigation }) {
           subtotal,
           shipping_fee: shippingFee,
           total,
+          notes: activePromo ? `Promo used: ${activePromo} (-${fmt(promoDiscount)})` : null,
           shipping_address: {
             name: displayName,
             phone: displayPhone,
@@ -172,20 +186,18 @@ export default function CheckoutScreen({ navigation }) {
                     <Text style={styles.instructionTitle}>Payment Process:</Text>
                     {m.id === 'mtn' || m.id === 'airtel' ? (
                       <Text style={styles.instructionText}>
-                        1. Dial *182# (MTN) or *500# (Airtel) {"\n"}
-                        2. Transfer total amount to: +250 78X XXX XXX {"\n"}
-                        3. Keep your Transaction ID for confirmation.
+                        {m.id === 'mtn' 
+                          ? (settings.mtnInstructions || "1. Dial *182#\n2. Transfer to: +250 78X XXX XXX\n3. Keep TxID for confirmation.") 
+                          : (settings.airtelInstructions || "1. Dial *500#\n2. Transfer to: +250 73X XXX XXX\n3. Keep TxID for confirmation.")
+                        }
                       </Text>
                     ) : m.id === 'bank' ? (
                       <Text style={styles.instructionText}>
-                        1. Transfer to BK Account: 000 XXXX XXX {"\n"}
-                        2. Name: Gisenyi Gadgets Ltd {"\n"}
-                        3. Use Order # as reference.
+                        {settings.bankInstructions || "1. Transfer to Bank of Kigali (BK)\n2. Account: 000 XXXX XXX\n3. Use Order # as reference."}
                       </Text>
                     ) : m.id === 'crypto' ? (
                       <Text style={styles.instructionText}>
-                        1. Send USDT (TRC-20) to: TXXXXXX... {"\n"}
-                        2. Take a screenshot of the TxID.
+                        {settings.cryptoInstructions || "1. Send USDT (TRC-20) to: TXXXXXX...\n2. Take a screenshot of the TxID."}
                       </Text>
                     ) : (
                       <Text style={styles.instructionText}>
@@ -222,6 +234,12 @@ export default function CheckoutScreen({ navigation }) {
               {shippingFee === 0 ? 'FREE' : fmt(shippingFee)}
             </Text>
           </View>
+          {promoDiscount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Discount ({activePromo})</Text>
+              <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 

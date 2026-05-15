@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, StyleSheet, TextInput,
-  TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image
+  TouchableOpacity, ScrollView, ActivityIndicator, Alert, Image, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, User, Phone, MapPin, Building, Camera } from 'lucide-react-native';
@@ -91,6 +91,7 @@ export default function EditProfileScreen({ navigation }) {
       return;
     }
 
+    console.log('Saving profile with name:', fullName);
     setSaving(true);
     try {
       let finalAvatarUrl = avatar;
@@ -102,18 +103,36 @@ export default function EditProfileScreen({ navigation }) {
         }
       }
 
-      await updateProfile({
+      const data = await updateProfile({
         full_name: fullName.trim(),
         phone: phone.trim(),
         address: address.trim(),
         city: city.trim(),
         avatar_url: finalAvatarUrl,
       });
-      Alert.alert('Success', 'Profile updated successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+
+      console.log('Profile update successful:', data);
+
+      // Show clear success feedback (Web-safe)
+      if (Platform.OS === 'web') {
+        alert('Your profile has been updated!');
+        navigation.goBack();
+      } else {
+        Alert.alert(
+          'Success', 
+          'Your profile has been updated!', 
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+      }
     } catch (err) {
-      Alert.alert('Error', err.message || 'Failed to update profile.');
+      console.error('Update Profile Error Details:', err);
+      const errorMsg = err.message || 'Something went wrong';
+      
+      if (Platform.OS === 'web') {
+        alert('Update Failed: ' + errorMsg);
+      } else {
+        Alert.alert('Update Failed', errorMsg);
+      }
     } finally {
       setSaving(false);
     }

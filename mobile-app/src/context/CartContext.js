@@ -8,6 +8,8 @@ const CART_STORAGE_KEY = '@GisenyiGadgets_cart';
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [activePromo, setActivePromo] = useState(null);
 
   // Load cart from AsyncStorage on mount
   useEffect(() => {
@@ -91,6 +93,31 @@ export function CartProvider({ children }) {
 
   const clearCart = () => {
     setCartItems([]);
+    setPromoDiscount(0);
+    setActivePromo(null);
+  };
+
+  const applyPromoCode = (code) => {
+    const cleanCode = code.toUpperCase().trim();
+    if (cleanCode === 'GADGET10') {
+      const discount = Math.round(subtotal * 0.1);
+      setPromoDiscount(discount);
+      setActivePromo('GADGET10');
+      return { success: true, message: '10% Discount Applied!' };
+    }
+    if (cleanCode === 'WELCOME20') {
+      const discount = Math.round(subtotal * 0.2);
+      setPromoDiscount(discount);
+      setActivePromo('WELCOME20');
+      return { success: true, message: '20% Welcome Discount Applied!' };
+    }
+    if (cleanCode === 'GISENYI') {
+      const discount = 5000;
+      setPromoDiscount(discount);
+      setActivePromo('GISENYI');
+      return { success: true, message: 'RWF 5,000 Discount Applied!' };
+    }
+    return { success: false, message: 'Invalid Promo Code' };
   };
 
   const isInCart = (productId) => {
@@ -108,15 +135,16 @@ export function CartProvider({ children }) {
     0
   );
   const shippingFee = subtotal > 50000 ? 0 : 2000; // Free shipping over RWF 50,000
-  const total = subtotal + shippingFee;
+  const total = Math.max(0, subtotal + shippingFee - promoDiscount);
 
   const value = {
     cartItems,
     loading,
     totalItems,
     subtotal,
-    shippingFee,
-    total,
+    promoDiscount,
+    activePromo,
+    applyPromoCode,
     addToCart,
     removeFromCart,
     updateQuantity,

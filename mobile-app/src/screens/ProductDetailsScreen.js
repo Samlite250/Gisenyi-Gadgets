@@ -2,13 +2,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, Alert, Dimensions, ActivityIndicator, Platform,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CheckCircle2,
-  Maximize2, X,
+  Maximize2, X, Store,
 } from 'lucide-react-native';
+import { FontAwesome } from '@expo/vector-icons';
 import { Modal } from 'react-native';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -56,6 +58,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [supplier, setSupplier] = useState(null);
+  const [hasBought, setHasBought] = useState(false);
   const scrollRef = useRef(null);
 
   // Fetch reviews
@@ -65,10 +69,18 @@ export default function ProductDetailsScreen({ route, navigation }) {
     try {
       const { data, error } = await supabase
         .from('reviews')
-        .select('id, rating, comment, image_url, created_at, user_id, profiles(full_name)')
+        .select('*')
         .eq('product_id', product.id)
         .order('created_at', { ascending: false });
-      if (!error && data) setReviews(data);
+      
+      if (!error && data) {
+        // Fetch profile names manually for each review to avoid join issues
+        const reviewsWithNames = await Promise.all(data.map(async (r) => {
+          const { data: p } = await supabase.from('profiles').select('full_name').eq('id', r.user_id).maybeSingle();
+          return { ...r, profiles: { full_name: p?.full_name || 'Verified Buyer' } };
+        }));
+        setReviews(reviewsWithNames);
+      }
     } catch (e) { console.warn('Reviews fetch:', e.message); }
     finally { setLoadingReviews(false); }
   }, [product.id]);
@@ -125,7 +137,76 @@ export default function ProductDetailsScreen({ route, navigation }) {
     fetchRelated();
   }, [product.id, product.category_id]);
 
-  const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
+  // Fetch supplier, product-level, or global support details
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        // 1. Try to get WhatsApp from product record directly (some schemas have it there)
+        if (product.whatsapp || product.phone) {
+          setSupplier({ phone: product.whatsapp || product.phone, business_name: 'Gisenyi Gadgets' });
+          return;
+        }
+
+        // 2. Try to get supplier info if product has a supplier_id
+        if (product.supplier_id) {
+          const { data: sup } = await supabase
+            .from('suppliers')
+            .select('phone, business_name')
+            .eq('id', product.supplier_id)
+            .maybeSingle();
+          if (sup?.phone) {
+            setSupplier(sup);
+            return;
+          }
+        }
+
+        // 3. Fallback: Get global store settings for WhatsApp
+        const { data: settings } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'whatsapp_number')
+          .maybeSingle();
+        
+        if (settings?.value) {
+          setSupplier({ phone: settings.value, business_name: 'Gisenyi Gadgets' });
+        }
+      } catch (e) { 
+        console.warn('Contact info fetch error:', e.message); 
+      }
+    };
+    fetchContactInfo();
+  }, [product.id, product.supplier_id, product.whatsapp, product.phone]);
+
+  // Check if user has bought this product
+  useEffect(() => {
+    const checkPurchase = async () => {
+      if (!user || !product.id || product.id === 'demo-1') return;
+      try {
+        const { count, error } = await supabase
+          .from('order_items')
+          .select('*', { count: 'exact', head: true })
+          .eq('product_id', product.id)
+          .innerJoin('orders', 'order_items.order_id', 'orders.id')
+          .eq('orders.user_id', user.id)
+          .eq('orders.status', 'delivered'); 
+        
+        if (!error && count > 0) setHasBought(true);
+      } catch (e) {
+        // Fallback check if join fails
+        try {
+          const { data: myOrders } = await supabase.from('orders').select('id').eq('user_id', user.id).eq('status', 'delivered');
+          if (myOrders?.length > 0) {
+            const orderIds = myOrders.map(o => o.id);
+            const { count: itemMatch } = await supabase.from('order_items').select('*', { count: 'exact', head: true }).in('order_id', orderIds).eq('product_id', product.id);
+            if (itemMatch > 0) setHasBought(true);
+          }
+        } catch(e2) {}
+      }
+    };
+    checkPurchase();
+  }, [user, product.id]);
+
+  const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
   const discount = product.compare_price
     ? Math.round((1 - product.price / product.compare_price) * 100)
     : 0;
@@ -147,6 +228,32 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const handleBuyNow = () => {
     addToCart(product, quantity, selectedColor, selectedStorage);
     navigation.navigate('Checkout');
+  };
+
+  const handleWhatsApp = () => {
+    // Dynamic number priority: Supplier Phone > Global Setting > Default
+    const rawPhone = supplier?.phone || '+250788000000';
+    const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); // Removes spaces, dashes, etc.
+    const message = `*✨ GISENYI GADGETS INQUIRY ✨*\n\n` +
+                    `Hello! I'm interested in this premium item:\n\n` +
+                    `━━━━━━━━━━━━━━━━━━\n` +
+                    `📦 *PRODUCT:* ${product.name}\n` +
+                    `🏷️ *BRAND:* ${product.brand || 'Premium'}\n` +
+                    `🆔 *REF:* #GG-${product.id.toString().slice(0, 5).toUpperCase()}\n` +
+                    `━━━━━━━━━━━━━━━━━━\n\n` +
+                    `🖼️ *View Image:* ${images[0]}\n\n` +
+                    `Is this item still available for purchase? I would appreciate more details.`;
+    
+    const url = `whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+    
+    Linking.canOpenURL(url).then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        const webUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(message)}`;
+        Linking.openURL(webUrl);
+      }
+    });
   };
 
   const images = product.images?.length ? product.images : [
@@ -335,13 +442,38 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
           )}
 
+          {/* Seller Information Section */}
+          <View style={styles.sellerSection}>
+            <View style={styles.sellerCard}>
+              <View style={styles.sellerInfo}>
+                <View style={styles.sellerAvatar}>
+                  <Store size={20} color={COLORS.primaryBlue} />
+                </View>
+                <View>
+                  <Text style={styles.sellerLabel}>Sold by</Text>
+                  <Text style={styles.sellerName}>{supplier?.business_name || 'Gisenyi Gadgets Official'}</Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.sellerWhatsappBtn}
+                onPress={handleWhatsApp}
+                activeOpacity={0.7}
+              >
+                <FontAwesome name="whatsapp" size={18} color="#fff" />
+                <Text style={styles.sellerWhatsappText}>Chat</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           {/* Reviews Section */}
           <View style={styles.reviewsSection}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Customer Reviews</Text>
-              <TouchableOpacity onPress={() => setShowReviewModal(true)}>
-                <Text style={styles.seeAll}>✏️ Write a review</Text>
-              </TouchableOpacity>
+              {hasBought && (
+                <TouchableOpacity onPress={() => setShowReviewModal(true)}>
+                  <Text style={styles.seeAll}>✏️ Write a review</Text>
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* Rating Overview */}
@@ -423,21 +555,20 @@ export default function ProductDetailsScreen({ route, navigation }) {
       {/* Action Footer */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.cartBtn, inCart && { backgroundColor: COLORS.primaryGreen }]}
+          style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
           onPress={handleAddToCart}
-          activeOpacity={0.85}
+          activeOpacity={0.7}
         >
-          {inCart && <CheckCircle2 size={18} color="#fff" />}
-          <Text style={styles.cartBtnText}>{inCart ? 'In Cart ✓' : 'Add to Cart'}</Text>
+          <Text style={styles.cartBtnText}>{inCart ? 'In Cart' : 'Add to Cart'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={styles.buyBtn}
           onPress={handleBuyNow}
           disabled={product.stock === 0}
-          activeOpacity={0.85}
+          activeOpacity={0.8}
         >
-          <Zap size={18} color="#fff" />
+          <Zap size={18} color="#fff" fill="#fff" />
           <Text style={styles.buyBtnText}>Buy Now</Text>
         </TouchableOpacity>
       </View>
@@ -598,30 +729,81 @@ const styles = StyleSheet.create({
   },
   cartBtn: {
     flex: 1,
-    height: 56,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    flexDirection: 'row',
+    height: 50,
+    backgroundColor: '#000000',
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    ...SHADOWS.sm,
+    ...SHADOWS.md,
   },
   buyBtn: {
-    flex: 1.5,
-    height: 56,
-    backgroundColor: COLORS.primaryBlue,
-    borderRadius: 16,
+    flex: 1,
+    height: 50,
+    backgroundColor: '#4285F4',
+    borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
     ...SHADOWS.md,
   },
-  cartBtnText: { color: COLORS.textPrimary, fontSize: 15, fontWeight: '700' },
-  buyBtnText: { color: '#fff', fontSize: 15, fontWeight: '800' },
+  cartBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  buyBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  sellerSection: {
+    marginTop: SIZES.lg,
+    paddingTop: SIZES.md,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  sellerCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  sellerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sellerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(66, 133, 244, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sellerLabel: {
+    fontSize: 12,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  sellerName: {
+    fontSize: 14,
+    color: COLORS.textPrimary,
+    fontWeight: '700',
+  },
+  sellerWhatsappBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#25D366',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    ...SHADOWS.sm,
+  },
+  sellerWhatsappText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+
   relatedSection: { marginTop: SIZES.lg, gap: SIZES.sm },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.sm },
   sectionTitle: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },

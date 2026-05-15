@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
     View, Text, StyleSheet, ScrollView,
-    TouchableOpacity, Alert,
+    TouchableOpacity, Alert, Clipboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Smartphone, Landmark, Bitcoin, Banknote, Copy, CheckCircle, Info } from 'lucide-react-native';
@@ -115,11 +115,14 @@ const PAYMENT_OPTIONS = [
 
 export default function PaymentMethodsScreen({ navigation }) {
     const [expanded, setExpanded] = useState(null);
+    const [copied, setCopied] = useState(null);
 
     const toggle = (id) => setExpanded((prev) => (prev === id ? null : id));
 
     const copyValue = (val) => {
-        Alert.alert('Copied', `"${val}" copied to clipboard.`);
+        Clipboard.setString(val);
+        setCopied(val);
+        setTimeout(() => setCopied(null), 2000);
     };
 
     return (
@@ -177,7 +180,10 @@ export default function PaymentMethodsScreen({ navigation }) {
                                                 activeOpacity={0.7}
                                             >
                                                 <Text style={[styles.fieldVal, { color: opt.color }]}>{f.value}</Text>
-                                                <Copy size={14} color={opt.color} />
+                                                {copied === f.value
+                                                    ? <CheckCircle size={14} color="#16A34A" />
+                                                    : <Copy size={14} color={opt.color} />
+                                                }
                                             </TouchableOpacity>
                                         </View>
                                     ))}
@@ -206,7 +212,7 @@ export default function PaymentMethodsScreen({ navigation }) {
 
                 <View style={styles.helpBox}>
                     <Text style={styles.helpTitle}>Need help with payment?</Text>
-                    <TouchableOpacity style={styles.contactBtn}>
+                    <TouchableOpacity style={styles.contactBtn} onPress={() => navigation.navigate('ChatSupport')}>
                         <Text style={styles.contactBtnText}>Contact Support</Text>
                     </TouchableOpacity>
                 </View>

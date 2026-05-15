@@ -4,14 +4,12 @@ import {
     ScrollView, ActivityIndicator, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, MapPin, CheckCircle2, Save } from 'lucide-react-native';
-import { supabase } from '../services/supabase';
+import { ChevronLeft, MapPin, Save } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function AddressesScreen({ navigation }) {
-    const { user, profile, refreshProfile } = useAuth();
-    const [loading, setLoading] = useState(false);
+    const { profile, updateProfile } = useAuth();
     const [saving, setSaving] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -38,19 +36,11 @@ export default function AddressesScreen({ navigation }) {
 
         setSaving(true);
         try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    address: formData.address,
-                    city: formData.city,
-                    country: formData.country,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id);
-
-            if (error) throw error;
-
-            await refreshProfile();
+            await updateProfile({
+                address: formData.address,
+                city: formData.city,
+                country: formData.country,
+            });
             Alert.alert('Success', 'Delivery address updated successfully!');
             navigation.goBack();
         } catch (err) {

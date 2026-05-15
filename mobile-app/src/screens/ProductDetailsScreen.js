@@ -371,7 +371,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
         {/* Details */}
         <View style={styles.details}>
-          {product.brand && (
+          {!!product.brand && (
             <Text style={styles.brand}>{product.brand}</Text>
           )}
           <Text style={styles.name}>{product.name}</Text>
@@ -392,7 +392,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Price */}
           <View style={styles.priceRow}>
             <Text style={styles.price}>{fmt(product.price)}</Text>
-            {product.compare_price && (
+            {!!product.compare_price && (
               <Text style={styles.comparePrice}>{fmt(product.compare_price)}</Text>
             )}
           </View>
@@ -455,7 +455,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </View>
 
           {/* Description */}
-          {product.description && (
+          {!!product.description && (
             <View style={styles.descSection}>
               <Text style={styles.descText}>{product.description}</Text>
             </View>

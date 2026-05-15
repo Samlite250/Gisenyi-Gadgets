@@ -97,8 +97,9 @@ export default function ProductsPage() {
 
     for (const file of files) {
       if (newImages.length >= 5) break;
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileExt = file.name.split('.').pop().toLowerCase().replace(/[^a-z0-9]/g, '');
+      const safeExt = ['jpg','jpeg','png','webp','gif'].includes(fileExt) ? fileExt : 'jpg';
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${safeExt}`;
       const filePath = `${fileName}`;
 
       const { data, error } = await supabase.storage

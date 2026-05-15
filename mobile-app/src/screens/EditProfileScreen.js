@@ -58,24 +58,27 @@ export default function EditProfileScreen({ navigation }) {
         type: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
       });
 
-      const { data, error } = await supabase.storage
-        .from('product-images')
+      const { error } = await supabase.storage
+        .from('avatars')
         .upload(fileName, formData, {
-           contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`
+          contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+          upsert: true,
         });
 
       if (error) {
-         // Fallback to fetch blob if FormData fails
-         const response = await fetch(avatarToUpload.uri);
-         const blob = await response.blob();
-         const fallbackRes = await supabase.storage
-            .from('product-images')
-            .upload(fileName, blob, { contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}` });
-         if (fallbackRes.error) throw fallbackRes.error;
+        const response = await fetch(avatarToUpload.uri);
+        const blob = await response.blob();
+        const fallbackRes = await supabase.storage
+          .from('avatars')
+          .upload(fileName, blob, {
+            contentType: `image/${ext === 'jpg' ? 'jpeg' : ext}`,
+            upsert: true,
+          });
+        if (fallbackRes.error) throw fallbackRes.error;
       }
 
       const { data: publicUrlData } = supabase.storage
-        .from('product-images')
+        .from('avatars')
         .getPublicUrl(fileName);
 
       return publicUrlData.publicUrl;
@@ -91,7 +94,6 @@ export default function EditProfileScreen({ navigation }) {
       return;
     }
 
-    console.log('Saving profile with name:', fullName);
     setSaving(true);
     try {
       let finalAvatarUrl = avatar;
@@ -111,9 +113,7 @@ export default function EditProfileScreen({ navigation }) {
         avatar_url: finalAvatarUrl,
       });
 
-      console.log('Profile update successful:', data);
-
-      // Show clear success feedback (Web-safe)
+      // Show success feedback
       if (Platform.OS === 'web') {
         alert('Your profile has been updated!');
         navigation.goBack();

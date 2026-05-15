@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../services/supabase';
 
 const CartContext = createContext(null);
 
@@ -97,27 +98,38 @@ export function CartProvider({ children }) {
     setActivePromo(null);
   };
 
-  const applyPromoCode = (code) => {
+  const applyPromoCode = async (code) => {
     const cleanCode = code.toUpperCase().trim();
-    if (cleanCode === 'GADGET10') {
-      const discount = Math.round(subtotal * 0.1);
+    if (!cleanCode) return { success: false, message: 'Enter a promo code.' };
+
+    try {
+      // Validate server-side via platform_settings table
+      const { data, error } = await supabase
+        .from('promo_codes')
+        .select('discount_type, discount_value, is_active')
+        .eq('code', cleanCode)
+        .single();
+
+      if (error || !data || !data.is_active) {
+        return { success: false, message: 'Invalid or expired promo code.' };
+      }
+
+      let discount = 0;
+      if (data.discount_type === 'percent') {
+        discount = Math.round(subtotal * (data.discount_value / 100));
+      } else {
+        discount = data.discount_value;
+      }
+      discount = Math.min(discount, subtotal); // never exceed subtotal
       setPromoDiscount(discount);
-      setActivePromo('GADGET10');
-      return { success: true, message: '10% Discount Applied!' };
+      setActivePromo(cleanCode);
+      const msg = data.discount_type === 'percent'
+        ? `${data.discount_value}% Discount Applied!`
+        : `RWF ${Number(data.discount_value).toLocaleString()} Discount Applied!`;
+      return { success: true, message: msg };
+    } catch {
+      return { success: false, message: 'Could not validate code. Try again.' };
     }
-    if (cleanCode === 'WELCOME20') {
-      const discount = Math.round(subtotal * 0.2);
-      setPromoDiscount(discount);
-      setActivePromo('WELCOME20');
-      return { success: true, message: '20% Welcome Discount Applied!' };
-    }
-    if (cleanCode === 'GISENYI') {
-      const discount = 5000;
-      setPromoDiscount(discount);
-      setActivePromo('GISENYI');
-      return { success: true, message: 'RWF 5,000 Discount Applied!' };
-    }
-    return { success: false, message: 'Invalid Promo Code' };
   };
 
   const isInCart = (productId) => {
@@ -142,6 +154,8 @@ export function CartProvider({ children }) {
     loading,
     totalItems,
     subtotal,
+    shippingFee,
+    total,
     promoDiscount,
     activePromo,
     applyPromoCode,

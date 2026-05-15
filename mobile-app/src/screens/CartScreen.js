@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
-  Image, TouchableOpacity, TextInput, Platform,
+  Image, TouchableOpacity, TextInput, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Minus, Plus, Trash2, ShoppingBag, Ticket, CheckCircle2 } from 'lucide-react-native';
@@ -9,22 +9,32 @@ import { useCart } from '../context/CartContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function CartScreen({ navigation }) {
-  const { 
-    cartItems, updateQuantity, removeFromCart, 
-    subtotal, shippingFee, total, 
-    promoDiscount, activePromo, applyPromoCode 
+  const {
+    cartItems, updateQuantity, removeFromCart,
+    subtotal, shippingFee, total,
+    promoDiscount, activePromo, applyPromoCode
   } = useCart();
   const [promoInput, setPromoInput] = React.useState('');
   const [promoMsg, setPromoMsg] = React.useState(null);
+  const [applyingPromo, setApplyingPromo] = React.useState(false);
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => { isMounted.current = false; };
+  }, []);
 
   const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
 
-  const handleApplyPromo = () => {
-    if (!promoInput.trim()) return;
-    const res = applyPromoCode(promoInput);
+  const handleApplyPromo = async () => {
+    if (!promoInput.trim() || applyingPromo) return;
+    setApplyingPromo(true);
+    const res = await applyPromoCode(promoInput);
+    if (!isMounted.current) return;
+    setApplyingPromo(false);
     setPromoMsg(res);
     if (res.success) setPromoInput('');
-    setTimeout(() => setPromoMsg(null), 3000);
+    const t = setTimeout(() => { if (isMounted.current) setPromoMsg(null); }, 3000);
+    return () => clearTimeout(t);
   };
 
   const renderItem = ({ item }) => (
@@ -124,12 +134,16 @@ export default function CartScreen({ navigation }) {
                   editable={!activePromo}
                 />
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
                 onPress={handleApplyPromo}
-                disabled={!!activePromo}
+                disabled={!!activePromo || applyingPromo}
               >
-                {activePromo ? <CheckCircle2 size={18} color="#fff" /> : <Text style={styles.promoBtnText}>Apply</Text>}
+                {activePromo
+                  ? <CheckCircle2 size={18} color="#fff" />
+                  : applyingPromo
+                    ? <ActivityIndicator size="small" color="#fff" />
+                    : <Text style={styles.promoBtnText}>Apply</Text>}
               </TouchableOpacity>
             </View>
             {promoMsg && (

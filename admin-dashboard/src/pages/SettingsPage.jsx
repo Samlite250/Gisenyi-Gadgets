@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Bell, Shield, Palette, Package, MessageCircle, CreditCard } from 'lucide-react';
+import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import Loader from '../components/Loader';
+import toast from 'react-hot-toast';
 
 
 const TABS = [
@@ -38,6 +39,9 @@ export default function SettingsPage() {
   const [activeTab, setTab] = useState('general');
   const [saved, setSaved]   = useState(false);
   const [loading, setLoading] = useState(true);
+  const [newPassword, setNewPassword]     = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPw, setChangingPw] = useState(false);
   const [form, setForm]     = useState({
     platformName: '',
     supportEmail: '',
@@ -84,27 +88,50 @@ export default function SettingsPage() {
   const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
   const setCheck = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.checked }));
 
+  const ALLOWED_KEYS = new Set([
+    'platformName','supportEmail','supportPhone','whatsappNumber','currency',
+    'mtnInstructions','airtelInstructions','bankInstructions','cryptoInstructions',
+    'freeShippingThreshold','standardShippingFee','expressShippingFee',
+    'emailNewOrder','emailNewUser','emailLowStock','lowStockThreshold',
+    'twoFactorEnabled','maintenanceMode',
+  ]);
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaved(false);
-    
     try {
-      const updates = Object.keys(form).map(key => ({
-        key,
-        value: form[key],
-        updated_at: new Date().toISOString()
-      }));
+      const updates = Object.keys(form)
+        .filter(key => ALLOWED_KEYS.has(key))
+        .map(key => ({ key, value: form[key], updated_at: new Date().toISOString() }));
 
       const { error } = await supabase.from('platform_settings').upsert(updates);
-      if (!error) {
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2500);
+      if (error) {
+        toast.error('Failed to save: ' + error.message);
       } else {
-        console.warn('Settings table error:', error.message);
-        setSaved(true); // Visual feedback
+        setSaved(true);
+        toast.success('Settings saved!');
+        setTimeout(() => setSaved(false), 2500);
       }
     } catch (err) {
-      console.error('Save error:', err);
+      toast.error('Save error: ' + (err.message || 'Unknown error'));
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!newPassword || !confirmPassword) return toast.error('Please fill both password fields.');
+    if (newPassword.length < 8) return toast.error('Password must be at least 8 characters.');
+    if (newPassword !== confirmPassword) return toast.error('Passwords do not match.');
+    setChangingPw(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Password updated successfully!');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      toast.error('Failed to update password: ' + err.message);
+    } finally {
+      setChangingPw(false);
     }
   };
 
@@ -327,13 +354,15 @@ export default function SettingsPage() {
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
                       <Field label="New Password">
-                        <input className="form-input" type="password" placeholder="••••••••" />
+                        <input className="form-input" type="password" placeholder="Min. 8 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                       </Field>
                       <Field label="Confirm New Password">
-                        <input className="form-input" type="password" placeholder="••••••••" />
+                        <input className="form-input" type="password" placeholder="Repeat password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
                       </Field>
                     </div>
-                    <button type="button" className="btn btn-primary">Update Secure Password</button>
+                    <button type="button" className="btn btn-primary" onClick={handlePasswordChange} disabled={changingPw}>
+                      {changingPw ? 'Updating...' : 'Update Secure Password'}
+                    </button>
                   </section>
                 </div>
               )}

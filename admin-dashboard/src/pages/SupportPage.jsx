@@ -31,7 +31,6 @@ export default function SupportPage() {
         setLoading(false);
         return;
       }
-      console.log('Successfully fetched chats. Count:', data?.length);
 
       const uniqueChats = [];
       const seen = new Set();
@@ -79,8 +78,7 @@ export default function SupportPage() {
       if (error) {
         console.error('Fetch messages error:', error.message);
       } else {
-        console.log(`Fetched ${data?.length || 0} messages for user ${selectedChat.user_id}`);
-        setMessages(data || []);
+          setMessages(data || []);
       }
     };
 
@@ -116,13 +114,6 @@ export default function SupportPage() {
     setInput('');
     setReplyTo(null);
 
-    console.log('Sending message:', {
-      user_id: selectedChat.user_id,
-      content: msgContent,
-      is_admin: true,
-      reply_to_id: replyId
-    });
-
     const { error } = await supabase.from('chat_messages').insert({
       user_id: selectedChat.user_id,
       content: msgContent,
@@ -131,8 +122,6 @@ export default function SupportPage() {
     });
 
     if (error) {
-      console.error('Send error:', error);
-      alert('Failed to send: ' + error.message);
       setInput(msgContent);
     }
   };

@@ -20,7 +20,11 @@ export default function ChatSupportScreen({ navigation }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [replyTo, setReplyTo] = useState(null);
+  const [sendError, setSendError] = useState(null);
   const scrollRef = useRef();
+  const isMounted = useRef(true);
+
+  useEffect(() => { return () => { isMounted.current = false; }; }, []);
 
   // 1. Fetch history and setup real-time
   useEffect(() => {
@@ -76,11 +80,12 @@ export default function ChatSupportScreen({ navigation }) {
 
     const { error } = await supabase.from('chat_messages').insert({
       ...newMessage,
-      reply_to_id: replyId
+      reply_to_id: replyId,
     });
-    if (error) {
-      alert(error.message);
+    if (error && isMounted.current) {
+      setSendError('Failed to send. Please try again.');
       setInput(tempInput);
+      setTimeout(() => { if (isMounted.current) setSendError(null); }, 3000);
     }
   };
 
@@ -106,7 +111,8 @@ export default function ChatSupportScreen({ navigation }) {
   };
 
   useEffect(() => {
-    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    return () => clearTimeout(t);
   }, [messages]);
 
   return (
@@ -235,6 +241,13 @@ export default function ChatSupportScreen({ navigation }) {
             <TouchableOpacity onPress={() => setReplyTo(null)}>
               <Text style={{ fontSize: 18, color: COLORS.textMuted }}>×</Text>
             </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Send error */}
+        {sendError && (
+          <View style={{ backgroundColor: '#FEF2F2', paddingHorizontal: 16, paddingVertical: 8, borderTopWidth: 1, borderTopColor: '#FECACA' }}>
+            <Text style={{ fontSize: 12, color: '#DC2626', fontWeight: '600' }}>{sendError}</Text>
           </View>
         )}
 

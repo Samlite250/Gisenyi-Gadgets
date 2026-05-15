@@ -10,7 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@esbuild/win32-x64": "^0.28.0",
     "@supabase/supabase-js": "^2.39.8",
     "chart.js": "^4.4.2",
     "lucide-react": "^0.364.0",

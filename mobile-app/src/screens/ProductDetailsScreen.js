@@ -22,32 +22,14 @@ import { ReviewCard, WriteReviewModal } from '../components/ReviewComponents';
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailsScreen({ route, navigation }) {
-  const product = route.params?.product || {
-    id: 'demo-1',
-    name: 'Samsung Galaxy S24 Ultra',
-    price: 850000,
-    compare_price: 950000,
-    rating: 4.8,
-    review_count: 124,
-    description: 'The ultimate Galaxy experience with a built-in S Pen, 200MP camera, and titanium frame. Experience AI-powered photography and productivity.',
-    images: [
-      'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1585060544812-6b45742d762f?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1565849904461-04a58ad377e0?q=80&w=600&auto=format&fit=crop',
-      'https://images.unsplash.com/photo-1678911820864-e2c567c655d7?q=80&w=600&auto=format&fit=crop'
-    ],
-    colors: ['Titanium Black', 'Titanium Gray', 'Titanium Violet'],
-    storage_options: ['256GB', '512GB', '1TB'],
-    brand: 'Samsung',
-    stock: 12,
-  };
+  const [product, setProduct] = useState(route.params?.product || null);
+  const [loadingProduct, setLoadingProduct] = useState(!product);
 
   const { addToCart, isInCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
 
-  const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || null);
-  const [selectedStorage, setSelectedStorage] = useState(product.storage_options?.[0] || null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedStorage, setSelectedStorage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [isZoomVisible, setIsZoomVisible] = useState(false);
@@ -61,6 +43,31 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [supplier, setSupplier] = useState(null);
   const [hasBought, setHasBought] = useState(false);
   const scrollRef = useRef(null);
+
+  // Fetch full product if only ID was passed or for fresh data
+  useEffect(() => {
+    const fetchFullProduct = async () => {
+      const pId = route.params?.product?.id || route.params?.productId;
+      if (!pId) return;
+      
+      try {
+        const { data, error } = await supabase.from('products').select('*').eq('id', pId).single();
+        if (!error && data) {
+          setProduct(data);
+          if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
+          if (data.storage_options?.length > 0) setSelectedStorage(data.storage_options[0]);
+        }
+      } catch (err) { console.warn('Product fetch error:', err.message); }
+      finally { setLoadingProduct(false); }
+    };
+    fetchFullProduct();
+  }, [route.params?.product?.id, route.params?.productId]);
+
+  // Calculate real rating distribution
+  const ratingDist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  reviews.forEach(r => { if (ratingDist[r.rating] !== undefined) ratingDist[r.rating]++; });
+  const totalWithReviews = reviews.length || 1;
+  const getRatingPer = (r) => Math.round((ratingDist[r] / totalWithReviews) * 100);
 
   // Fetch reviews
   const fetchReviews = useCallback(async () => {
@@ -259,6 +266,18 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const images = product.images?.length ? product.images : [
     'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?q=80&w=600&auto=format&fit=crop',
   ];
+
+  if (loadingProduct || !product) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        {loadingProduct ? (
+          <ActivityIndicator size="large" color={COLORS.primaryBlue} />
+        ) : (
+          <Text style={{ color: COLORS.textSecondary }}>Product not found</Text>
+        )}
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -492,7 +511,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                   <View key={r} style={styles.barRow}>
                     <Text style={styles.barLabel}>{r} ★</Text>
                     <View style={styles.barBg}>
-                      <View style={[styles.barFill, { width: `${r === 5 ? 70 : r === 4 ? 20 : 5}%` }]} />
+                      <View style={[styles.barFill, { width: `${getRatingPer(r)}%` }]} />
                     </View>
                   </View>
                 ))}

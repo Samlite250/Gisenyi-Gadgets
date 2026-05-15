@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://cysejrutcrfvopqjqknv.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5c2VqcnV0Y3Jmdm9wcWpxa252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0OTkwNzcsImV4cCI6MjA5NDA3NTA3N30.-VrulGgskYKK8czPk1vMl7rsjGmYNeo9hdWDKW4GeZ8';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://cysejrutcrfvopqjqknv.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN5c2VqcnV0Y3Jmdm9wcWpxa252Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0OTkwNzcsImV4cCI6MjA5NDA3NTA3N30.-VrulGgskYKK8czPk1vMl7rsjGmYNeo9hdWDKW4GeZ8';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -29,7 +29,7 @@ export const fetchDashboardStats = async () => {
     supabase.from('orders').select('*', { count: 'exact', head: true }),
     supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
     supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
-    supabase.from('vendors').select('*', { count: 'exact', head: true }).eq('is_active', true),
+    supabase.from('suppliers').select('*', { count: 'exact', head: true }),
     supabase.from('orders').select('id, profiles(full_name), total, status, created_at').order('created_at', { ascending: false }).limit(5),
     supabase.from('products').select('id, name, price').order('created_at', { ascending: false }).limit(5),
   ]);
@@ -41,14 +41,14 @@ export const fetchDashboardStats = async () => {
 
   const totalRevenue = revenueData?.reduce((sum, o) => sum + Number(o.total), 0) || 0;
 
-  return { totalOrders, totalUsers, totalProducts, totalVendors, totalRevenue, recentOrders, topProducts };
+  return { totalOrders, totalUsers, totalProducts, totalSuppliers: totalVendors, totalRevenue, recentOrders, topProducts };
 };
 
 // ─── Products CRUD ────────────────────────────────────────────
 export const fetchProducts = async ({ page = 1, limit = 20, search = '', categoryId = null } = {}) => {
   let query = supabase
     .from('products')
-    .select('*, categories(name), vendors(shop_name)', { count: 'exact' })
+    .select('*, categories(name), suppliers(name)', { count: 'exact' })
     .order('created_at', { ascending: false })
     .range((page - 1) * limit, page * limit - 1);
 
@@ -118,23 +118,12 @@ export const fetchUsers = async ({ page = 1, limit = 20, search = '' } = {}) => 
   return { data, count };
 };
 
-// ─── Vendors ──────────────────────────────────────────────────
-export const fetchVendors = async () => {
+// ─── Suppliers ────────────────────────────────────────────────
+export const fetchSuppliers = async () => {
   const { data, error } = await supabase
-    .from('vendors')
-    .select('*, profiles(full_name, phone)')
+    .from('suppliers')
+    .select('*')
     .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data;
-};
-
-export const toggleVendorVerification = async (id, isVerified) => {
-  const { data, error } = await supabase
-    .from('vendors')
-    .update({ is_verified: isVerified })
-    .eq('id', id)
-    .select()
-    .single();
   if (error) throw error;
   return data;
 };

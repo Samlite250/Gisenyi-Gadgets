@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Edit2, Trash2, X, Package, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
+import Loader from '../components/Loader';
+
 
 const EMPTY_FORM = { name: '', brand: '', price: '', compare_price: '', stock: '', description: '', is_featured: false, is_active: true, images: [], supplier_id: null, category_id: null };
 
@@ -152,10 +154,13 @@ export default function ProductsPage() {
       setProducts((prev) => prev.filter((p) => p.id !== id));
       toast.success('Product deleted successfully!');
     } catch (err) { toast.error(err.message); }
-    finally { setDeleting(null); }
+  finally { setDeleting(null); }
   };
 
+  if (loading) return <Loader message="Reviewing product stock..." />;
+
   return (
+
     <div>
       <div className="page-header">
         <div>

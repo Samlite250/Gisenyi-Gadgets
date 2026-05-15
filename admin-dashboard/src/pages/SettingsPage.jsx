@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Globe, Bell, Shield, Palette, Package, MessageCircle, CreditCard } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import Loader from '../components/Loader';
+
 
 const TABS = [
   { id: 'general',   label: 'General',       icon: Globe   },
@@ -37,22 +39,22 @@ export default function SettingsPage() {
   const [saved, setSaved]   = useState(false);
   const [loading, setLoading] = useState(true);
   const [form, setForm]     = useState({
-    platformName: 'Gisenyi Gadgets',
-    supportEmail: 'support@gisenyigadgets.rw',
-    supportPhone: '+250 788 000 000',
-    whatsappNumber: '+250 788 000 000',
-    currency: 'RWF',
-    mtnInstructions: "1. Dial *182#\n2. Transfer to: +250 78X XXX XXX\n3. Keep TxID for confirmation.",
-    airtelInstructions: "1. Dial *500#\n2. Transfer to: +250 73X XXX XXX\n3. Keep TxID for confirmation.",
-    bankInstructions: "1. Transfer to Bank of Kigali (BK)\n2. Account: 000 XXXX XXX\n3. Use Order # as reference.",
-    cryptoInstructions: "1. Send USDT (TRC-20) to: TXXXXXX...\n2. Take a screenshot of the TxID.",
-    freeShippingThreshold: '50000',
-    standardShippingFee: '2000',
-    expressShippingFee: '5000',
-    emailNewOrder: true,
-    emailNewUser: true,
-    emailLowStock: true,
-    lowStockThreshold: '5',
+    platformName: '',
+    supportEmail: '',
+    supportPhone: '',
+    whatsappNumber: '',
+    currency: '',
+    mtnInstructions: '',
+    airtelInstructions: '',
+    bankInstructions: '',
+    cryptoInstructions: '',
+    freeShippingThreshold: '',
+    standardShippingFee: '',
+    expressShippingFee: '',
+    emailNewOrder: false,
+    emailNewUser: false,
+    emailLowStock: false,
+    lowStockThreshold: '',
     twoFactorEnabled: false,
     maintenanceMode: false,
   });
@@ -106,7 +108,7 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Loading platform configuration...</div>;
+  if (loading) return <Loader message="Loading platform configuration..." />;
 
   return (
     <div>

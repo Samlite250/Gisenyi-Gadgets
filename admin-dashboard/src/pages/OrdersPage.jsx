@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Search, Eye, Radio } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import Loader from '../components/Loader';
+
 import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = ['All', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -20,6 +22,10 @@ export default function OrdersPage() {
   const [statusFilter, setStatus] = useState('All');
   const [selected, setSelected] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  
+  // Modal Specific State
+  const [items, setItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -33,6 +39,20 @@ export default function OrdersPage() {
   }, [statusFilter]);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  // Fetch items when a specific order is selected
+  useEffect(() => {
+    if (selected) {
+      setLoadingItems(true);
+      supabase.from('order_items')
+        .select('*, products(supplier_id, suppliers(name))')
+        .eq('order_id', selected.id)
+        .then(({ data }) => {
+          setItems(data || []);
+          setLoadingItems(false);
+        });
+    }
+  }, [selected]);
 
   // ── Real-time: incoming orders notify + auto-refresh ───────────────────
   const isFirstLoad = useRef(true);
@@ -84,6 +104,8 @@ export default function OrdersPage() {
     const matchStatus = statusFilter === 'All' || o.status === statusFilter;
     return matchSearch && matchStatus;
   });
+
+  if (loading) return <Loader message="Fetching customer orders..." />;
 
   return (
     <div>
@@ -172,7 +194,7 @@ export default function OrdersPage() {
       {/* Order Detail Modal */}
       {selected && (
         <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 650 }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div>
                 <div className="modal-title">{selected.order_number}</div>
@@ -181,21 +203,57 @@ export default function OrdersPage() {
               <span className={`badge ${STATUS_BADGE[selected.status]}`} style={{ textTransform: 'capitalize' }}>{selected.status}</span>
             </div>
             <div className="modal-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
                 {[
                   { label: 'Customer', value: selected.profiles?.full_name },
                   { label: 'Phone', value: selected.profiles?.phone },
                   { label: 'Payment', value: selected.payment_method },
                   { label: 'Pay Status', value: selected.payment_status },
-                  { label: 'Total', value: fmt(selected.total) },
-                  { label: 'Shipping', value: fmt(selected.shipping_fee || 0) },
+                  { label: 'Total Amount', value: fmt(selected.total) },
+                  { label: 'Shipping Fee', value: fmt(selected.shipping_fee || 0) },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <div className="form-label">{label}</div>
-                    <div style={{ fontWeight: 600 }}>{value || '—'}</div>
+                    <div style={{ fontWeight: 700 }}>{value || '—'}</div>
                   </div>
                 ))}
               </div>
+
+              {/* Order Items Table */}
+              <div style={{ marginBottom: 24 }}>
+                <div className="form-label" style={{ marginBottom: 12 }}>Items & Suppliers</div>
+                <div className="table-wrap" style={{ border: '1px solid var(--border)', borderRadius: 12 }}>
+                  <table style={{ margin: 0 }}>
+                    <thead style={{ background: 'var(--surface-bg)' }}>
+                      <tr>
+                        <th style={{ fontSize: 11 }}>Product</th>
+                        <th style={{ fontSize: 11 }}>Qty</th>
+                        <th style={{ fontSize: 11 }}>Supplier</th>
+                        <th style={{ fontSize: 11, textAlign: 'right' }}>Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loadingItems ? (
+                        <tr><td colSpan={4} style={{ textAlign: 'center', padding: 20, fontSize: 12 }}>Loading items...</td></tr>
+                      ) : items.map((item) => (
+                        <tr key={item.id}>
+                          <td style={{ fontSize: 13, fontWeight: 600 }}>{item.product_name}</td>
+                          <td style={{ fontSize: 13 }}>{item.quantity}</td>
+                          <td style={{ fontSize: 12 }}>
+                            {item.products?.suppliers?.name ? (
+                              <span style={{ color: '#F59E0B', fontWeight: 600 }}>🟡 {item.products.suppliers.name}</span>
+                            ) : (
+                              <span style={{ color: '#10B981', fontWeight: 600 }}>🟢 Own Stock</span>
+                            )}
+                          </td>
+                          <td style={{ fontSize: 13, fontWeight: 700, textAlign: 'right' }}>{fmt(item.price)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
               {selected.shipping_address && (
                 <div style={{ background: 'var(--surface-bg)', borderRadius: 'var(--radius-md)', padding: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>

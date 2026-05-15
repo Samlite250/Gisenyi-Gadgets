@@ -311,18 +311,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
-        {/* Fallback if no banners in DB yet */}
-        {banners.length === 0 && offers.length === 0 && (
-          <View style={[styles.banner, { backgroundColor: '#1E293B', marginHorizontal: SIZES.lg, marginBottom: SIZES.lg }]}>
-            <View style={styles.bannerContent}>
-              <Text style={styles.bannerSubtitle}>Gisenyi Gadgets</Text>
-              <Text style={styles.bannerTitle}>{`Best Tech\nDeals in RW`}</Text>
-              <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}>
-                <Text style={styles.bannerButtonText}>Shop Now</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
+
 
         {/* Categories */}
         <View style={styles.sectionHeader}>

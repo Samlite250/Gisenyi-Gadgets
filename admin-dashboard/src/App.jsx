@@ -22,6 +22,10 @@ import SupportPage    from './pages/SupportPage';
 import CategoriesPage from './pages/CategoriesPage';
 import SuppliersPage  from './pages/SuppliersPage';
 import BannersPage    from './pages/BannersPage';
+import LoginPage      from './pages/LoginPage';
+import Loader         from './components/Loader';
+import { supabase }   from './services/supabase';
+
 
 const NAV_ITEMS = [
   { path: '/',           icon: LayoutDashboard, label: 'Dashboard'  },
@@ -31,17 +35,17 @@ const NAV_ITEMS = [
   { path: '/orders',     icon: ShoppingCart,    label: 'Orders'     },
   { path: '/suppliers',  icon: Handshake,       label: 'Suppliers'  },
   { path: '/users',      icon: Users,           label: 'Users'      },
-  { path: '/vendors',    icon: Store,           label: 'Vendors'    },
   { path: '/reviews',    icon: Star,            label: 'Reviews'    },
   { path: '/support',    icon: MessageCircle,   label: 'Support'    },
   { path: '/settings',   icon: Settings,        label: 'Settings'   },
 ];
 
-function AppInner() {
+function AppInner({ user, onLogout }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const location = useLocation();
+
 
   const pageTitle = NAV_ITEMS.find((item) =>
     item.path === '/'
@@ -140,11 +144,13 @@ function AppInner() {
               className="nav-item nav-item-logout" 
               style={{ width: '100%', margin: 0 }}
               title={collapsed ? "Sign Out" : ""}
+              onClick={onLogout}
             >
               <LogOut size={20} />
               {showLabels && <span>Sign Out</span>}
             </button>
           </div>
+
         </aside>
 
         {/* ── Main area ── */}
@@ -176,11 +182,12 @@ function AppInner() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {!isMobile && (
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>Samuel Admin</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{user?.user_metadata?.full_name || 'Samuel Admin'}</div>
                     <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)' }}>Super Admin</div>
                   </div>
                 )}
-                <div className="admin-avatar">S</div>
+                <div className="admin-avatar">{user?.email?.charAt(0).toUpperCase() || 'S'}</div>
+
               </div>
             </div>
           </header>
@@ -194,7 +201,6 @@ function AppInner() {
               <Route path="/orders"     element={<OrdersPage />}     />
               <Route path="/suppliers"  element={<SuppliersPage />}  />
               <Route path="/users"      element={<UsersPage />}      />
-              <Route path="/vendors"    element={<VendorsPage />}    />
               <Route path="/reviews"    element={<ReviewsPage />}    />
               <Route path="/banners"    element={<BannersPage />}    />
               <Route path="/support"    element={<SupportPage />}    />
@@ -210,9 +216,42 @@ function AppInner() {
 }
 
 export default function App() {
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
+
+  if (loading) return <Loader message="Verifying session security..." />;
+
+  if (!session) {
+    return (
+      <>
+        <LoginPage onLogin={(user) => setSession({ user })} />
+        <Toaster position="top-right" />
+      </>
+    );
+  }
+
   return (
-    <Router>
-      <AppInner />
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <AppInner user={session.user} onLogout={handleLogout} />
     </Router>
   );
 }
+

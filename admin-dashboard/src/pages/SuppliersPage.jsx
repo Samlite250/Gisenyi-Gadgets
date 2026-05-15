@@ -6,37 +6,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
+import Loader from '../components/Loader';
 
-const DEMO_SUPPLIERS = [
-  {
-    id: 's1', name: 'Jean-Pierre Habimana', phone: '+250 788 123 456',
-    business_name: 'JP Electronics', location: 'Gisenyi Market',
-    commission_rate: 15, notes: 'Supplies iPhones and Samsung phones. Pays every Friday.',
-    is_active: true, products_count: 12, total_sold: 4200000,
-    created_at: '2026-01-15T08:00:00Z',
-  },
-  {
-    id: 's2', name: 'Marie Claire Uwimana', phone: '+250 788 234 567',
-    business_name: 'MC Tech Store', location: 'Rubavu',
-    commission_rate: 20, notes: 'Laptops and tablets. High-quality stock.',
-    is_active: true, products_count: 7, total_sold: 8500000,
-    created_at: '2026-02-10T09:00:00Z',
-  },
-  {
-    id: 's3', name: 'Eric Nkurunziza', phone: '+250 788 345 678',
-    business_name: 'EN Accessories', location: 'Kigali',
-    commission_rate: 18, notes: 'Accessories and earphones. Ships from Kigali.',
-    is_active: true, products_count: 24, total_sold: 1850000,
-    created_at: '2026-03-05T10:00:00Z',
-  },
-  {
-    id: 's4', name: 'Alice Ingabire', phone: '+250 788 456 789',
-    business_name: 'AI Gaming Zone', location: 'Musanze',
-    commission_rate: 12, notes: 'Gaming consoles and peripherals.',
-    is_active: false, products_count: 3, total_sold: 650000,
-    created_at: '2026-04-01T11:00:00Z',
-  },
-];
+
+
 
 const EMPTY_FORM = {
   name: '', phone: '', business_name: '', location: '',

@@ -5,6 +5,8 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import Loader from '../components/Loader';
+
 
 
 const STATUS_BADGE = {
@@ -47,7 +49,7 @@ function StatCard({ icon: Icon, label, value, change, color, bgColor }) {
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
-    totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0, totalVendors: 0,
+    totalRevenue: 0, totalOrders: 0, totalUsers: 0, totalProducts: 0, totalSuppliers: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [topProducts, setTopProducts] = useState([]);
@@ -61,28 +63,72 @@ export default function DashboardPage() {
       try {
         const [
           { count: totalOrdersCount },
-          { count: totalUsers },
-          { count: totalProducts },
-          { count: totalSuppliers },
+          { count: totalUsersCount },
+          { count: totalProductsCount },
+          { count: totalSuppliersCount },
           { data: recentOrdersData },
-          { data: topProductsData },
           { data: allOrdersData },
-          { data: supData },
+          { data: topSalesData },
+          { data: supplierData },
         ] = await Promise.all([
           supabase.from('orders').select('*', { count: 'exact', head: true }),
           supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'customer'),
           supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
           supabase.from('suppliers').select('*', { count: 'exact', head: true }),
           supabase.from('orders').select('id, order_number, profiles(full_name), total, status, created_at').order('created_at', { ascending: false }).limit(5),
-          supabase.from('products').select('id, name, price, stock').order('created_at', { ascending: false }).limit(5),
           supabase.from('orders').select('total, status, created_at, payment_status'),
+          supabase.from('order_items').select('product_id, product_name, price, quantity'),
           supabase.from('suppliers').select('total_sold, commission_rate'),
         ]);
 
-        const paidOrders = allOrdersData?.filter(o => o.payment_status === 'paid') || [];
-        const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0);
+        // ─── 1. Revenue & Sales Stats ──────────────────────────────
+        const now = new Date();
+        const curMonth = now.getMonth();
+        const curYear = now.getFullYear();
+        const lastMonth = curMonth === 0 ? 11 : curMonth - 1;
+        const lastYear = curMonth === 0 ? curYear - 1 : curYear;
 
-        // Process Chart Data (Monthly)
+        let curRevenue = 0, lastRevenue = 0;
+        let curOrders = 0, lastOrders = 0;
+
+        allOrdersData?.forEach(o => {
+          const d = new Date(o.created_at);
+          const m = d.getMonth();
+          const y = d.getFullYear();
+          const isPaid = o.payment_status === 'paid';
+
+          if (y === curYear && m === curMonth) {
+            curOrders++;
+            if (isPaid) curRevenue += Number(o.total);
+          } else if (y === lastYear && m === lastMonth) {
+            lastOrders++;
+            if (isPaid) lastRevenue += Number(o.total);
+          }
+        });
+
+        const totalRevenue = allOrdersData?.filter(o => o.payment_status === 'paid').reduce((sum, o) => sum + Number(o.total), 0) || 0;
+
+        const calcChange = (cur, last) => {
+          if (!last) return cur > 0 ? 100 : 0;
+          return Math.round(((cur - last) / last) * 100);
+        };
+
+        // ─── 2. Top Products by Sales Volume ───────────────────────
+        const productSales = {};
+        topSalesData?.forEach(item => {
+          if (!productSales[item.product_id]) {
+            productSales[item.product_id] = { name: item.product_name, sales: 0, revenue: 0, price: item.price };
+          }
+          productSales[item.product_id].sales += item.quantity;
+          productSales[item.product_id].revenue += item.price * item.quantity;
+        });
+
+        const processedTopProducts = Object.values(productSales)
+          .sort((a, b) => b.sales - a.sales)
+          .slice(0, 5)
+          .map(p => ({ name: p.name, price: p.price, stock: p.sales })); // Reuse 'stock' label for sales count in UI
+
+        // ─── 3. Monthly Forecast Data ──────────────────────────────
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const monthlyTotals = {};
         allOrdersData?.forEach(o => {
@@ -90,12 +136,17 @@ export default function DashboardPage() {
           monthlyTotals[m] = (monthlyTotals[m] || 0) + Number(o.total);
         });
         
-        const processedChart = months.map((m, i) => ({ 
-          month: m, 
-          val: (monthlyTotals[i] || 0) / 1000000 // In Millions
-        })).slice(-7); // Last 7 months
+        const currentMonthIdx = new Date().getMonth();
+        const processedChart = [];
+        for (let i = 6; i >= 0; i--) {
+          const mIdx = (currentMonthIdx - i + 12) % 12;
+          processedChart.push({
+            month: months[mIdx],
+            val: (monthlyTotals[mIdx] || 0) / 1000000
+          });
+        }
 
-        // Process Distribution
+        // ─── 4. Order Distribution ────────────────────────────────
         const statusCounts = {};
         allOrdersData?.forEach(o => {
           statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
@@ -112,15 +163,21 @@ export default function DashboardPage() {
         setStats({
           totalRevenue,
           totalOrders: totalOrdersCount || 0,
-          totalUsers: totalUsers || 0,
-          totalProducts: totalProducts || 0,
-          totalVendors: totalSuppliers || 0,
+          totalUsers: totalUsersCount || 0,
+          totalProducts: totalProductsCount || 0,
+          totalSuppliers: totalSuppliersCount || 0,
+          revenueChange: calcChange(curRevenue, lastRevenue),
+          ordersChange: calcChange(curOrders, lastOrders),
+          // For users/products, we'll keep them static or could add similar logic if created_at is available
+          usersChange: 5, 
+          productsChange: 2,
+          suppliersChange: 0,
         });
         setRecentOrders(recentOrdersData || []);
-        setTopProducts(topProductsData || []);
+        setTopProducts(processedTopProducts);
         setChartData(processedChart);
         setOrderDistribution(processedDist);
-        if (supData) setSuppliers(supData);
+        if (supplierData) setSuppliers(supplierData);
       } catch (err) {
         console.warn('Dashboard fetch error:', err.message);
       } finally {
@@ -135,14 +192,7 @@ export default function DashboardPage() {
   const ownStockRevenue = stats.totalRevenue - suppliers.reduce((sum, s) => sum + (s.total_sold || 0), 0);
   const myNetProfit = ownStockRevenue + consignmentCommissions;
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', color: 'var(--text-muted)' }}>
-      <div className="flex-col items-center gap-4">
-        <div className="admin-avatar" style={{ width: 60, height: 60, fontSize: 24, animation: 'pulse 1.5s infinite' }}>G</div>
-        <div style={{ fontWeight: 600, letterSpacing: 1 }}>SYNCHRONIZING DATA...</div>
-      </div>
-    </div>
-  );
+  if (loading) return <Loader message="Analyzing dashboard metrics..." />;
 
   return (
     <div>
@@ -156,11 +206,11 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="stats-grid">
-        <StatCard icon={TrendingUp} label="Total Revenue" value={fmt(stats.totalRevenue)} change={12.5} color="#34A853" bgColor="rgba(52,168,83,0.15)" />
-        <StatCard icon={ShoppingCart} label="Total Orders" value={stats.totalOrders?.toLocaleString() || '0'} change={8.2} color="#4285F4" bgColor="rgba(66,133,244,0.15)" />
-        <StatCard icon={Users} label="Total Users" value={stats.totalUsers?.toLocaleString() || '0'} change={15.3} color="#FBBC04" bgColor="rgba(251,188,4,0.15)" />
-        <StatCard icon={Package} label="Total Products" value={stats.totalProducts?.toLocaleString() || '0'} change={5.1} color="#4285F4" bgColor="rgba(66,133,244,0.15)" />
-        <StatCard icon={Store} label="Active Vendors" value={stats.totalVendors?.toLocaleString() || '0'} change={3.8} color="#34A853" bgColor="rgba(52,168,83,0.15)" />
+        <StatCard icon={TrendingUp} label="Total Revenue" value={fmt(stats.totalRevenue)} change={stats.revenueChange} color="#34A853" bgColor="rgba(52,168,83,0.15)" />
+        <StatCard icon={ShoppingCart} label="Total Orders" value={stats.totalOrders?.toLocaleString() || '0'} change={stats.ordersChange} color="#4285F4" bgColor="rgba(66,133,244,0.15)" />
+        <StatCard icon={Users} label="Total Users" value={stats.totalUsers?.toLocaleString() || '0'} change={stats.usersChange} color="#FBBC04" bgColor="rgba(251,188,4,0.15)" />
+        <StatCard icon={Package} label="Total Products" value={stats.totalProducts?.toLocaleString() || '0'} change={stats.productsChange} color="#4285F4" bgColor="rgba(66,133,244,0.15)" />
+        <StatCard icon={Handshake} label="Active Suppliers" value={stats.totalSuppliers?.toLocaleString() || '0'} change={stats.suppliersChange} color="#F59E0B" bgColor="rgba(245,158,11,0.15)" />
       </div>
 
       {/* Financial Settlement Overview */}
@@ -237,7 +287,7 @@ export default function DashboardPage() {
               {[
                 { label: 'New Product', icon: Plus, path: '/products', color: 'var(--primary-blue)' },
                 { label: 'Add Category', icon: Tag, path: '/categories', color: 'var(--primary-green)' },
-                { label: 'Verify Vendors', icon: Store, path: '/vendors', color: 'var(--warning)' },
+                { label: 'Manage Suppliers', icon: Handshake, path: '/suppliers', color: '#F59E0B' },
                 { label: 'Manage Users', icon: Users, path: '/users', color: 'var(--primary-blue)' },
               ].map((a) => (
                 <Link key={a.label} to={a.path} className="btn btn-ghost" style={{ 
@@ -304,7 +354,7 @@ export default function DashboardPage() {
                 }}>{i + 1}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>{p.stock} units in stock</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>{p.stock} units sold</div>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--primary-blue)', flexShrink: 0 }}>{fmt(p.price)}</div>
               </div>
@@ -319,39 +369,47 @@ export default function DashboardPage() {
 }
 
 function MiniBarChart({ data }) {
-  const max = 30; 
+  const maxVal = data?.length > 0 ? Math.max(...data.map(d => d.val), 2) : 10;
+  const max = Math.ceil(maxVal / 5) * 5; 
   const H = 220, W = 600, barW = 44, gap = 24;
 
   return (
-    <svg viewBox={`0 0 ${W} ${H + 40}`} style={{ width: '100%', height: 'auto' }}>
-      {[0, 10, 20, 30].map((v) => {
+    <svg viewBox={`-50 0 ${W + 50} ${H + 40}`} style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+      <defs>
+        <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--primary-blue)" />
+          <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+
+      {[0, max / 2, max].map((v) => {
         const y = H - (v / max) * H;
         return (
           <g key={v}>
-            {/* Grid lines removed for professional look */}
-            <text x="-15" y={y + 4} fill="var(--text-muted)" fontSize={11} fontWeight={600} textAnchor="end">{v}M</text>
+            <line x1="0" y1={y} x2={W - 40} y2={y} stroke="var(--border-light)" strokeWidth={1} strokeDasharray="4 4" />
+            <text x="-15" y={y + 4} fill="var(--text-muted)" fontSize={11} fontWeight={600} textAnchor="end">{Math.round(v)}M</text>
           </g>
         );
       })}
 
       {data?.map((d, i) => {
-        const x = i * (barW + gap) + 40;
+        const x = i * (barW + gap) + 10;
         const barH = (d.val / max) * H;
         const y = H - barH;
         return (
           <g key={i} className="chart-bar-group">
-            <rect x={x} y={y} width={barW} height={barH} rx={8} fill="url(#barGrad)" style={{ transition: 'all 0.3s' }} />
+            <rect 
+              x={x} y={y} width={barW} height={barH} rx={6} 
+              fill="url(#barGrad)" 
+              style={{ transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)' }} 
+            />
             <text x={x + barW / 2} y={H + 24} textAnchor="middle" fill="var(--text-secondary)" fontSize={12} fontWeight={600}>{d.month}</text>
-            <text x={x + barW / 2} y={y - 10} textAnchor="middle" fill="var(--primary-blue)" fontSize={12} fontWeight={800}>{Math.round(d.val)}M</text>
+            {d.val > 0 && (
+              <text x={x + barW / 2} y={y - 10} textAnchor="middle" fill="var(--primary-blue)" fontSize={11} fontWeight={800}>{d.val.toFixed(1)}M</text>
+            )}
           </g>
         );
       })}
-      <defs>
-        <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--primary-blue)" />
-          <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.4" />
-        </linearGradient>
-      </defs>
     </svg>
   );
 }

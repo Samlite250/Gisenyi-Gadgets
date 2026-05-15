@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Search, Shield, ShieldOff, Eye, Edit2, X } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import Loader from '../components/Loader';
+
 
 const ROLE_BADGE = { customer: 'badge-blue', vendor: 'badge-green', admin: 'badge-yellow' };
 
@@ -14,6 +16,7 @@ export default function UsersPage() {
   const [selected, setSelected] = useState(null);
   const [editUser, setEditUser] = useState(null);
   const [form, setForm] = useState({ full_name: '', phone: '', city: '', country: '', role: '' });
+  const [supplierCount, setSupplierCount] = useState(0);
   const [togglingId, setTogglingId] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -21,7 +24,10 @@ export default function UsersPage() {
     try {
       const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
       if (data?.length) setUsers(data);
-    } catch { /* keep demo */ }
+      
+      const { count } = await supabase.from('suppliers').select('*', { count: 'exact', head: true });
+      setSupplierCount(count || 0);
+    } catch (err) { console.warn(err.message); }
     finally { setLoading(false); }
   }, []);
 
@@ -56,7 +62,10 @@ export default function UsersPage() {
 
   const roleCounts = users.reduce((acc, u) => { acc[u.role] = (acc[u.role] || 0) + 1; return acc; }, {});
 
+  if (loading) return <Loader message="Managing user directory..." />;
+
   return (
+
     <div>
       <div className="page-header">
         <div>
@@ -70,13 +79,13 @@ export default function UsersPage() {
         {[
           { label: 'Total Users', value: users.length, color: '#4285F4', bg: 'rgba(66,133,244,0.1)' },
           { label: 'Customers', value: roleCounts.customer || 0, color: '#34A853', bg: 'rgba(52,168,83,0.1)' },
-          { label: 'Vendors', value: roleCounts.vendor || 0, color: '#FBBC04', bg: 'rgba(251,188,4,0.1)' },
-          { label: 'Active', value: users.filter(u => u.is_active).length, color: '#34A853', bg: 'rgba(52,168,83,0.1)' },
+          { label: 'Suppliers', value: supplierCount, color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
+          { label: 'Active Users', value: users.filter(u => u.is_active).length, color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
         ].map((s) => (
           <div className="stat-card" key={s.label}>
             <div className="stat-icon" style={{ background: s.bg }}>
               <div style={{ color: s.color, fontWeight: 800, fontSize: 18 }}>
-                {s.label === 'Total Users' ? '👥' : s.label === 'Vendors' ? '🏪' : s.label === 'Active' ? '✅' : '👤'}
+                {s.label === 'Total Users' ? '👥' : s.label === 'Suppliers' ? '🤝' : s.label === 'Active Users' ? '✅' : '👤'}
               </div>
             </div>
             <div className="stat-label">{s.label}</div>
@@ -97,7 +106,7 @@ export default function UsersPage() {
               <input className="input input-sm" placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <select className="input input-sm" style={{ width: 130 }} value={roleFilter} onChange={(e) => setRole(e.target.value)}>
-              {['All', 'customer', 'vendor', 'admin'].map((r) => <option key={r} value={r} style={{ textTransform: 'capitalize' }}>{r === 'All' ? 'All Roles' : r}</option>)}
+              {['All', 'customer', 'admin'].map((r) => <option key={r} value={r} style={{ textTransform: 'capitalize' }}>{r === 'All' ? 'All Roles' : r}</option>)}
             </select>
           </div>
           <span className="text-muted">{filtered.length} users</span>
@@ -210,7 +219,6 @@ export default function UsersPage() {
                     <label className="form-label">Role</label>
                     <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
                       <option value="customer">Customer</option>
-                      <option value="vendor">Vendor</option>
                       <option value="admin">Admin</option>
                     </select>
                   </div>

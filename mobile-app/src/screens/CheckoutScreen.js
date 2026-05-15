@@ -42,7 +42,7 @@ export default function CheckoutScreen({ navigation }) {
   const displayPhone = profile?.phone || '—';
   const displayAddress = profile?.address
     ? `${profile.address}, ${profile.city || 'Gisenyi'}`
-    : 'KG 15 Ave, Gisenyi, Rubavu District';
+    : 'No address set. Please update in profile.';
 
   // Map UI payment method IDs → DB allowed values ('momo' | 'card' | 'cash')
   const toDbPayment = (id) => {
@@ -187,17 +187,17 @@ export default function CheckoutScreen({ navigation }) {
                     {m.id === 'mtn' || m.id === 'airtel' ? (
                       <Text style={styles.instructionText}>
                         {m.id === 'mtn' 
-                          ? (settings.mtnInstructions || "1. Dial *182#\n2. Transfer to: +250 78X XXX XXX\n3. Keep TxID for confirmation.") 
-                          : (settings.airtelInstructions || "1. Dial *500#\n2. Transfer to: +250 73X XXX XXX\n3. Keep TxID for confirmation.")
+                          ? (settings.mtnInstructions || "Please contact support for MoMo details.") 
+                          : (settings.airtelInstructions || "Please contact support for Airtel details.")
                         }
                       </Text>
                     ) : m.id === 'bank' ? (
                       <Text style={styles.instructionText}>
-                        {settings.bankInstructions || "1. Transfer to Bank of Kigali (BK)\n2. Account: 000 XXXX XXX\n3. Use Order # as reference."}
+                        {settings.bankInstructions || "Bank details not configured."}
                       </Text>
                     ) : m.id === 'crypto' ? (
                       <Text style={styles.instructionText}>
-                        {settings.cryptoInstructions || "1. Send USDT (TRC-20) to: TXXXXXX...\n2. Take a screenshot of the TxID."}
+                        {settings.cryptoInstructions || "Crypto wallet not configured."}
                       </Text>
                     ) : (
                       <Text style={styles.instructionText}>

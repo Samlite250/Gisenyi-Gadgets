@@ -20,7 +20,12 @@ export function AuthProvider({ children }) {
 
     // Listen for auth state changes (persistent login)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
+        // After sign-up, always force the user back to Login instead of auto-logging in
+        if (event === 'SIGNED_UP') {
+          await supabase.auth.signOut();
+          return;
+        }
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) fetchProfile(session.user.id);

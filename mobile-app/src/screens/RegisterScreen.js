@@ -55,19 +55,18 @@ export default function RegisterScreen({ navigation }) {
     setLoading(true);
     setFocusedField(null);
     try {
-      const { data } = await signUp({
+      await signUp({
         email: form.email.trim().toLowerCase(),
         password: form.password,
         fullName: form.fullName.trim(),
       });
 
-      if (!data.session) {
-        Alert.alert(
-          'Check your email! 📧',
-          'We sent a verification link to your email. Please verify to login.',
-          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
-        );
-      }
+      Alert.alert(
+        'Account Created!',
+        'Your account has been created. Please sign in to continue.',
+        [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }],
+        { cancelable: false }
+      );
     } catch (e) {
       setError(e.message || 'Registration failed. Please try again.');
     } finally {

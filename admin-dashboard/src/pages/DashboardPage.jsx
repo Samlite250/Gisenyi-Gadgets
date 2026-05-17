@@ -214,52 +214,43 @@ export default function DashboardPage() {
       </div>
 
       {/* Financial Settlement Overview */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-        <div className="card" style={{ 
-          padding: 24, 
-          background: 'linear-gradient(135deg, #1E293B, #0F172A)', 
-          color: 'white',
-          border: 'none',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ fontSize: 13, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>My Net Profit</div>
-              <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8, color: '#10B981', letterSpacing: -1 }}>{fmt(myNetProfit)}</div>
+      <div className="finance-grid">
+        {/* Net Profit Card */}
+        <div className="finance-card finance-card--dark">
+          <div className="finance-card__top">
+            <div className="finance-card__icon finance-card__icon--green">
+              <TrendingUp size={22} color="#10B981" />
             </div>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <TrendingUp size={24} color="#10B981" />
-            </div>
+            <span className="finance-card__label">My Net Profit</span>
           </div>
-          <div style={{ fontSize: 13, marginTop: 16, color: '#94A3B8', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 6 }}>
-              <Package size={12} /> {fmt(ownStockRevenue)} (Own Stock)
+          <div className="finance-card__amount finance-card__amount--green">{fmt(myNetProfit)}</div>
+          <div className="finance-card__breakdown">
+            <span className="finance-card__pill">
+              <Package size={11} />
+              <span>{fmt(ownStockRevenue)}</span>
+              <span className="finance-card__pill-tag">Own Stock</span>
             </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(255,255,255,0.1)', padding: '4px 8px', borderRadius: 6 }}>
-              <Handshake size={12} /> {fmt(consignmentCommissions)} (Commissions)
+            <span className="finance-card__pill">
+              <Handshake size={11} />
+              <span>{fmt(consignmentCommissions)}</span>
+              <span className="finance-card__pill-tag">Commissions</span>
             </span>
           </div>
         </div>
 
-        <div className="card" style={{ 
-          padding: 24, 
-          background: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)',
-          border: '1px solid #FDE68A',
-          boxShadow: '0 10px 25px rgba(217, 119, 6, 0.05)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <div style={{ fontSize: 13, color: '#D97706', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Owed To Suppliers</div>
-              <div style={{ fontSize: 36, fontWeight: 800, marginTop: 8, color: '#B45309', letterSpacing: -1 }}>{fmt(owedToSuppliers)}</div>
+        {/* Owed to Suppliers Card */}
+        <div className="finance-card finance-card--amber">
+          <div className="finance-card__top">
+            <div className="finance-card__icon finance-card__icon--amber">
+              <Handshake size={22} color="#D97706" />
             </div>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(217, 119, 6, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Handshake size={24} color="#D97706" />
-            </div>
+            <span className="finance-card__label finance-card__label--amber">Owed To Suppliers</span>
           </div>
-          <div style={{ fontSize: 14, marginTop: 16, color: '#B45309', fontWeight: 600, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span>Unpaid settlements for {suppliers.length} partners</span>
-            <Link to="/suppliers" style={{ color: '#D97706', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: 4 }}>
-              View Details <ArrowUpRight size={14} />
+          <div className="finance-card__amount finance-card__amount--amber">{fmt(owedToSuppliers)}</div>
+          <div className="finance-card__footer">
+            <span className="finance-card__note">Unpaid settlements for <strong>{suppliers.length}</strong> partners</span>
+            <Link to="/suppliers" className="finance-card__link">
+              View Details <ArrowUpRight size={13} />
             </Link>
           </div>
         </div>

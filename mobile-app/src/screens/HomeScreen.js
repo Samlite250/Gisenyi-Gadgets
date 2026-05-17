@@ -711,21 +711,21 @@ const styles = StyleSheet.create({
   hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },
 
-  productCard: { 
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 20, 
-    padding: 8, 
-    borderWidth: 1, 
+  productCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 8,
+    borderWidth: 1,
     borderColor: '#F1F5F9',
     marginVertical: 6,
     width: 170,
     height: 250,
     ...SHADOWS.sm,
   },
-  productImageWrap: { 
+  productImageWrap: {
     height: 150,
-    backgroundColor: '#F1F5F9', 
-    borderRadius: 18, 
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
     padding: 12,
     justifyContent: 'center',
     alignItems: 'center',

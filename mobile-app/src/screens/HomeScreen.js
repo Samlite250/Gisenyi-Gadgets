@@ -265,7 +265,7 @@ export default function HomeScreen({ navigation }) {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
-              snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 + 16}
+              snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16}
               decelerationRate="fast"
             >
               {banners.map((b, index) => (
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
 
   bannerContainer: { paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
   banner: {
-    width: Dimensions.get('window').width - SIZES.lg * 2,
+    width: Dimensions.get('window').width - SIZES.lg * 2 - 8,
     height: 170,
     borderRadius: 24,
     paddingLeft: SIZES.xl,

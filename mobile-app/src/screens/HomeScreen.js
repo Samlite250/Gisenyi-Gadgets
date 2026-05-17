@@ -796,7 +796,6 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#D1D5DB',
-    transition: 'all 0.3s ease',
   },
   activeDot: {
     width: 24,

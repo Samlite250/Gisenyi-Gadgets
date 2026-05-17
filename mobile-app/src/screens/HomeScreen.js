@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
-  TouchableOpacity, Image, FlatList, RefreshControl, Platform,
+  TouchableOpacity, Image, FlatList, RefreshControl, Platform, Dimensions,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -294,9 +294,22 @@ export default function HomeScreen({ navigation }) {
         {/* Banners Carousel — from DB */}
         {banners.length > 0 && (
           <View style={styles.bannerContainerWrap}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: SIZES.lg, gap: 16 }}>
-              {banners.map((b) => (
-                <View key={b.id} style={[styles.banner, { backgroundColor: b.color }]}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
+              snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 + 16}
+              decelerationRate="fast"
+            >
+              {banners.map((b, index) => (
+                <View
+                  key={b.id}
+                  style={[
+                    styles.banner,
+                    { backgroundColor: b.color },
+                    index !== banners.length - 1 && { marginRight: 16 }
+                  ]}
+                >
                   <View style={styles.bannerContent}>
                     <Text style={styles.bannerSubtitle}>{b.subtitle}</Text>
                     <Text style={styles.bannerTitle}>{b.title}</Text>
@@ -601,15 +614,49 @@ const styles = StyleSheet.create({
 
   bannerContainer: { paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
   banner: {
-    height: 170, borderRadius: 24, padding: SIZES.lg,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    ...SHADOWS.md, overflow: 'hidden',
+    width: Dimensions.get('window').width - SIZES.lg * 2,
+    height: 170,
+    borderRadius: 24,
+    padding: SIZES.xl,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    ...SHADOWS.md,
+    overflow: 'hidden',
   },
-  bannerContent: { flex: 1, justifyContent: 'center', gap: 12 },
-  bannerTitle: { fontSize: 24, fontWeight: '900', color: '#FFFFFF', lineHeight: 30, letterSpacing: -0.5 },
-  bannerButton: { alignSelf: 'flex-start', backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 10, paddingHorizontal: 18 },
-  bannerButtonText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
-  bannerImage: { width: 130, height: 130, borderRadius: 65, right: -10, position: 'relative' },
+  bannerContent: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 12,
+    paddingRight: SIZES.md,
+  },
+  bannerTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    lineHeight: 28,
+    letterSpacing: -0.5,
+  },
+  bannerButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#3B82F6',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    ...SHADOWS.sm,
+  },
+  bannerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  bannerImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    right: 0,
+    position: 'relative',
+  },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.5 },

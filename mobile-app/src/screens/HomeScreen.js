@@ -5,11 +5,11 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  Bell, Search, ShoppingBag, Heart, 
+import {
+  Bell, Search, ShoppingBag, Heart,
   ChevronRight, Star, MessageSquare,
-  Smartphone, Laptop, Headphones, Watch, Gamepad2, 
-  Cpu, Camera, MapPin, Tablet, Sliders
+  Smartphone, Laptop, Headphones, Watch, Gamepad2,
+  Cpu, Camera, MapPin, Tablet, Sliders, Flame
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -295,7 +295,10 @@ export default function HomeScreen({ navigation }) {
         {offers.length > 0 && (
           <View style={styles.offersSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>🔥 Special Offers</Text>
+              <View style={styles.sectionTitleRow}>
+                <Flame size={22} color="#EF4444" fill="#EF4444" />
+                <Text style={styles.sectionTitle}>Special Offers</Text>
+              </View>
               <TouchableOpacity onPress={() => navigation.navigate('Search')}>
                 <Text style={styles.seeAll}>See all</Text>
               </TouchableOpacity>
@@ -669,6 +672,11 @@ const styles = StyleSheet.create({
   },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.5 },
   seeAll: { fontSize: 13, color: '#3B82F6', fontWeight: '700' },
 

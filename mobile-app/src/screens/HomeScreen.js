@@ -284,7 +284,9 @@ export default function HomeScreen({ navigation }) {
                       <Text style={styles.bannerButtonText}>{b.button_text}</Text>
                     </TouchableOpacity>
                   </View>
-                  <Image source={{ uri: b.image_url }} style={styles.bannerImage} />
+                  <View style={styles.bannerImageContainer}>
+                    <Image source={{ uri: b.image_url }} style={styles.bannerImage} resizeMode="cover" />
+                  </View>
                 </View>
               ))}
             </ScrollView>
@@ -665,11 +667,18 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '800',
   },
+  bannerImageContainer: {
+    width: 150,
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: -25,
+  },
   bannerImage: {
     width: 140,
     height: 140,
     borderRadius: 70,
-    marginRight: -20,
+    backgroundColor: '#FFFFFF',
   },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },

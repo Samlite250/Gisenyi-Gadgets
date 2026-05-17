@@ -6,8 +6,8 @@
 DELETE FROM public.banners WHERE title = 'Capture Every Moment';
 
 -- Restore the original Canon EOS 5D Mark IV banner
--- subtitle = small text on top, title = big text below
--- Using professional Canon camera image positioned on right
+-- subtitle = small text on top (PHOTOGRAPHY), title = big text below (Canon EOS 5D Mark IV)
+-- image_url will render as circular badge on the right side
 INSERT INTO public.banners (type, subtitle, title, button_text, color, image_url, sort_order) VALUES
   (
     'banner',
@@ -15,7 +15,7 @@ INSERT INTO public.banners (type, subtitle, title, button_text, color, image_url
     'Canon EOS 5D Mark IV',
     'Shop Now',
     '#0F172A',
-    'https://images.unsplash.com/photo-1606980707358-bef1e7b4c951?q=80&w=600',
+    'https://images.unsplash.com/photo-1606980707358-bef1e7b4c951?q=80&w=240&h=240&fit=crop',
     1
   );
 

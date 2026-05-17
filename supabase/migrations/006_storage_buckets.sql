@@ -17,18 +17,22 @@ ON CONFLICT (id) DO NOTHING;
 -- 2. Create security policies to allow uploads, updates, and deletes
 -- (For MVP, we allow public access to upload and manage files. In production, restrict INSERT to authenticated admins)
 
-CREATE POLICY "product_images_select" 
-ON storage.objects FOR SELECT 
+DROP POLICY IF EXISTS "product_images_select" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_insert" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_update" ON storage.objects;
+DROP POLICY IF EXISTS "product_images_delete" ON storage.objects;
+CREATE POLICY "product_images_select"
+ON storage.objects FOR SELECT
 USING (bucket_id = 'product-images');
 
-CREATE POLICY "product_images_insert" 
-ON storage.objects FOR INSERT 
+CREATE POLICY "product_images_insert"
+ON storage.objects FOR INSERT
 WITH CHECK (bucket_id = 'product-images');
 
-CREATE POLICY "product_images_update" 
-ON storage.objects FOR UPDATE 
+CREATE POLICY "product_images_update"
+ON storage.objects FOR UPDATE
 USING (bucket_id = 'product-images');
 
-CREATE POLICY "product_images_delete" 
-ON storage.objects FOR DELETE 
+CREATE POLICY "product_images_delete"
+ON storage.objects FOR DELETE
 USING (bucket_id = 'product-images');

@@ -18,10 +18,12 @@ CREATE TABLE IF NOT EXISTS public.promo_codes (
 -- RLS: only authenticated users can read active codes (for validation)
 ALTER TABLE public.promo_codes ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can read active promo codes" ON public.promo_codes;
 CREATE POLICY "Anyone can read active promo codes"
   ON public.promo_codes FOR SELECT
   USING (is_active = true AND (expires_at IS NULL OR expires_at > now()));
 
+DROP POLICY IF EXISTS "Only admins can manage promo codes" ON public.promo_codes;
 CREATE POLICY "Only admins can manage promo codes"
   ON public.promo_codes FOR ALL
   USING (

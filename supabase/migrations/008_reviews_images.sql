@@ -13,10 +13,12 @@ VALUES ('review-images', 'review-images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- 3. Storage Policies for review-images
+DROP POLICY IF EXISTS "Review Images: Public Read" ON storage.objects;
 CREATE POLICY "Review Images: Public Read"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'review-images');
 
+DROP POLICY IF EXISTS "Review Images: Authenticated Upload" ON storage.objects;
 CREATE POLICY "Review Images: Authenticated Upload"
 ON storage.objects FOR INSERT
 TO authenticated
@@ -24,6 +26,7 @@ WITH CHECK (bucket_id = 'review-images');
 
 -- Note: We assume reviews table already has INSERT policies for authenticated users.
 -- Let's ensure authenticated users can insert reviews
+DROP POLICY IF EXISTS "Reviews: Auth Insert" ON public.reviews;
 CREATE POLICY "Reviews: Auth Insert"
 ON public.reviews FOR INSERT
 TO authenticated

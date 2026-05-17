@@ -20,11 +20,16 @@ CREATE TABLE IF NOT EXISTS public.suppliers (
 
 -- 2. ENABLE RLS ON SUPPLIERS
 ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Suppliers: all access" ON public.suppliers;
 CREATE POLICY "Suppliers: all access" ON public.suppliers USING (true) WITH CHECK (true);
 
 -- 3. FIX ADMIN UPDATE/DELETE POLICIES
 -- The admin panel needs INSERT/UPDATE/DELETE access.
 -- For this MVP, we allow all operations (the panel is local).
+DROP POLICY IF EXISTS "Categories: all access" ON public.categories;
+DROP POLICY IF EXISTS "Products: all access"   ON public.products;
+DROP POLICY IF EXISTS "Orders: all access"     ON public.orders;
+DROP POLICY IF EXISTS "Order items: all access" ON public.order_items;
 CREATE POLICY "Categories: all access" ON public.categories USING (true) WITH CHECK (true);
 CREATE POLICY "Products: all access"   ON public.products   USING (true) WITH CHECK (true);
 CREATE POLICY "Orders: all access"     ON public.orders     USING (true) WITH CHECK (true);

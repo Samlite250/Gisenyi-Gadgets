@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS public.banners (
 
 -- RLS
 ALTER TABLE public.banners ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Banners: public read" ON public.banners;
+DROP POLICY IF EXISTS "Banners: admin all"   ON public.banners;
 CREATE POLICY "Banners: public read" ON public.banners FOR SELECT USING (true);
 CREATE POLICY "Banners: admin all"   ON public.banners USING (true) WITH CHECK (true);
 

@@ -162,7 +162,7 @@ export default function HomeScreen({ navigation }) {
 
     let currentIndex = 0;
     const BANNER_INTERVAL = 10000; // 10 seconds
-    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16;
+    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.lg * 2 + 16;
 
     const scrollToNext = () => {
       if (bannerPaused) return;
@@ -217,6 +217,16 @@ export default function HomeScreen({ navigation }) {
   const handleOfferTouchStart = () => {
     setOfferPaused(true);
     setTimeout(() => setOfferPaused(false), 3000);
+  };
+
+  // Update pagination dots on manual scroll
+  const handleBannerScroll = (event) => {
+    const scrollPosition = event.nativeEvent.contentOffset.x;
+    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.lg * 2 + 16;
+    const index = Math.round(scrollPosition / BANNER_WIDTH);
+    if (index >= 0 && index < banners.length) {
+      setActiveBannerIndex(index);
+    }
   };
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
@@ -337,10 +347,12 @@ export default function HomeScreen({ navigation }) {
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
-              snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16}
+              snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 + 16}
+              snapToAlignment="center"
               decelerationRate="fast"
-              pagingEnabled
+              pagingEnabled={false}
               onTouchStart={handleBannerTouchStart}
+              onScroll={handleBannerScroll}
               scrollEventThrottle={16}
             >
               {banners.map((b, index) => (
@@ -720,7 +732,7 @@ const styles = StyleSheet.create({
 
   bannerContainer: { paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
   banner: {
-    width: Dimensions.get('window').width - SIZES.lg * 2 - 8,
+    width: Dimensions.get('window').width - SIZES.lg * 2,
     height: 170,
     borderRadius: 24,
     paddingLeft: SIZES.xl,

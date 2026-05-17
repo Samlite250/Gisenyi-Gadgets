@@ -41,6 +41,7 @@ export default function LoginPage({ onLogin }) {
       {/* ── Left branded panel ── */}
       <div className="login-panel">
         <div className="login-panel-grid" />
+        <div className="login-panel-gradient" />
 
         <div className="login-brand">
           <div className="login-brand-logo-enhanced">
@@ -54,29 +55,31 @@ export default function LoginPage({ onLogin }) {
 
         <div className="login-panel-body">
           <h1 className="login-panel-headline">
-            Manage your<br />store with <em>ease</em>
+            Powerful tools<br />for your <em>business</em>
           </h1>
           <p className="login-panel-desc">
-            Full control over orders, products, customers, and analytics — all in one place.
+            Manage inventory, track orders, analyze sales, and grow your e-commerce business from one beautiful dashboard.
           </p>
-          <div className="login-panel-stats">
-            <div className="login-stat">
-              <span className="login-stat-val">RWF</span>
-              <span className="login-stat-lbl">Currency</span>
+          <div className="login-panel-features">
+            <div className="login-feature">
+              <div className="login-feature-icon">📦</div>
+              <span>Inventory Management</span>
             </div>
-            <div className="login-stat">
-              <span className="login-stat-val">24/7</span>
-              <span className="login-stat-lbl">Live Data</span>
+            <div className="login-feature">
+              <div className="login-feature-icon">📊</div>
+              <span>Real-time Analytics</span>
             </div>
-            <div className="login-stat">
-              <span className="login-stat-val">100%</span>
-              <span className="login-stat-lbl">Secure</span>
+            <div className="login-feature">
+              <div className="login-feature-icon">🔒</div>
+              <span>Secure Platform</span>
             </div>
           </div>
         </div>
 
         <div className="login-panel-footer">
-          © {new Date().getFullYear()} Gisenyi Gadgets · Rwanda
+          <span>© {new Date().getFullYear()} Gisenyi Gadgets</span>
+          <span className="login-footer-dot">•</span>
+          <span>Gisenyi, Rwanda</span>
         </div>
       </div>
 
@@ -87,23 +90,20 @@ export default function LoginPage({ onLogin }) {
             <div className="login-logo-mobile">
               <img src="/logo.png" alt="Gisenyi Gadgets" />
             </div>
-            <div className="login-welcome">Admin Portal</div>
-            <h2 className="login-title">Welcome Back</h2>
-            <p className="login-subtitle">Sign in to your dashboard to manage products, orders, and more</p>
+            <h2 className="login-title">Welcome back</h2>
+            <p className="login-subtitle">Enter your credentials to access the admin dashboard</p>
           </div>
 
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin} className="login-form">
             <div className="login-field">
-              <label className="login-label">
-                <Mail size={13} /> Email Address
-              </label>
+              <label className="login-label">Email address</label>
               <div className="login-input-wrap">
-                <span className="login-input-icon"><Mail size={16} /></span>
+                <Mail size={18} className="login-input-icon" />
                 <input
                   type="email"
                   className="login-input"
                   required
-                  placeholder="admin@gisenyigadgets.rw"
+                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
@@ -112,16 +112,14 @@ export default function LoginPage({ onLogin }) {
             </div>
 
             <div className="login-field">
-              <label className="login-label">
-                <Lock size={13} /> Password
-              </label>
+              <label className="login-label">Password</label>
               <div className="login-input-wrap">
-                <span className="login-input-icon"><Lock size={16} /></span>
+                <Lock size={18} className="login-input-icon" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   className="login-input"
                   required
-                  placeholder="••••••••"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="current-password"
@@ -139,19 +137,22 @@ export default function LoginPage({ onLogin }) {
 
             <button type="submit" className="login-submit" disabled={loading}>
               {loading ? (
-                'Authenticating...'
+                <span className="login-submit-loading">
+                  <span className="login-spinner"></span>
+                  Signing in...
+                </span>
               ) : (
                 <>
-                  Sign In <ArrowRight size={18} />
+                  Sign in to dashboard
+                  <ArrowRight size={18} />
                 </>
               )}
             </button>
           </form>
 
           <div className="login-footer">
-            <div className="login-secure-dot" />
-            <ShieldCheck size={13} />
-            Secured with Supabase Auth
+            <ShieldCheck size={14} className="login-shield-icon" />
+            <span>Secured with Supabase authentication</span>
           </div>
         </div>
       </div>

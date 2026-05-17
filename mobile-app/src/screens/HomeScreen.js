@@ -258,39 +258,6 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Special Offers — from DB */}
-        {offers.length > 0 && (
-          <>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Special Offers</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-                <Text style={styles.seeAll}>See all</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.offerRow}>
-              {offers.map((offer) => (
-                <TouchableOpacity
-                  key={offer.id}
-                  style={[styles.offerCard, { backgroundColor: offer.color }]}
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Search', { category: offer.link_category })}
-                >
-                  <View style={styles.offerImageHalf}>
-                    <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
-                  </View>
-                  <View style={styles.offerContentHalf}>
-                    <View style={styles.offerBadge}>
-                      <Text style={styles.offerDiscount}>{offer.discount}</Text>
-                    </View>
-                    <Text style={styles.offerLabel}>{offer.label}</Text>
-                    <Text style={styles.offerTagline} numberOfLines={1}>{offer.tagline}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </>
-        )}
-
         {/* Banners Carousel — from DB */}
         {banners.length > 0 && (
           <View style={styles.bannerContainerWrap}>
@@ -319,6 +286,49 @@ export default function HomeScreen({ navigation }) {
                   </View>
                   <Image source={{ uri: b.image_url }} style={styles.bannerImage} />
                 </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
+        {/* Special Offers — from DB */}
+        {offers.length > 0 && (
+          <View style={styles.offersSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>🔥 Special Offers</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+                <Text style={styles.seeAll}>See all</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
+              snapToInterval={186}
+              decelerationRate="fast"
+            >
+              {offers.map((offer, index) => (
+                <TouchableOpacity
+                  key={offer.id}
+                  style={[
+                    styles.offerCard,
+                    { backgroundColor: offer.color },
+                    index !== offers.length - 1 && { marginRight: 16 }
+                  ]}
+                  activeOpacity={0.9}
+                  onPress={() => navigation.navigate('Search', { category: offer.link_category })}
+                >
+                  <View style={styles.offerImageHalf}>
+                    <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
+                  </View>
+                  <View style={styles.offerContentHalf}>
+                    <View style={styles.offerBadge}>
+                      <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                    </View>
+                    <Text style={styles.offerLabel}>{offer.label}</Text>
+                    <Text style={styles.offerTagline} numberOfLines={2}>{offer.tagline}</Text>
+                  </View>
+                </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
@@ -725,22 +735,58 @@ const styles = StyleSheet.create({
   productPriceSmall: { fontSize: 12, fontWeight: '800', color: '#3B82F6' },
   productPrice: { fontSize: 16, fontWeight: '900', color: '#3B82F6', marginTop: 4 },
 
-  offerRow: { paddingHorizontal: SIZES.lg, paddingRight: 40, gap: 16, marginBottom: SIZES.lg, paddingBottom: 4 },
   offerCard: {
-    width: 170, height: 230, borderRadius: 28,
-    ...SHADOWS.md, overflow: 'hidden',
-    borderWidth: 1, borderColor: '#F0F0F0',
+    width: 170,
+    height: 240,
+    borderRadius: 24,
+    ...SHADOWS.md,
+    overflow: 'hidden',
+    borderWidth: 0,
   },
-  offerImageHalf: { width: '100%', height: '48%', backgroundColor: '#F8F9FA' },
-  offerImgFull: { width: '100%', height: '100%' },
-  offerContentHalf: { flex: 1, paddingHorizontal: 16, paddingVertical: 14, justifyContent: 'flex-start', gap: 4 },
+  offerImageHalf: {
+    width: '100%',
+    height: '52%',
+    backgroundColor: '#F8F9FA',
+  },
+  offerImgFull: {
+    width: '100%',
+    height: '100%',
+  },
+  offerContentHalf: {
+    flex: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    justifyContent: 'flex-start',
+    gap: 6,
+  },
   offerBadge: {
-    alignSelf: 'flex-start', backgroundColor: 'rgba(255,255,255,0.25)',
-    borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4, marginBottom: 4,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginBottom: 4,
+    ...SHADOWS.sm,
   },
-  offerDiscount: { fontSize: 10, fontWeight: '900', color: '#FFFFFF', letterSpacing: 0.8 },
-  offerLabel: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5, lineHeight: 22 },
-  offerTagline: { fontSize: 12, color: 'rgba(255,255,255,0.9)', fontWeight: '600', lineHeight: 16 },
+  offerDiscount: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+  offerLabel: {
+    fontSize: 19,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+    lineHeight: 24,
+  },
+  offerTagline: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.95)',
+    fontWeight: '600',
+    lineHeight: 18,
+  },
 
   helpCard: {
     marginHorizontal: SIZES.lg,
@@ -766,8 +812,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
 
-  bannerContainerWrap: { marginBottom: SIZES.lg },
-  bannerSubtitle: { fontSize: 12, color: '#E0E7FF', fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.5 },
+  bannerContainerWrap: {
+    marginBottom: SIZES.xl,
+    marginTop: SIZES.md,
+  },
+  bannerSubtitle: {
+    fontSize: 11,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+
+  offersSection: {
+    marginBottom: SIZES.xl,
+  },
 
   flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.lg, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
   flashDealContent: { flex: 1, justifyContent: 'center', gap: 6 },

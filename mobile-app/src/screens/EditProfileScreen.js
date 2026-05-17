@@ -49,7 +49,7 @@ export default function EditProfileScreen({ navigation }) {
 
     try {
       const ext = avatarToUpload.uri.substring(avatarToUpload.uri.lastIndexOf('.') + 1) || 'jpg';
-      const fileName = `avatars/${user.id}-${Date.now()}.${ext}`;
+      const fileName = `${user.id}-${Date.now()}.${ext}`;
 
       const formData = new FormData();
       formData.append('file', {

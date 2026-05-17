@@ -36,8 +36,5 @@ CREATE POLICY "Orders: all access"     ON public.orders     USING (true) WITH CH
 CREATE POLICY "Order items: all access" ON public.order_items USING (true) WITH CHECK (true);
 
 -- Seed some initial suppliers for the admin dashboard
-INSERT INTO public.suppliers (name, phone, business_name, location, commission_rate, notes, products_count, total_sold)
-VALUES 
-  ('Jean-Pierre Habimana', '+250 788 123 456', 'JP Electronics', 'Gisenyi Market', 15, 'Supplies iPhones and Samsung phones.', 12, 4200000),
-  ('Marie Claire Uwimana', '+250 788 234 567', 'MC Tech Store', 'Rubavu', 20, 'Laptops and tablets.', 7, 8500000)
-ON CONFLICT DO NOTHING;
+-- Note: Seed data moved to 20240101000001_initial_schema.sql to avoid duplicates
+-- This migration only creates the table structure and policies

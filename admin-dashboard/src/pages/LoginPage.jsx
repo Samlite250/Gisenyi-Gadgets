@@ -43,12 +43,12 @@ export default function LoginPage({ onLogin }) {
         <div className="login-panel-grid" />
 
         <div className="login-brand">
-          <div className="login-brand-logo">
-            <img src="/logo.png" alt="Logo" />
+          <div className="login-brand-logo-enhanced">
+            <img src="/logo.png" alt="Gisenyi Gadgets Logo" />
           </div>
           <div className="login-brand-text">
             <span className="login-brand-name">Gisenyi Gadgets</span>
-            <span className="login-brand-sub">Admin Console</span>
+            <span className="login-brand-sub">Admin Dashboard</span>
           </div>
         </div>
 
@@ -84,9 +84,12 @@ export default function LoginPage({ onLogin }) {
       <div className="login-form-area">
         <div className="login-card">
           <div className="login-card-header">
+            <div className="login-logo-mobile">
+              <img src="/logo.png" alt="Gisenyi Gadgets" />
+            </div>
             <div className="login-welcome">Admin Portal</div>
-            <h2 className="login-title">Sign in to your<br />dashboard</h2>
-            <p className="login-subtitle">Enter your admin credentials to continue</p>
+            <h2 className="login-title">Welcome Back</h2>
+            <p className="login-subtitle">Sign in to your dashboard to manage products, orders, and more</p>
           </div>
 
           <form onSubmit={handleLogin}>

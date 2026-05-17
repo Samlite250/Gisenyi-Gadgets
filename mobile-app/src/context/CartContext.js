@@ -102,6 +102,12 @@ export function CartProvider({ children }) {
     const cleanCode = code.toUpperCase().trim();
     if (!cleanCode) return { success: false, message: 'Enter a promo code.' };
 
+    // Calculate current subtotal
+    const currentSubtotal = cartItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
     try {
       // Validate server-side via platform_settings table
       const { data, error } = await supabase
@@ -116,11 +122,11 @@ export function CartProvider({ children }) {
 
       let discount = 0;
       if (data.discount_type === 'percent') {
-        discount = Math.round(subtotal * (data.discount_value / 100));
+        discount = Math.round(currentSubtotal * (data.discount_value / 100));
       } else {
         discount = data.discount_value;
       }
-      discount = Math.min(discount, subtotal); // never exceed subtotal
+      discount = Math.min(discount, currentSubtotal); // never exceed subtotal
       setPromoDiscount(discount);
       setActivePromo(cleanCode);
       const msg = data.discount_type === 'percent'

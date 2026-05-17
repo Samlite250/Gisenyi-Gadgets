@@ -206,6 +206,25 @@ CREATE TABLE public.notifications (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- ─── PROMO CODES ───────────────────────────────────────────────
+CREATE TABLE public.promo_codes (
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  code           TEXT NOT NULL UNIQUE,
+  discount_type  TEXT NOT NULL CHECK (discount_type IN ('percent', 'fixed')),
+  discount_value NUMERIC NOT NULL CHECK (discount_value > 0),
+  is_active      BOOLEAN NOT NULL DEFAULT true,
+  max_uses       INTEGER,
+  uses_count     INTEGER NOT NULL DEFAULT 0,
+  expires_at     TIMESTAMPTZ,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Seed default promo codes
+INSERT INTO public.promo_codes (code, discount_type, discount_value, is_active) VALUES
+  ('GADGET10',  'percent', 10,   true),
+  ('WELCOME20', 'percent', 20,   true),
+  ('GISENYI',   'fixed',   5000, true);
+
 -- ─── UPDATED_AT TRIGGER ────────────────────────────────────────
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER AS $$
@@ -231,6 +250,7 @@ ALTER TABLE public.order_items   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reviews       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.wishlists     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.promo_codes   ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can read/update their own profile
 CREATE POLICY "Profiles: own read"   ON public.profiles FOR SELECT USING (auth.uid() = id);
@@ -275,6 +295,12 @@ CREATE POLICY "Wishlists: own delete" ON public.wishlists FOR DELETE USING (auth
 -- Notifications: own only
 CREATE POLICY "Notifications: own read"   ON public.notifications FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Notifications: own update" ON public.notifications FOR UPDATE USING (auth.uid() = user_id);
+
+-- Promo Codes: anyone can read active codes, only admins can manage
+CREATE POLICY "Promo codes: public read" ON public.promo_codes
+  FOR SELECT USING (is_active = true AND (expires_at IS NULL OR expires_at > NOW()));
+CREATE POLICY "Promo codes: admin all" ON public.promo_codes
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- ─── INDEXES FOR PERFORMANCE ───────────────────────────────────
 CREATE INDEX idx_products_category   ON public.products(category_id);

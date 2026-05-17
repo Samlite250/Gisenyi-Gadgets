@@ -377,6 +377,7 @@ const styles = StyleSheet.create({
   },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SIZES.md },
   totalLabel: { fontSize: 16, fontWeight: '600', color: COLORS.textSecondary },
+  totalAmount: { fontSize: 22, fontWeight: '900', color: COLORS.primaryBlue },
   placeBtn: {
     backgroundColor: COLORS.textPrimary,
     height: 56,

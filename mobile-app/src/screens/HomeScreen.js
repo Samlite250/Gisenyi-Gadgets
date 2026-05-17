@@ -725,10 +725,7 @@ const styles = StyleSheet.create({
   productImageWrap: {
     height: 150,
     backgroundColor: '#F1F5F9',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    borderRadius: 14,
     padding: 12,
     justifyContent: 'center',
     alignItems: 'center',

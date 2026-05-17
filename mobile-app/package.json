@@ -36,7 +36,8 @@
     "react-native-worklets": "0.8.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.0"
+    "@babel/core": "^7.20.0",
+    "metro-minify-terser": "^0.84.4"
   },
   "overrides": {
     "react": "$react"

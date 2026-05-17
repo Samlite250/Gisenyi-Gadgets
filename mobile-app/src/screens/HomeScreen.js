@@ -82,6 +82,9 @@ export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  const bannerScrollRef = React.useRef(null);
+  const offerScrollRef = React.useRef(null);
+
 
   const displayName = profile?.full_name?.split(' ')[0]
     || user?.user_metadata?.full_name?.split(' ')[0]
@@ -147,6 +150,31 @@ export default function HomeScreen({ navigation }) {
       .subscribe();
     return () => supabase.removeChannel(channel);
   }, [fetchData]);
+
+  // ── Auto-scroll for banners and offers ────────────────────────
+  useEffect(() => {
+    if (banners.length > 1 && bannerScrollRef.current) {
+      let currentIndex = 0;
+      const bannerInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % banners.length;
+        const offset = currentIndex * (Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16);
+        bannerScrollRef.current?.scrollTo({ x: offset, animated: true });
+      }, 4000);
+      return () => clearInterval(bannerInterval);
+    }
+  }, [banners]);
+
+  useEffect(() => {
+    if (offers.length > 1 && offerScrollRef.current) {
+      let currentIndex = 0;
+      const offerInterval = setInterval(() => {
+        currentIndex = (currentIndex + 1) % offers.length;
+        const offset = currentIndex * 186;
+        offerScrollRef.current?.scrollTo({ x: offset, animated: true });
+      }, 5000);
+      return () => clearInterval(offerInterval);
+    }
+  }, [offers]);
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
@@ -262,11 +290,13 @@ export default function HomeScreen({ navigation }) {
         {banners.length > 0 && (
           <View style={styles.bannerContainerWrap}>
             <ScrollView
+              ref={bannerScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
               snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16}
               decelerationRate="fast"
+              pagingEnabled
             >
               {banners.map((b, index) => (
                 <View
@@ -306,6 +336,7 @@ export default function HomeScreen({ navigation }) {
               </TouchableOpacity>
             </View>
             <ScrollView
+              ref={offerScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingHorizontal: SIZES.lg }}

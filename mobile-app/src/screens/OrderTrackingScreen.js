@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, CheckCircle2, Circle, Clock, Package, Truck, MapPin } from 'lucide-react-native';
+import { ChevronLeft, CircleCheckBig, Circle, Clock, Package, Truck, MapPin } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 
 const ALL_STEPS = [
@@ -10,7 +10,7 @@ const ALL_STEPS = [
   { key: 'processing', label: 'Processing', icon: Clock },
   { key: 'shipped', label: 'Shipped', icon: Truck },
   { key: 'delivered', label: 'Out for Delivery', icon: MapPin },
-  { key: 'done', label: 'Delivered', icon: CheckCircle2 },
+  { key: 'done', label: 'Delivered', icon: CircleCheckBig },
 ];
 
 const STATUS_STEP_MAP = {

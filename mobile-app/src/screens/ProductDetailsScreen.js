@@ -7,7 +7,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
-  Minus, Plus, ShoppingCart, Zap, CheckCircle2,
+  Minus, Plus, ShoppingCart, Zap, CircleCheckBig,
   Maximize2, X, Store,
 } from 'lucide-react-native';
 import { FontAwesome } from '@expo/vector-icons';

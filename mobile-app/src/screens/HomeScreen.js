@@ -9,7 +9,7 @@ import {
   Bell, Search, ShoppingBag, Heart,
   ChevronRight, Star, MessageSquare,
   Smartphone, Laptop, Headphones, Watch, Gamepad2,
-  Cpu, Camera, MapPin, Tablet, Sliders, Flame
+  Cpu, Camera, MapPin, Tablet, SlidersHorizontal, Flame
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -333,7 +333,7 @@ export default function HomeScreen({ navigation }) {
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.filterBtn}>
-                <Sliders size={18} color={COLORS.textSecondary} />
+                <SlidersHorizontal size={18} color={COLORS.textSecondary} />
               </TouchableOpacity>
             )}
           </View>

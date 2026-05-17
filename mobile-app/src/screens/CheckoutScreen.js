@@ -4,7 +4,7 @@ import {
   TouchableOpacity, Alert, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, MapPin, CreditCard, Smartphone, Banknote, CheckCircle2, Landmark, Bitcoin } from 'lucide-react-native';
+import { ChevronLeft, MapPin, CreditCard, Smartphone, Banknote, CircleCheckBig, Landmark, Bitcoin } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
@@ -255,7 +255,7 @@ export default function CheckoutScreen({ navigation }) {
           disabled={placing}
           activeOpacity={0.85}
         >
-          <CheckCircle2 size={20} color="#fff" />
+          <CircleCheckBig size={20} color="#fff" />
           <Text style={styles.placeBtnText}>
             {placing ? 'Placing Order...' : 'Place Order'}
           </Text>

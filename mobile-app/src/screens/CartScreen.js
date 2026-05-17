@@ -4,7 +4,7 @@ import {
   Image, TouchableOpacity, TextInput, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Minus, Plus, Trash2, ShoppingBag, Ticket, CheckCircle2 } from 'lucide-react-native';
+import { Minus, Plus, Trash2, ShoppingBag, Ticket, CircleCheckBig } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
@@ -140,7 +140,7 @@ export default function CartScreen({ navigation }) {
                 disabled={!!activePromo || applyingPromo}
               >
                 {activePromo
-                  ? <CheckCircle2 size={18} color="#fff" />
+                  ? <CircleCheckBig size={18} color="#fff" />
                   : applyingPromo
                     ? <ActivityIndicator size="small" color="#fff" />
                     : <Text style={styles.promoBtnText}>Apply</Text>}

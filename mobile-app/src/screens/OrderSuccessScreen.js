@@ -8,7 +8,7 @@ import {
   Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CheckCircle2, Package, Home, ListOrdered, Truck } from 'lucide-react-native';
+import { CircleCheckBig, Package, Home, ListOrdered, Truck } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { BlurView } from 'expo-blur';
 import { useCart } from '../context/CartContext';
@@ -66,7 +66,7 @@ export default function OrderSuccessScreen({ navigation, route }) {
         <Animated.View style={[styles.iconWrap, { transform: [{ scale: scaleAnim }] }]}>
           <View style={styles.outerRing}>
             <View style={styles.innerRing}>
-              <CheckCircle2 size={64} color={COLORS.primaryGreen} />
+              <CircleCheckBig size={64} color={COLORS.primaryGreen} />
             </View>
           </View>
         </Animated.View>
@@ -110,7 +110,7 @@ export default function OrderSuccessScreen({ navigation, route }) {
           <BlurView intensity={60} tint="light" style={styles.stepsCard}>
             <Text style={styles.stepsTitle}>What happens next?</Text>
             {[
-              { icon: CheckCircle2, label: 'Order Confirmed', done: true, color: COLORS.primaryGreen },
+              { icon: CircleCheckBig, label: 'Order Confirmed', done: true, color: COLORS.primaryGreen },
               { icon: Package, label: 'Being Packed', done: false, color: COLORS.textSecondary },
               { icon: Truck, label: 'Out for Delivery', done: false, color: COLORS.textSecondary },
               { icon: Home, label: 'Delivered', done: false, color: COLORS.textSecondary },

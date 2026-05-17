@@ -6,7 +6,7 @@
   min-height: 100vh;
   display: flex;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
   position: relative;
   overflow: hidden;
 }
@@ -16,8 +16,8 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 80%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.3) 0%, transparent 50%);
+    radial-gradient(circle at 20% 80%, rgba(66, 133, 244, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(52, 168, 83, 0.3) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -124,7 +124,7 @@
 
 .login-panel-headline em {
   font-style: normal;
-  background: linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%);
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -213,10 +213,10 @@
   width: 56px;
   height: 56px;
   margin: 0 auto 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
   border-radius: 14px;
   padding: 12px;
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+  box-shadow: 0 8px 24px rgba(66, 133, 244, 0.25);
   display: none;
 }
 
@@ -293,8 +293,8 @@
 .login-input:focus {
   outline: none;
   background: #ffffff;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  border-color: #4285F4;
+  box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.1);
 }
 
 .login-input::placeholder {
@@ -319,14 +319,14 @@
 }
 
 .login-eye-btn:hover {
-  color: #667eea;
+  color: #4285F4;
   background: #F7FAFC;
 }
 
 .login-submit {
   width: 100%;
   height: 52px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -338,7 +338,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 12px 32px rgba(66, 133, 244, 0.4);
   transition: all 0.3s;
   position: relative;
   overflow: hidden;
@@ -355,7 +355,7 @@
 
 .login-submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 40px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 16px 40px rgba(66, 133, 244, 0.5);
 }
 
 .login-submit:hover::before {
@@ -436,7 +436,7 @@
   }
 
   .login-root {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #4285F4 0%, #34A853 100%);
   }
 
   .login-logo-mobile {

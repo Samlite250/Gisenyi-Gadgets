@@ -12,10 +12,7 @@
       "backgroundColor": "#0F172A"
     },
     "assetBundlePatterns": [
-      "assets/icon.png",
-      "assets/adaptive-icon.png",
-      "assets/logo.png",
-      "assets/favicon.png"
+      "assets/**/*"
     ],
     "ios": {
       "supportsTablet": true
@@ -25,9 +22,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F172A"
       },
-      "package": "com.gisenyigadgets.app",
-      "enableProguardInReleaseBuilds": true,
-      "enableShrinkResourcesInReleaseBuilds": true
+      "package": "com.gisenyigadgets.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

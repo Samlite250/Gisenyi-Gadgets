@@ -9,16 +9,14 @@ module.exports = {
     minifierPath: 'metro-minify-terser',
     minifierConfig: {
       compress: {
-        drop_console: true, // Remove console.logs in production
+        drop_console: false, // Keep console for debugging
         drop_debugger: true,
-        pure_funcs: ['console.info', 'console.debug', 'console.warn'],
       },
       mangle: {
-        keep_fnames: false,
+        keep_fnames: true, // Keep function names to prevent crashes
       },
       output: {
         comments: false,
-        ascii_only: true,
       },
     },
   },

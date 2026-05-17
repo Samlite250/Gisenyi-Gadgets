@@ -44,7 +44,7 @@ const ProductCard = ({ product, style, onPress, onWishlist, wishlisted, fmt }) =
         <Image
           source={{ uri: product.images[0] }}
           style={styles.productImage}
-          resizeMode="contain"
+          resizeMode="cover"
         />
         <TouchableOpacity style={styles.heartBtn} onPress={onWishlist}>
           <Heart size={16} color={wishlisted ? COLORS.error : '#666'} fill={wishlisted ? COLORS.error : 'none'} />

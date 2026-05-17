@@ -81,9 +81,14 @@ export default function HomeScreen({ navigation }) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
   const bannerScrollRef = React.useRef(null);
   const offerScrollRef = React.useRef(null);
+  const bannerAutoScrollRef = React.useRef(null);
+  const offerAutoScrollRef = React.useRef(null);
+  const [bannerPaused, setBannerPaused] = React.useState(false);
+  const [offerPaused, setOfferPaused] = React.useState(false);
 
 
   const displayName = profile?.full_name?.split(' ')[0]
@@ -151,30 +156,68 @@ export default function HomeScreen({ navigation }) {
     return () => supabase.removeChannel(channel);
   }, [fetchData]);
 
-  // ── Auto-scroll for banners and offers ────────────────────────
+  // ── Professional Auto-scroll with smooth transitions ──────────
   useEffect(() => {
-    if (banners.length > 1 && bannerScrollRef.current) {
-      let currentIndex = 0;
-      const bannerInterval = setInterval(() => {
-        currentIndex = (currentIndex + 1) % banners.length;
-        const offset = currentIndex * (Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16);
-        bannerScrollRef.current?.scrollTo({ x: offset, animated: true });
-      }, 4000);
-      return () => clearInterval(bannerInterval);
-    }
-  }, [banners]);
+    if (banners.length <= 1 || !bannerScrollRef.current) return;
+
+    let currentIndex = 0;
+    const BANNER_INTERVAL = 10000; // 10 seconds
+    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16;
+
+    const scrollToNext = () => {
+      if (bannerPaused) return;
+      currentIndex = (currentIndex + 1) % banners.length;
+      setActiveBannerIndex(currentIndex);
+      bannerScrollRef.current?.scrollTo({
+        x: currentIndex * BANNER_WIDTH,
+        animated: true,
+      });
+    };
+
+    bannerAutoScrollRef.current = setInterval(scrollToNext, BANNER_INTERVAL);
+
+    return () => {
+      if (bannerAutoScrollRef.current) {
+        clearInterval(bannerAutoScrollRef.current);
+      }
+    };
+  }, [banners, bannerPaused]);
 
   useEffect(() => {
-    if (offers.length > 1 && offerScrollRef.current) {
-      let currentIndex = 0;
-      const offerInterval = setInterval(() => {
-        currentIndex = (currentIndex + 1) % offers.length;
-        const offset = currentIndex * 186;
-        offerScrollRef.current?.scrollTo({ x: offset, animated: true });
-      }, 5000);
-      return () => clearInterval(offerInterval);
-    }
-  }, [offers]);
+    if (offers.length <= 1 || !offerScrollRef.current) return;
+
+    let currentIndex = 0;
+    const OFFER_INTERVAL = 10000; // 10 seconds
+    const OFFER_WIDTH = 186; // Card width + margin
+
+    const scrollToNext = () => {
+      if (offerPaused) return;
+      currentIndex = (currentIndex + 1) % offers.length;
+      offerScrollRef.current?.scrollTo({
+        x: currentIndex * OFFER_WIDTH,
+        animated: true,
+      });
+    };
+
+    offerAutoScrollRef.current = setInterval(scrollToNext, OFFER_INTERVAL);
+
+    return () => {
+      if (offerAutoScrollRef.current) {
+        clearInterval(offerAutoScrollRef.current);
+      }
+    };
+  }, [offers, offerPaused]);
+
+  // Pause auto-scroll on user interaction, resume after 3 seconds
+  const handleBannerTouchStart = () => {
+    setBannerPaused(true);
+    setTimeout(() => setBannerPaused(false), 3000);
+  };
+
+  const handleOfferTouchStart = () => {
+    setOfferPaused(true);
+    setTimeout(() => setOfferPaused(false), 3000);
+  };
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
@@ -297,6 +340,8 @@ export default function HomeScreen({ navigation }) {
               snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 - 8 + 16}
               decelerationRate="fast"
               pagingEnabled
+              onTouchStart={handleBannerTouchStart}
+              scrollEventThrottle={16}
             >
               {banners.map((b, index) => (
                 <View
@@ -320,6 +365,19 @@ export default function HomeScreen({ navigation }) {
                 </View>
               ))}
             </ScrollView>
+            {banners.length > 1 && (
+              <View style={styles.paginationDots}>
+                {banners.map((_, index) => (
+                  <View
+                    key={index}
+                    style={[
+                      styles.dot,
+                      index === activeBannerIndex && styles.activeDot
+                    ]}
+                  />
+                ))}
+              </View>
+            )}
           </View>
         )}
 
@@ -342,6 +400,8 @@ export default function HomeScreen({ navigation }) {
               contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
               snapToInterval={186}
               decelerationRate="fast"
+              onTouchStart={handleOfferTouchStart}
+              scrollEventThrottle={16}
             >
               {offers.map((offer, index) => (
                 <TouchableOpacity
@@ -710,6 +770,26 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 70,
     backgroundColor: '#FFFFFF',
+  },
+  paginationDots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#D1D5DB',
+    transition: 'all 0.3s ease',
+  },
+  activeDot: {
+    width: 24,
+    backgroundColor: '#3B82F6',
+    borderRadius: 4,
   },
 
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },

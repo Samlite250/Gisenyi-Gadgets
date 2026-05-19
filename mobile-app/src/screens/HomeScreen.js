@@ -162,7 +162,7 @@ export default function HomeScreen({ navigation }) {
 
     let currentIndex = 0;
     const BANNER_INTERVAL = 10000; // 10 seconds
-    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.lg * 2 + 16;
+    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.md * 2 + 16;
 
     const scrollToNext = () => {
       if (bannerPaused) return;
@@ -222,7 +222,7 @@ export default function HomeScreen({ navigation }) {
   // Update pagination dots on manual scroll
   const handleBannerScroll = (event) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
-    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.lg * 2 + 16;
+    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.md * 2 + 16;
     const index = Math.round(scrollPosition / BANNER_WIDTH);
     if (index >= 0 && index < banners.length) {
       setActiveBannerIndex(index);
@@ -250,7 +250,7 @@ export default function HomeScreen({ navigation }) {
           <SkeletonLoader width={'90%'} height={170} borderRadius={24} style={{ alignSelf: 'center', marginBottom: SIZES.lg }} />
           
           {/* Categories Skeleton */}
-          <View style={{ paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg }}>
+          <View style={{ paddingHorizontal: SIZES.md, marginBottom: SIZES.md }}>
             <SkeletonLoader width={120} height={24} borderRadius={6} style={{ marginBottom: 16 }} />
             <View style={{ flexDirection: 'row', gap: 16 }}>
               {[1, 2, 3, 4].map(i => (
@@ -263,7 +263,7 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           {/* Featured Skeleton */}
-          <View style={{ paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg }}>
+          <View style={{ paddingHorizontal: SIZES.md, marginBottom: SIZES.md }}>
             <SkeletonLoader width={150} height={24} borderRadius={6} style={{ marginBottom: 16 }} />
             <View style={{ flexDirection: 'row', gap: 16 }}>
               {[1, 2, 3].map(i => (
@@ -346,8 +346,8 @@ export default function HomeScreen({ navigation }) {
               ref={bannerScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
-              snapToInterval={Dimensions.get('window').width - SIZES.lg * 2 + 16}
+              contentContainerStyle={{ paddingHorizontal: SIZES.md }}
+              snapToInterval={Dimensions.get('window').width - SIZES.md * 2 + 16}
               snapToAlignment="center"
               decelerationRate="fast"
               pagingEnabled={false}
@@ -409,7 +409,7 @@ export default function HomeScreen({ navigation }) {
               ref={offerScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: SIZES.lg }}
+              contentContainerStyle={{ paddingHorizontal: SIZES.md }}
               snapToInterval={186}
               decelerationRate="fast"
               onTouchStart={handleOfferTouchStart}
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: SIZES.lg, paddingTop: SIZES.md, paddingBottom: SIZES.sm,
+    paddingHorizontal: SIZES.md, paddingTop: SIZES.md, paddingBottom: SIZES.sm,
   },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
   avatar: {
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
   },
 
   searchBarWrapper: {
-    marginHorizontal: SIZES.lg,
+    marginHorizontal: SIZES.md,
     marginVertical: SIZES.md,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
@@ -730,9 +730,9 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 
-  bannerContainer: { paddingHorizontal: SIZES.lg, marginBottom: SIZES.lg },
+  bannerContainer: { paddingHorizontal: SIZES.md, marginBottom: SIZES.lg },
   banner: {
-    width: Dimensions.get('window').width - SIZES.lg * 2,
+    width: Dimensions.get('window').width - SIZES.md * 2,
     height: 170,
     borderRadius: 24,
     paddingLeft: SIZES.xl,
@@ -803,7 +803,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
 
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.lg, marginBottom: SIZES.md },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: SIZES.md, marginBottom: SIZES.md },
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -812,7 +812,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 20, fontWeight: '800', color: '#1A1A1A', letterSpacing: -0.5 },
   seeAll: { fontSize: 13, color: '#3B82F6', fontWeight: '700' },
 
-  catRow: { flexDirection: 'row', paddingHorizontal: SIZES.lg, paddingRight: 40, marginBottom: SIZES.lg, gap: 16 },
+  catRow: { flexDirection: 'row', paddingHorizontal: SIZES.md, paddingRight: 40, marginBottom: SIZES.lg, gap: 16 },
   catItem: { alignItems: 'center', gap: 10, width: 75 },
   catIconCircle: { 
     width: 64, 
@@ -830,7 +830,7 @@ const styles = StyleSheet.create({
   },
   catName: { fontSize: 11, fontWeight: '700', color: '#64748B', textAlign: 'center' },
 
-  hScroll: { paddingHorizontal: SIZES.lg, gap: 16, paddingBottom: SIZES.md },
+  hScroll: { paddingHorizontal: SIZES.md, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },
 
   productCard: {
@@ -932,7 +932,7 @@ const styles = StyleSheet.create({
   },
 
   helpCard: {
-    marginHorizontal: SIZES.lg,
+    marginHorizontal: SIZES.md,
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 16,
@@ -972,7 +972,7 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.xl,
   },
 
-  flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.lg, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
+  flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.md, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
   flashDealContent: { flex: 1, justifyContent: 'center', gap: 6 },
   flashHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   flashBadgeWrap: { 
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
   searchResultGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: SIZES.lg,
+    paddingHorizontal: SIZES.md,
     justifyContent: 'space-between',
   },
   searchResultCard: {
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
   discoveryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: SIZES.lg - 6,
+    paddingHorizontal: SIZES.md - 6,
     justifyContent: 'space-between',
   },
   discoveryCard: {

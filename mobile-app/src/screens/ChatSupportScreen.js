@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
-  TouchableOpacity, Image, KeyboardAvoidingView, Platform
+  TouchableOpacity, KeyboardAvoidingView, Platform, Keyboard,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, Send, Phone, MoreVertical, CheckCheck, User } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +16,7 @@ const INITIAL_MESSAGES = [
 
 export default function ChatSupportScreen({ navigation }) {
   const { profile } = useAuth();
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
@@ -116,9 +117,13 @@ export default function ChatSupportScreen({ navigation }) {
   }, [messages]);
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+    >
+      {/* Header — manual top inset so we don't need SafeAreaView */}
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
@@ -140,14 +145,13 @@ export default function ChatSupportScreen({ navigation }) {
         </View>
       </View>
 
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
-        style={{ flex: 1 }}
-      >
-        <ScrollView 
+      <ScrollView
           ref={scrollRef}
+          style={{ flex: 1 }}
           contentContainerStyle={styles.chatScroll}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <Text style={styles.dateDivider}>Today</Text>
           
@@ -252,31 +256,32 @@ export default function ChatSupportScreen({ navigation }) {
         )}
 
         {/* Input Bar */}
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { paddingBottom: insets.bottom + 10 }]}>
           <TextInput
             style={styles.textInput}
             placeholder="Type a message..."
             value={input}
             onChangeText={setInput}
             multiline
+            onFocus={() => setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)}
           />
-          <TouchableOpacity 
-            style={[styles.sendBtn, !input.trim() && { backgroundColor: '#E5E7EB' }]} 
+          <TouchableOpacity
+            style={[styles.sendBtn, !input.trim() && { backgroundColor: '#E5E7EB' }]}
             onPress={handleSend}
             disabled={!input.trim()}
           >
             <Send size={20} color="#fff" />
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F3F4F6' },
   header: {
-    flexDirection: 'row', alignItems: 'center', padding: SIZES.md,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: SIZES.md, paddingBottom: SIZES.md,
     backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
   },
   backBtn: { padding: 4 },
@@ -347,7 +352,7 @@ const styles = StyleSheet.create({
 
   inputContainer: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
-    padding: SIZES.md, paddingBottom: Platform.OS === 'ios' ? 30 : SIZES.md,
+    paddingHorizontal: SIZES.md, paddingTop: SIZES.md,
     backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E5E7EB',
   },
   textInput: {

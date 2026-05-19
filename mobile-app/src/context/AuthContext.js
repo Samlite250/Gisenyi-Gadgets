@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { Platform } from 'react-native';
+import { makeRedirectUri } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../services/supabase';
+
+WebBrowser.maybeCompleteAuthSession();
 
 const AuthContext = createContext(null);
 
@@ -10,19 +15,26 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    // Get initial session — clear stale tokens automatically
+    supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
-        console.warn('Session error:', error.message);
-        // Clear invalid session
-        supabase.auth.signOut();
+        await supabase.auth.signOut();
         setSession(null);
         setUser(null);
         setProfile(null);
-      } else {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) fetchProfile(session.user.id);
+      } else if (session) {
+        // Validate the session is still usable
+        const { error: userError } = await supabase.auth.getUser();
+        if (userError) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+        } else {
+          setSession(session);
+          setUser(session.user);
+          fetchProfile(session.user.id);
+        }
       }
       setLoading(false);
     });
@@ -32,8 +44,11 @@ export function AuthProvider({ children }) {
       async (event, session) => {
         console.log('Auth event:', event);
 
-        // After sign-up, always force the user back to Login instead of auto-logging in
-        if (event === 'SIGNED_UP') {
+        // After email sign-up, force user back to Login (email confirmation flow)
+        // Google OAuth fires SIGNED_IN (not SIGNED_UP), so this never blocks Google users
+        const isEmailProvider = session?.user?.app_metadata?.provider === 'email'
+          || session?.user?.identities?.[0]?.provider === 'email';
+        if (event === 'SIGNED_UP' && isEmailProvider) {
           await supabase.auth.signOut();
           return;
         }
@@ -102,6 +117,60 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const signInWithGoogle = async () => {
+    if (Platform.OS === 'web') {
+      // On web, use full-page redirect — no popup (avoids COOP issues)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin },
+      });
+      if (error) throw error;
+      return;
+    }
+
+    // Native (Android/iOS): open browser, capture deep-link callback
+    const redirectUrl = makeRedirectUri({ scheme: 'com.gisenyigadgets.app', path: 'auth/callback' });
+
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: true,
+      },
+    });
+
+    if (error) throw error;
+
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
+
+    if (result.type === 'success') {
+      const url = result.url;
+
+      // PKCE flow: Supabase returns ?code= which must be exchanged for a session
+      const queryParams = new URLSearchParams(url.split('?')[1] || '');
+      const code = queryParams.get('code');
+
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) throw exchangeError;
+        return;
+      }
+
+      // Fallback: implicit flow returns #access_token= in the hash
+      const hashParams = new URLSearchParams(url.split('#')[1] || '');
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+
+      if (accessToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (sessionError) throw sessionError;
+      }
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -137,6 +206,7 @@ export function AuthProvider({ children }) {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     updateProfile,

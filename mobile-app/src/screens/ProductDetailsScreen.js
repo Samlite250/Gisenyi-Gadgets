@@ -12,6 +12,7 @@ import {
 } from 'lucide-react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Modal } from 'react-native';
+import { FileSystem, Sharing } from '../utils/nativeShare';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -167,13 +168,13 @@ export default function ProductDetailsScreen({ route, navigation }) {
           }
         }
 
-        // 3. Fallback: Get global store settings for WhatsApp
+        // 3. Fallback: Get global store WhatsApp from platform_settings
         const { data: settings } = await supabase
-          .from('settings')
+          .from('platform_settings')
           .select('value')
-          .eq('key', 'whatsapp_number')
+          .eq('key', 'whatsappNumber')
           .maybeSingle();
-        
+
         if (settings?.value) {
           setSupplier({ phone: settings.value, business_name: 'Gisenyi Gadgets' });
         }
@@ -237,30 +238,47 @@ export default function ProductDetailsScreen({ route, navigation }) {
     navigation.navigate('Checkout');
   };
 
-  const handleWhatsApp = () => {
-    // Dynamic number priority: Supplier Phone > Global Setting > Default
+  const handleWhatsApp = async () => {
     const rawPhone = supplier?.phone || '+250788000000';
-    const cleanPhone = rawPhone.replace(/[^\d+]/g, ''); // Removes spaces, dashes, etc.
-    const message = `*✨ GISENYI GADGETS INQUIRY ✨*\n\n` +
-                    `Hello! I'm interested in this premium item:\n\n` +
-                    `━━━━━━━━━━━━━━━━━━\n` +
-                    `📦 *PRODUCT:* ${product.name}\n` +
-                    `🏷️ *BRAND:* ${product.brand || 'Premium'}\n` +
-                    `🆔 *REF:* #GG-${product.id.toString().slice(0, 5).toUpperCase()}\n` +
-                    `━━━━━━━━━━━━━━━━━━\n\n` +
-                    `🖼️ *View Image:* ${images[0]}\n\n` +
-                    `Is this item still available for purchase? I would appreciate more details.`;
-    
-    const url = `whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-    
-    Linking.canOpenURL(url).then(supported => {
-      if (supported) {
-        Linking.openURL(url);
-      } else {
-        const webUrl = `https://wa.me/${cleanPhone.replace('+', '')}?text=${encodeURIComponent(message)}`;
-        Linking.openURL(webUrl);
+    let cleanPhone = rawPhone.replace(/[^\d+]/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '+250' + cleanPhone.slice(1);
+    const intlNumber = cleanPhone.replace('+', '');
+
+    const price = product.price
+      ? `RWF ${Number(product.price).toLocaleString()}`
+      : 'Ask for price';
+
+    const message =
+      `Hello! I'm interested in purchasing this item from Gisenyi Gadgets:\n\n` +
+      `📦 *${product.name}*\n` +
+      `🏷️ Brand: ${product.brand || 'Gisenyi Gadgets'}\n` +
+      `💰 Price: ${price}\n` +
+      `🆔 Ref: #GG-${product.id.toString().slice(0, 6).toUpperCase()}\n\n` +
+      `Is it available? Please confirm and share delivery details.`;
+
+    const imageUrl = images[0];
+    const canShare = Platform.OS !== 'web' && Sharing && await Sharing.isAvailableAsync();
+
+    if (canShare && imageUrl) {
+      try {
+        // Download product image to a temp file then share with message
+        const ext = imageUrl.split('?')[0].split('.').pop()?.split('/').pop() || 'jpg';
+        const localUri = `${FileSystem.cacheDirectory}product_share.${ext}`;
+        const { uri } = await FileSystem.downloadAsync(imageUrl, localUri);
+        await Sharing.shareAsync(uri, {
+          mimeType: `image/${ext === 'webp' ? 'webp' : 'jpeg'}`,
+          dialogTitle: message,
+          UTI: 'public.image',
+        });
+        return;
+      } catch {
+        // fall through to wa.me link if image share fails
       }
-    });
+    }
+
+    // Web or image share failed — open WhatsApp with text only
+    Linking.openURL(`https://wa.me/${intlNumber}?text=${encodeURIComponent(message)}`)
+      .catch(() => Linking.openURL(`whatsapp://send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`));
   };
 
   const images = product.images?.length ? product.images : [

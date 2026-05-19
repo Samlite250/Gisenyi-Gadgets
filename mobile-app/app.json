@@ -11,6 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#0F172A"
     },
+    "scheme": "com.gisenyigadgets.app",
     "assetBundlePatterns": [
       "assets/**/*"
     ],
@@ -31,6 +32,16 @@
       "eas": {
         "projectId": "b0f6dd7c-493a-43bb-80f9-720966be95f4"
       }
-    }
+    },
+    "plugins": [
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Gisenyi Gadgets needs access to your photos to upload payment screenshots."
+        }
+      ],
+      "expo-sharing"
+    ]
   }
 }

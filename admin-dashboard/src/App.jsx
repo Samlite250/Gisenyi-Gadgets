@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Package, ShoppingCart, Users,
   Store, Star, Settings, LogOut, Menu,
   Bell, MessageCircle, Tag, Handshake, Image,
-  Search, ChevronLeft, ChevronRight,
+  Search, ChevronLeft, ChevronRight, CreditCard,
 } from 'lucide-react';
 
 import DashboardPage  from './pages/DashboardPage';
@@ -21,8 +21,9 @@ import SettingsPage   from './pages/SettingsPage';
 import SupportPage    from './pages/SupportPage';
 import CategoriesPage from './pages/CategoriesPage';
 import SuppliersPage  from './pages/SuppliersPage';
-import BannersPage    from './pages/BannersPage';
-import LoginPage      from './pages/LoginPage';
+import BannersPage       from './pages/BannersPage';
+import TransactionsPage  from './pages/TransactionsPage';
+import LoginPage         from './pages/LoginPage';
 import Loader         from './components/Loader';
 import { supabase }   from './services/supabase';
 
@@ -32,8 +33,9 @@ const NAV_ITEMS = [
   { path: '/products',   icon: Package,         label: 'Products'   },
   { path: '/categories', icon: Tag,             label: 'Categories' },
   { path: '/banners',    icon: Image,           label: 'Banners'    },
-  { path: '/orders',     icon: ShoppingCart,    label: 'Orders'     },
-  { path: '/suppliers',  icon: Handshake,       label: 'Suppliers'  },
+  { path: '/orders',        icon: ShoppingCart,  label: 'Orders'       },
+  { path: '/transactions',  icon: CreditCard,    label: 'Transactions' },
+  { path: '/suppliers',     icon: Handshake,     label: 'Suppliers'    },
   { path: '/users',      icon: Users,           label: 'Users'      },
   { path: '/reviews',    icon: Star,            label: 'Reviews'    },
   { path: '/support',    icon: MessageCircle,   label: 'Support'    },
@@ -203,8 +205,9 @@ function AppInner({ user, onLogout }) {
               <Route path="/users"      element={<UsersPage />}      />
               <Route path="/reviews"    element={<ReviewsPage />}    />
               <Route path="/banners"    element={<BannersPage />}    />
-              <Route path="/support"    element={<SupportPage />}    />
-              <Route path="/settings"   element={<SettingsPage />}   />
+              <Route path="/support"       element={<SupportPage />}      />
+              <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/settings"     element={<SettingsPage />}     />
             </Routes>
           </main>
         </div>

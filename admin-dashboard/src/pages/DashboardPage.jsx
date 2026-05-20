@@ -56,6 +56,13 @@ export default function DashboardPage() {
   const [suppliers, setSuppliers] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [orderDistribution, setOrderDistribution] = useState([]);
+  const [financialMetrics, setFinancialMetrics] = useState({
+    owedToSuppliers: 0,
+    consignmentCommissions: 0,
+    ownStockRevenue: 0,
+    myNetProfit: 0,
+    revenueForecast: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -178,6 +185,26 @@ export default function DashboardPage() {
         setChartData(processedChart);
         setOrderDistribution(processedDist);
         if (supplierData) setSuppliers(supplierData);
+
+        // ─── 5. Financial Metrics (Dynamic Calculation) ────────────
+        const totalSupplierSales = supplierData?.reduce((sum, s) => sum + (s.total_sold || 0), 0) || 0;
+        const owedToSuppliers = supplierData?.reduce((sum, s) => sum + (s.total_sold || 0) * (1 - (s.commission_rate || 0) / 100), 0) || 0;
+        const consignmentCommissions = supplierData?.reduce((sum, s) => sum + (s.total_sold || 0) * ((s.commission_rate || 0) / 100), 0) || 0;
+        const ownStockRevenue = totalRevenue - totalSupplierSales;
+        const myNetProfit = ownStockRevenue + consignmentCommissions;
+
+        // Simple forecast: average of last 3 months projected forward
+        const last3Months = processedChart.slice(-3);
+        const avgLast3 = last3Months.reduce((sum, m) => sum + m.val, 0) / (last3Months.length || 1);
+        const revenueForecast = avgLast3 * 1000000; // Convert back from millions
+
+        setFinancialMetrics({
+          owedToSuppliers,
+          consignmentCommissions,
+          ownStockRevenue,
+          myNetProfit,
+          revenueForecast,
+        });
       } catch (err) {
         console.warn('Dashboard fetch error:', err.message);
       } finally {
@@ -186,11 +213,6 @@ export default function DashboardPage() {
     };
     loadData();
   }, []);
-
-  const owedToSuppliers = suppliers.reduce((sum, s) => sum + (s.total_sold || 0) * (1 - s.commission_rate / 100), 0);
-  const consignmentCommissions = suppliers.reduce((sum, s) => sum + (s.total_sold || 0) * (s.commission_rate / 100), 0);
-  const ownStockRevenue = stats.totalRevenue - suppliers.reduce((sum, s) => sum + (s.total_sold || 0), 0);
-  const myNetProfit = ownStockRevenue + consignmentCommissions;
 
   if (loading) return <Loader message="Analyzing dashboard metrics..." />;
 
@@ -223,16 +245,16 @@ export default function DashboardPage() {
             </div>
             <span className="finance-card__label">My Net Profit</span>
           </div>
-          <div className="finance-card__amount finance-card__amount--green">{fmt(myNetProfit)}</div>
+          <div className="finance-card__amount finance-card__amount--green">{fmt(financialMetrics.myNetProfit)}</div>
           <div className="finance-card__breakdown">
             <span className="finance-card__pill">
               <Package size={11} />
-              <span>{fmt(ownStockRevenue)}</span>
+              <span>{fmt(financialMetrics.ownStockRevenue)}</span>
               <span className="finance-card__pill-tag">Own Stock</span>
             </span>
             <span className="finance-card__pill">
               <Handshake size={11} />
-              <span>{fmt(consignmentCommissions)}</span>
+              <span>{fmt(financialMetrics.consignmentCommissions)}</span>
               <span className="finance-card__pill-tag">Commissions</span>
             </span>
           </div>
@@ -246,7 +268,7 @@ export default function DashboardPage() {
             </div>
             <span className="finance-card__label finance-card__label--amber">Owed To Suppliers</span>
           </div>
-          <div className="finance-card__amount finance-card__amount--amber">{fmt(owedToSuppliers)}</div>
+          <div className="finance-card__amount finance-card__amount--amber">{fmt(financialMetrics.owedToSuppliers)}</div>
           <div className="finance-card__footer">
             <span className="finance-card__note">Unpaid settlements for <strong>{suppliers.length}</strong> partners</span>
             <Link to="/suppliers" className="finance-card__link">

@@ -163,7 +163,7 @@ export default function SupportPage() {
 
   return (
     <div className="support-wrapper" style={{
-      height: isMobile ? '100vh' : 'calc(100vh - 160px)',
+      height: isMobile ? 'calc(100vh - 70px)' : 'calc(100vh - 160px)',
       display: 'flex',
       background: '#fff',
       borderRadius: isMobile ? 0 : 24,
@@ -171,12 +171,8 @@ export default function SupportPage() {
       boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
       border: '1px solid var(--border)',
       flexDirection: isMobile ? 'column' : 'row',
-      position: isMobile ? 'fixed' : 'relative',
-      top: isMobile ? 0 : 'auto',
-      left: isMobile ? 0 : 'auto',
-      right: isMobile ? 0 : 'auto',
-      bottom: isMobile ? 0 : 'auto',
-      zIndex: isMobile ? 100 : 'auto'
+      position: 'relative',
+      marginTop: isMobile ? 0 : 'auto'
     }}>
 
       {/* Sidebar */}

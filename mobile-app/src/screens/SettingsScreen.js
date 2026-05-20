@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Linking, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, ChevronRight, Bell, Shield, Info, Trash2, Lock } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Bell, Shield, Info, Trash2, Lock, RefreshCw } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
+import Constants from 'expo-constants';
 
 const NOTIF_STORAGE_KEY = '@GisenyiGadgets_notifications';
 
@@ -16,7 +17,12 @@ export default function SettingsScreen({ navigation }) {
     email: false,
     offers: true
   });
+  const [checking, setChecking] = useState(false);
   const isMounted = useRef(true);
+
+  // Get app version from expo config
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
+  const buildNumber = Constants.expoConfig?.android?.versionCode || Constants.expoConfig?.ios?.buildNumber || '1';
 
   useEffect(() => {
     return () => { isMounted.current = false; };
@@ -37,6 +43,56 @@ export default function SettingsScreen({ navigation }) {
       AsyncStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
+  };
+
+  const checkForUpdates = async () => {
+    setChecking(true);
+    try {
+      // Fetch latest version from GitHub releases or your server
+      const response = await fetch('https://api.github.com/repos/Samlite250/Gisenyi-Gadgets/releases/latest');
+      const data = await response.json();
+
+      if (data.tag_name) {
+        const latestVersion = data.tag_name.replace('v', '');
+        const currentVersion = appVersion;
+
+        if (latestVersion > currentVersion) {
+          Alert.alert(
+            '🎉 Update Available!',
+            `New version ${latestVersion} is available!\n\nCurrent: v${currentVersion}\nLatest: v${latestVersion}\n\nWhat's new:\n${data.body?.substring(0, 200) || 'Bug fixes and improvements'}`,
+            [
+              { text: 'Later', style: 'cancel' },
+              {
+                text: 'Update Now',
+                onPress: () => {
+                  // Open download link
+                  const apkAsset = data.assets?.find(a => a.name.endsWith('.apk'));
+                  if (apkAsset) {
+                    Linking.openURL(apkAsset.browser_download_url);
+                  } else {
+                    Linking.openURL(data.html_url);
+                  }
+                }
+              }
+            ]
+          );
+        } else {
+          Alert.alert(
+            '✅ You\'re Up to Date!',
+            `You have the latest version (v${currentVersion}) installed.`,
+            [{ text: 'OK' }]
+          );
+        }
+      }
+    } catch (error) {
+      Alert.alert(
+        'Check Failed',
+        'Unable to check for updates. Please check your internet connection.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setChecking(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -125,8 +181,30 @@ export default function SettingsScreen({ navigation }) {
           <SettingRow
             icon={Shield}
             title="Privacy Policy"
-            onPress={() => Linking.openURL('https://gisenyi-gadgets.vercel.app/privacy')}
+            onPress={() => Alert.alert('Privacy Policy', 'Your privacy is important to us. We collect and use your data only to provide and improve our services. We do not share your personal information with third parties without your consent.')}
           />
+        </View>
+
+        <Text style={styles.sectionTitle}>App Updates</Text>
+        <View style={styles.sectionCard}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={checkForUpdates}
+            disabled={checking}
+            activeOpacity={0.7}
+          >
+            <View style={styles.settingLeft}>
+              <View style={[styles.iconBox, { backgroundColor: '#EFF6FF' }]}>
+                {checking ? (
+                  <ActivityIndicator size="small" color={COLORS.primaryBlue} />
+                ) : (
+                  <RefreshCw size={20} color={COLORS.primaryBlue} />
+                )}
+              </View>
+              <Text style={styles.settingLabel}>Check for Updates</Text>
+            </View>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>About</Text>
@@ -135,7 +213,7 @@ export default function SettingsScreen({ navigation }) {
             icon={Info}
             title="App Version"
             showChevron={false}
-            onPress={() => Alert.alert('Gisenyi Gadgets', 'Version 1.2.0 (Build 45)')}
+            onPress={() => Alert.alert('Gisenyi Gadgets', `Version ${appVersion} (Build ${buildNumber})\n\nDeveloped with ❤️ in Gisenyi, Rwanda`)}
           />
           <SettingRow
             icon={Info}

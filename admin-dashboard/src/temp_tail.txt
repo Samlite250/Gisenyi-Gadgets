@@ -1,0 +1,100 @@
+.chat-list-item:hover {
+  background: var(--surface-bg) !important;
+}
+
+.chat-list-item.active {
+  background: rgba(66, 133, 244, 0.08) !important;
+  border-left-color: var(--primary-blue);
+}
+
+.chat-list-item.active .chat-name {
+  color: var(--primary-blue);
+}
+
+.msg-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  max-width: 80%;
+  position: relative;
+  box-shadow: var(--shadow-sm);
+}
+
+.msg-support {
+  background: var(--primary-blue);
+  color: #fff;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-user {
+  background: #fff;
+  color: var(--text-primary);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.msg-time {
+  font-size: 10px;
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.support-sidebar {
+  border-right: 1px solid var(--border);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Mobile Responsive Styles ────────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-tabs-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .settings-tabs-layout > .card:first-child {
+    width: 100% !important;
+  }
+
+  .settings-tabs-layout > .card:first-child button {
+    display: inline-flex !important;
+  }
+
+  /* Contact & Support Cards - Single Column on Mobile */
+  .contact-support-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Payment Instructions Grid */
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Basic Information Grid */
+  .settings-section > section > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 16px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  .form-input {
+    font-size: 14px !important;
+  }
+}

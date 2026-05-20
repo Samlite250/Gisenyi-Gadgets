@@ -15,7 +15,15 @@ export default function SupportPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [replyTo, setReplyTo] = useState(null);
+  const [isMobile, setIsMobile] = useState(isMobile);
   const scrollRef = useRef();
+
+  // Handle responsive layout
+  useEffect(() => {
+    const handleResize = () => setIsMobile(isMobile);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 1. Fetch active chat sessions
   useEffect(() => {
@@ -154,10 +162,27 @@ export default function SupportPage() {
   );
 
   return (
-    <div className="support-wrapper" style={{ height: 'calc(100vh - 160px)', display: 'flex', background: '#fff', borderRadius: 24, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}>
-      
+    <div className="support-wrapper" style={{
+      height: 'calc(100vh - 160px)',
+      display: 'flex',
+      background: '#fff',
+      borderRadius: isMobile ? 0 : 24,
+      overflow: 'hidden',
+      boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
+      border: '1px solid var(--border)',
+      flexDirection: isMobile ? 'column' : 'row'
+    }}>
+
       {/* Sidebar */}
-      <div style={{ width: 350, borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', background: '#F8FAFC' }}>
+      <div style={{
+        width: isMobile ? '100%' : 350,
+        borderRight: isMobile ? 'none' : '1px solid var(--border)',
+        borderBottom: isMobile && selectedChat ? '1px solid var(--border)' : 'none',
+        display: isMobile && selectedChat ? 'none' : 'flex',
+        flexDirection: 'column',
+        background: '#F8FAFC',
+        maxHeight: isMobile ? '40vh' : 'auto'
+      }}>
         <div style={{ padding: 24, borderBottom: '1px solid var(--border)', background: '#fff' }}>
           <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16 }}>Messages</h2>
           <div className="search-wrap" style={{ position: 'relative' }}>
@@ -217,12 +242,40 @@ export default function SupportPage() {
       </div>
 
       {/* Chat Area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff' }}>
+      <div style={{
+        flex: 1,
+        display: isMobile && !selectedChat ? 'none' : 'flex',
+        flexDirection: 'column',
+        background: '#fff',
+        width: isMobile ? '100%' : 'auto'
+      }}>
         {selectedChat ? (
           <>
             {/* Chat Header */}
-            <div style={{ padding: '16px 32px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{
+              padding: isMobile ? '12px 16px' : '16px 32px',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                {isMobile && (
+                  <button
+                    onClick={() => setSelectedChat(null)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: 24,
+                      cursor: 'pointer',
+                      color: 'var(--text-primary)',
+                      padding: 0,
+                      marginRight: 8
+                    }}
+                  >
+                    ←
+                  </button>
+                )}
                 <div style={{ width: 40, height: 40, borderRadius: 12, background: '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <User size={20} color="#64748B" />
                 </div>
@@ -234,7 +287,7 @@ export default function SupportPage() {
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 16, color: 'var(--text-muted)' }}>
+              <div style={{ display: isMobile ? 'none' : 'flex', gap: 16, color: 'var(--text-muted)' }}>
                 <Phone size={20} style={{ cursor: 'pointer' }} />
                 <Video size={20} style={{ cursor: 'pointer' }} />
                 <MoreHorizontal size={20} style={{ cursor: 'pointer' }} />
@@ -242,9 +295,17 @@ export default function SupportPage() {
             </div>
 
             {/* Messages Scroll Area */}
-            <div 
+            <div
               ref={scrollRef}
-              style={{ flex: 1, overflowY: 'auto', padding: '32px', display: 'flex', flexDirection: 'column', gap: 16, background: '#F1F5F9' }}
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                padding: isMobile ? '16px' : '32px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 16,
+                background: '#F1F5F9'
+              }}
             >
               {messages.map((m, idx) => {
                 const isAdmin = m.is_admin;
@@ -256,10 +317,10 @@ export default function SupportPage() {
                 
                 return (
                   <div key={m.id || idx} style={{ display: 'flex', justifyContent: isAdmin ? 'flex-end' : 'flex-start' }}>
-                    <div 
+                    <div
                       className="msg-bubble-wrap"
-                      style={{ 
-                        maxWidth: '85%',
+                      style={{
+                        maxWidth: isMobile ? '85%' : '70%',
                         position: 'relative',
                         display: 'flex',
                         flexDirection: 'column',
@@ -336,25 +397,63 @@ export default function SupportPage() {
 
             {/* Reply Preview */}
             {replyTo && (
-              <div style={{ padding: '12px 32px', background: '#F8FAFC', borderTop: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ borderLeft: '4px solid var(--primary-blue)', paddingLeft: 12 }}>
+              <div style={{
+                padding: isMobile ? '12px 16px' : '12px 32px',
+                background: '#F8FAFC',
+                borderTop: '1px solid var(--border)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}>
+                <div style={{ borderLeft: '4px solid var(--primary-blue)', paddingLeft: 12, flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-blue)' }}>Replying to {replyTo.is_admin ? 'yourself' : selectedChat.name}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 400 }}>{replyTo.content}</div>
+                  <div style={{
+                    fontSize: 12,
+                    color: 'var(--text-muted)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: isMobile ? '200px' : '400px'
+                  }}>{replyTo.content}</div>
                 </div>
-                <button onClick={() => setReplyTo(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>×</button>
+                <button onClick={() => setReplyTo(null)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 20 }}>×</button>
               </div>
             )}
 
             {/* Input Bar */}
-            <div style={{ padding: '24px 32px', borderTop: '1px solid var(--border)' }}>
-              <form onSubmit={handleSend} style={{ display: 'flex', gap: 12, background: '#F1F5F9', padding: '8px 12px', borderRadius: 16 }}>
-                <input 
+            <div style={{
+              padding: isMobile ? '12px 16px' : '24px 32px',
+              borderTop: '1px solid var(--border)',
+              background: '#fff'
+            }}>
+              <form onSubmit={handleSend} style={{ display: 'flex', gap: 8, background: '#F1F5F9', padding: '6px 10px', borderRadius: 16 }}>
+                <input
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Type a message..."
-                  style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '8px', fontSize: 14 }}
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    background: 'transparent',
+                    outline: 'none',
+                    padding: '8px',
+                    fontSize: 14,
+                    minWidth: 0
+                  }}
                 />
-                <button type="submit" style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--primary-blue)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <button type="submit" style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: 'var(--primary-blue)',
+                  color: '#fff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0
+                }}>
                   <Send size={18} />
                 </button>
               </form>

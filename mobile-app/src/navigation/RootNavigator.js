@@ -99,6 +99,13 @@ function MainTabs() {
           paddingBottom: Platform.OS === 'ios' ? 28 : 12,
           paddingTop: 10,
           elevation: 8,
+          ...Platform.select({
+            web: {
+              boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
+              position: 'sticky',
+              bottom: 0,
+            }
+          }),
         },
         tabBarActiveTintColor: COLORS.primaryBlue,
         tabBarInactiveTintColor: COLORS.textSecondary,
@@ -157,7 +164,7 @@ function AuthStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: 'transparent' },
+        contentStyle: { backgroundColor: '#FFFFFF' },
         animation: 'slide_from_right',
       }}
     >
@@ -175,7 +182,7 @@ function AppStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: 'transparent' },
+        contentStyle: { backgroundColor: '#F8FAFC' },
         animation: 'slide_from_right',
       }}
     >

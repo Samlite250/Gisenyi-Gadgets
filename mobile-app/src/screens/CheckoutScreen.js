@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import PaymentModal from '../components/PaymentModal';
+// import PaymentModal from '../components/PaymentModal'; // TODO: Create PaymentModal component
 
 const PAYMENT_METHODS = [
   { id: 'mtn',    name: 'MTN MoMo',         icon: Smartphone, color: '#FBC400', bg: '#FFFBEB', border: '#FDE68A',  description: 'Pay via MTN Mobile Money' },

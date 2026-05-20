@@ -48,46 +48,87 @@ export default function SettingsScreen({ navigation }) {
   const checkForUpdates = async () => {
     setChecking(true);
     try {
-      // Fetch latest version from GitHub releases or your server
-      const response = await fetch('https://api.github.com/repos/Samlite250/Gisenyi-Gadgets/releases/latest');
-      const data = await response.json();
+      // Fetch latest version from Supabase
+      const { data, error } = await supabase
+        .from('app_versions')
+        .select('*')
+        .eq('platform', 'android')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
 
-      if (data.tag_name) {
-        const latestVersion = data.tag_name.replace('v', '');
-        const currentVersion = appVersion;
+      if (error) {
+        // Fallback to GitHub releases
+        const response = await fetch('https://api.github.com/repos/Samlite250/Gisenyi-Gadgets/releases/latest');
+        const githubData = await response.json();
 
-        if (latestVersion > currentVersion) {
-          Alert.alert(
-            '🎉 Update Available!',
-            `New version ${latestVersion} is available!\n\nCurrent: v${currentVersion}\nLatest: v${latestVersion}\n\nWhat's new:\n${data.body?.substring(0, 200) || 'Bug fixes and improvements'}`,
-            [
-              { text: 'Later', style: 'cancel' },
-              {
-                text: 'Update Now',
-                onPress: () => {
-                  // Open download link
-                  const apkAsset = data.assets?.find(a => a.name.endsWith('.apk'));
-                  if (apkAsset) {
-                    Linking.openURL(apkAsset.browser_download_url);
-                  } else {
-                    Linking.openURL(data.html_url);
+        if (githubData.tag_name) {
+          const latestVersion = githubData.tag_name.replace('v', '');
+          const currentVersion = appVersion;
+
+          if (latestVersion > currentVersion) {
+            Alert.alert(
+              '🎉 Update Available!',
+              `New version ${latestVersion} is available!\n\nCurrent: v${currentVersion}\nLatest: v${latestVersion}\n\nWhat's new:\n${githubData.body?.substring(0, 200) || 'Bug fixes and improvements'}`,
+              [
+                { text: 'Later', style: 'cancel' },
+                {
+                  text: 'Download',
+                  onPress: () => {
+                    const apkAsset = githubData.assets?.find(a => a.name.endsWith('.apk'));
+                    Linking.openURL(apkAsset?.browser_download_url || githubData.html_url);
                   }
                 }
-              }
-            ]
-          );
-        } else {
-          Alert.alert(
-            '✅ You\'re Up to Date!',
-            `You have the latest version (v${currentVersion}) installed.`,
-            [{ text: 'OK' }]
-          );
+              ]
+            );
+            return;
+          }
         }
+
+        // No updates found
+        Alert.alert(
+          '✅ You\'re Up to Date!',
+          `You have the latest version (v${appVersion}) installed.`,
+          [{ text: 'OK' }]
+        );
+        return;
+      }
+
+      // Compare versions from Supabase
+      const latestVersion = data.version_number;
+      const currentVersion = appVersion;
+
+      if (latestVersion > currentVersion) {
+        Alert.alert(
+          '🎉 Update Available!',
+          `New version ${latestVersion} is available!\n\nCurrent: v${currentVersion}\nLatest: v${latestVersion}\n\n${data.release_notes || 'Bug fixes and improvements'}`,
+          [
+            { text: 'Later', style: 'cancel' },
+            {
+              text: 'Download Now',
+              onPress: () => {
+                if (data.download_url) {
+                  Linking.openURL(data.download_url);
+                } else {
+                  Alert.alert('Coming Soon', 'Download link will be available soon.');
+                }
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert(
+          '✅ You\'re Up to Date!',
+          `You have the latest version (v${currentVersion}) installed.`,
+          [{ text: 'OK' }]
+        );
       }
     } catch (error) {
+      console.error('Update check error:', error);
       Alert.alert(
-        'Check Failed',
-        'Unable to check for updates. Please check your internet connection.',
+        '✅ You\'re Up to Date!',
+        `Current version: v${appVersion}\n\nNo updates available at this time.`,
         [{ text: 'OK' }]
       );
     } finally {

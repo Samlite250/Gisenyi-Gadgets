@@ -15,22 +15,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
 
+  // Use scope:'local' so we don't hit the server with an already-dead token
+  const clearStaleSession = async () => {
+    await supabase.auth.signOut({ scope: 'local' });
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+  };
+
   useEffect(() => {
-    // Get initial session — clear stale tokens automatically
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
-        await supabase.auth.signOut();
-        setSession(null);
-        setUser(null);
-        setProfile(null);
+        await clearStaleSession();
       } else if (session) {
-        // Validate the session is still usable
         const { error: userError } = await supabase.auth.getUser();
         if (userError) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setProfile(null);
+          await clearStaleSession();
         } else {
           setSession(session);
           setUser(session.user);
@@ -54,17 +54,13 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        // Handle token refresh errors
+        // Handle token refresh errors and unexpected sign-outs
         if (event === 'TOKEN_REFRESHED' && !session) {
-          authLogger.warn('Token refresh failed, logging out');
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setProfile(null);
+          authLogger.warn('Token refresh failed, clearing stale session');
+          await clearStaleSession();
           return;
         }
 
-        // Handle signed out
         if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);

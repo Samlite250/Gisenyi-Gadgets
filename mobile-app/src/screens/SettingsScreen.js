@@ -65,21 +65,31 @@ export default function SettingsScreen({ navigation }) {
 
         if (latestVersion > currentVersion) {
           Alert.alert(
-            '🎉 Update Available!',
-            `New version ${latestVersion} is available!\n\nCurrent: v${currentVersion}\nLatest: v${latestVersion}\n\n${data.release_notes || 'Bug fixes and improvements'}`,
+            '🎉 New Update Available!',
+            `A new version is ready to download!\n\n📱 Your Version: v${currentVersion}\n✨ Latest Version: v${latestVersion}\n\n📝 What's New:\n${data.release_notes || 'Bug fixes and performance improvements'}\n\nUpdate now to get the latest features!`,
             [
               { text: 'Later', style: 'cancel' },
               {
-                text: 'Download Now',
+                text: '⬇️ Download Now',
+                style: 'default',
                 onPress: () => {
                   if (data.download_url) {
                     Linking.openURL(data.download_url);
                   } else {
-                    Alert.alert('Coming Soon', 'Download link will be available soon.');
+                    Alert.alert('Coming Soon', 'Download link will be available soon. Check back later!');
                   }
                 }
               }
             ]
+          );
+          setChecking(false);
+          return;
+        } else {
+          // Same version or newer
+          Alert.alert(
+            '✅ App is Up to Date',
+            `Your app is already updated!\n\n📱 Current Version: v${currentVersion}\n🎯 Latest Version: v${latestVersion}\n\nYou're running the latest version. Enjoy!`,
+            [{ text: 'Got it!' }]
           );
           setChecking(false);
           return;
@@ -88,18 +98,18 @@ export default function SettingsScreen({ navigation }) {
 
       // If no Supabase data, show up-to-date message
       Alert.alert(
-        '✅ You\'re Up to Date!',
-        `You have the latest version (v${appVersion}) installed.\n\nNo updates available at this time.`,
-        [{ text: 'OK' }]
+        '✅ App is Up to Date',
+        `Your app is already updated!\n\n📱 Current Version: v${appVersion}\n🎯 Build: ${buildNumber}\n\nYou're running the latest version of Gisenyi Gadgets. No updates needed!`,
+        [{ text: 'Got it!' }]
       );
 
     } catch (error) {
       console.log('Update check error (expected):', error);
       // Show up-to-date message on any error
       Alert.alert(
-        '✅ You\'re Up to Date!',
-        `Current version: v${appVersion}\n\nNo updates available at this time.`,
-        [{ text: 'OK' }]
+        '✅ App is Up to Date',
+        `Your app is already updated!\n\n📱 Current Version: v${appVersion}\n🎯 Build: ${buildNumber}\n\nNo updates available at this time.`,
+        [{ text: 'Got it!' }]
       );
     } finally {
       setChecking(false);

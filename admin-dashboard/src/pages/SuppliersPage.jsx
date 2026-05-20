@@ -262,7 +262,7 @@ export default function SuppliersPage() {
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13 }}>{fmtRWF(s.total_sold)}</div>
                       <div style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>
-                        → Your cut: {fmtRWF((s.total_sold || 0) * s.commission_rate / 100)}
+                        → My cut: {fmtRWF((s.total_sold || 0) * s.commission_rate / 100)}
                       </div>
                     </div>
                   </td>
@@ -358,7 +358,7 @@ export default function SuppliersPage() {
                   <Percent size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 </div>
                 <div style={{ fontSize: 11, color: '#10B981', marginTop: 4, fontWeight: 600 }}>
-                  You keep {form.commission_rate}% of every sale from this supplier
+                  I keep {form.commission_rate}% of every sale from this supplier
                 </div>
               </div>
               <div style={{ gridColumn: 'span 2' }}>
@@ -425,7 +425,7 @@ export default function SuppliersPage() {
                   {[
                     { label: 'Total Sales', value: fmtRWF(viewTarget.total_sold), color: '#1E293B' },
                     { label: 'Commission Rate', value: `${viewTarget.commission_rate}%`, color: '#7C3AED' },
-                    { label: 'Your Earnings', value: fmtRWF((viewTarget.total_sold || 0) * viewTarget.commission_rate / 100), color: '#10B981' },
+                    { label: 'My Earnings', value: fmtRWF((viewTarget.total_sold || 0) * viewTarget.commission_rate / 100), color: '#10B981' },
                     { label: 'Amount to Pay Back', value: fmtRWF((viewTarget.total_sold || 0) * (1 - viewTarget.commission_rate / 100)), color: '#EF4444' },
                   ].map(({ label, value, color }) => (
                     <div key={label}>
@@ -484,7 +484,7 @@ export default function SuppliersPage() {
                           <th style={{ fontSize: 11 }}>Product Name</th>
                           <th style={{ fontSize: 11 }}>Category</th>
                           <th style={{ fontSize: 11, textAlign: 'right' }}>Selling Price</th>
-                          <th style={{ fontSize: 11, textAlign: 'right' }}>Your Income</th>
+                          <th style={{ fontSize: 11, textAlign: 'right' }}>My Income</th>
                           <th style={{ fontSize: 11, textAlign: 'right' }}>Supplier Gets</th>
                         </tr>
                       </thead>
@@ -530,7 +530,7 @@ export default function SuppliersPage() {
                         <tfoot style={{ background: 'var(--surface-bg)', fontWeight: 700 }}>
                           <tr>
                             <td colSpan={3} style={{ fontSize: 13, textAlign: 'right', paddingRight: 12 }}>
-                              Total Your Income (if all sell):
+                              Total My Income (if all sell):
                             </td>
                             <td style={{ fontSize: 14, color: '#10B981', textAlign: 'right' }}>
                               {fmtRWF(

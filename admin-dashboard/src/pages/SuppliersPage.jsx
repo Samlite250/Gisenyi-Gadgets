@@ -391,7 +391,7 @@ export default function SuppliersPage() {
       {/* View Detail Modal */}
       {viewTarget && (
         <div className="modal-overlay" onClick={() => setViewTarget(null)}>
-          <div className="modal" style={{ maxWidth: 720 }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 900, maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
@@ -477,80 +477,83 @@ export default function SuppliersPage() {
                     No products assigned to this supplier yet. Assign products when adding/editing them.
                   </div>
                 ) : (
-                  <div className="table-wrap" style={{ border: '1px solid var(--border)', borderRadius: 8, maxHeight: 400, overflow: 'auto' }}>
-                    <table style={{ margin: 0 }}>
-                      <thead style={{ background: 'var(--surface-bg)', position: 'sticky', top: 0 }}>
-                        <tr>
-                          <th style={{ fontSize: 11 }}>Product Name</th>
-                          <th style={{ fontSize: 11 }}>Category</th>
-                          <th style={{ fontSize: 11, textAlign: 'right' }}>Selling Price</th>
-                          <th style={{ fontSize: 11, textAlign: 'right' }}>My Income</th>
-                          <th style={{ fontSize: 11, textAlign: 'right' }}>Supplier Gets</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {supplierProducts.map((product) => {
-                          const sellingPrice = Number(product.price || 0);
-                          const yourIncome = sellingPrice * (viewTarget.commission_rate / 100);
-                          const supplierGets = sellingPrice - yourIncome;
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ margin: 0, width: '100%', minWidth: 700 }}>
+                        <thead style={{ background: 'var(--surface-bg)', position: 'sticky', top: 0 }}>
+                          <tr>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'left', minWidth: 200 }}>Product Name</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'left', minWidth: 120 }}>Category</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'right', minWidth: 130 }}>Selling Price</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'right', minWidth: 130 }}>My Income</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'right', minWidth: 130 }}>Supplier Gets</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {supplierProducts.map((product) => {
+                            const sellingPrice = Number(product.price || 0);
+                            const myIncome = sellingPrice * (viewTarget.commission_rate / 100);
+                            const supplierGets = sellingPrice - myIncome;
 
-                          return (
-                            <tr key={product.id}>
-                              <td style={{ fontSize: 13, fontWeight: 600 }}>{product.name}</td>
-                              <td style={{ fontSize: 12 }}>
-                                <span style={{
-                                  background: 'var(--surface-bg)',
-                                  padding: '2px 8px',
-                                  borderRadius: 6,
-                                  fontSize: 11,
-                                  fontWeight: 600
-                                }}>
-                                  {product.categories?.name || 'Uncategorized'}
-                                </span>
+                            return (
+                              <tr key={product.id}>
+                                <td style={{ fontSize: 14, fontWeight: 600, padding: '12px' }}>{product.name}</td>
+                                <td style={{ fontSize: 13, padding: '12px' }}>
+                                  <span style={{
+                                    background: 'var(--surface-bg)',
+                                    padding: '4px 10px',
+                                    borderRadius: 6,
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    {product.categories?.name || 'Uncategorized'}
+                                  </span>
+                                </td>
+                                <td style={{ fontSize: 14, fontWeight: 700, textAlign: 'right', padding: '12px' }}>
+                                  {fmtRWF(sellingPrice)}
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '12px' }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981' }}>
+                                    {fmtRWF(myIncome)}
+                                  </div>
+                                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                                    ({viewTarget.commission_rate}%)
+                                  </div>
+                                </td>
+                                <td style={{ fontSize: 14, color: '#F59E0B', fontWeight: 700, textAlign: 'right', padding: '12px' }}>
+                                  {fmtRWF(supplierGets)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        {supplierProducts.length > 0 && (
+                          <tfoot style={{ background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)', borderTop: '2px solid #10B981' }}>
+                            <tr>
+                              <td colSpan={3} style={{ fontSize: 14, textAlign: 'right', paddingRight: 16, fontWeight: 700, color: '#1E293B', padding: '14px 12px' }}>
+                                My Total Income (If I sell all):
                               </td>
-                              <td style={{ fontSize: 13, fontWeight: 700, textAlign: 'right' }}>
-                                {fmtRWF(sellingPrice)}
+                              <td style={{ fontSize: 16, color: '#10B981', textAlign: 'right', fontWeight: 800, padding: '14px 12px' }}>
+                                {fmtRWF(
+                                  supplierProducts.reduce((sum, p) => {
+                                    return sum + (Number(p.price || 0) * (viewTarget.commission_rate / 100));
+                                  }, 0)
+                                )}
                               </td>
-                              <td style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}>
-                                  {fmtRWF(yourIncome)}
-                                </div>
-                                <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                                  ({viewTarget.commission_rate}%)
-                                </div>
-                              </td>
-                              <td style={{ fontSize: 13, color: '#F59E0B', fontWeight: 600, textAlign: 'right' }}>
-                                {fmtRWF(supplierGets)}
+                              <td style={{ fontSize: 16, color: '#F59E0B', textAlign: 'right', fontWeight: 800, padding: '14px 12px' }}>
+                                {fmtRWF(
+                                  supplierProducts.reduce((sum, p) => {
+                                    const income = Number(p.price || 0) * (viewTarget.commission_rate / 100);
+                                    return sum + (Number(p.price || 0) - income);
+                                  }, 0)
+                                )}
                               </td>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                      {supplierProducts.length > 0 && (
-                        <tfoot style={{ background: 'var(--surface-bg)', fontWeight: 700 }}>
-                          <tr>
-                            <td colSpan={3} style={{ fontSize: 13, textAlign: 'right', paddingRight: 12 }}>
-                              Total My Income (if all sell):
-                            </td>
-                            <td style={{ fontSize: 14, color: '#10B981', textAlign: 'right' }}>
-                              {fmtRWF(
-                                supplierProducts.reduce((sum, p) => {
-                                  return sum + (Number(p.price || 0) * (viewTarget.commission_rate / 100));
-                                }, 0)
-                              )}
-                            </td>
-                            <td style={{ fontSize: 14, color: '#F59E0B', textAlign: 'right' }}>
-                              {fmtRWF(
-                                supplierProducts.reduce((sum, p) => {
-                                  const income = Number(p.price || 0) * (viewTarget.commission_rate / 100);
-                                  return sum + (Number(p.price || 0) - income);
-                                }, 0)
-                              )}
-                            </td>
-                          </tr>
-                        </tfoot>
-                      )}
-                    </table>
+                          </tfoot>
+                        )}
+                      </table>
+                    </div>
                   </div>
                 )}
               </div>

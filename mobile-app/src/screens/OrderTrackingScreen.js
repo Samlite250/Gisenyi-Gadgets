@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, CircleCheckBig, Circle, Clock, Package, Truck, MapPin } from 'lucide-react-native';
 import { supabase } from '../services/supabase';

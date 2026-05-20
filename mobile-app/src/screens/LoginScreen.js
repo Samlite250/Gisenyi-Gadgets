@@ -3,7 +3,7 @@ import {
   View, Text, TextInput, StyleSheet, TouchableOpacity,
   KeyboardAvoidingView, Platform, ScrollView, Image
 } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';

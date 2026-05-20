@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { Smartphone, Headphones, Watch } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');

@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CircleCheckBig, Package, Home, ListOrdered, Truck } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { useCart } from '../context/CartContext';
 
 export default function OrderSuccessScreen({ navigation, route }) {

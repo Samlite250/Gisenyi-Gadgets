@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, Image, FlatList, RefreshControl, Platform, Dimensions,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Bell, Search, ShoppingBag, Heart,

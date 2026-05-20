@@ -4,7 +4,7 @@ import {
   Image, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { ChevronLeft, Heart, ShoppingCart } from 'lucide-react-native';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';

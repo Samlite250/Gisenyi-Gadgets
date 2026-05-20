@@ -4,7 +4,7 @@ import {
   TouchableOpacity, RefreshControl, Image,
   Dimensions,
 } from 'react-native';
-import { BlurView } from 'expo-blur';
+import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';

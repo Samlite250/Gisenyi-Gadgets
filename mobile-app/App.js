@@ -25,11 +25,6 @@ export default function App() {
             ResetPassword: 'reset-password',
           },
         },
-        App: {
-          screens: {
-            ResetPassword: 'reset-password',
-          },
-        },
       },
     },
   };

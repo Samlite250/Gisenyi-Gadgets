@@ -163,14 +163,20 @@ export default function SupportPage() {
 
   return (
     <div className="support-wrapper" style={{
-      height: 'calc(100vh - 160px)',
+      height: isMobile ? '100vh' : 'calc(100vh - 160px)',
       display: 'flex',
       background: '#fff',
       borderRadius: isMobile ? 0 : 24,
       overflow: 'hidden',
       boxShadow: '0 10px 30px rgba(0,0,0,0.05)',
       border: '1px solid var(--border)',
-      flexDirection: isMobile ? 'column' : 'row'
+      flexDirection: isMobile ? 'column' : 'row',
+      position: isMobile ? 'fixed' : 'relative',
+      top: isMobile ? 0 : 'auto',
+      left: isMobile ? 0 : 'auto',
+      right: isMobile ? 0 : 'auto',
+      bottom: isMobile ? 0 : 'auto',
+      zIndex: isMobile ? 100 : 'auto'
     }}>
 
       {/* Sidebar */}
@@ -181,7 +187,7 @@ export default function SupportPage() {
         display: isMobile && selectedChat ? 'none' : 'flex',
         flexDirection: 'column',
         background: '#F8FAFC',
-        maxHeight: isMobile ? '40vh' : 'auto'
+        height: isMobile ? '100%' : 'auto'
       }}>
         <div style={{ padding: 24, borderBottom: '1px solid var(--border)', background: '#fff' }}>
           <h2 style={{ fontSize: 20, fontWeight: 800, marginBottom: 16 }}>Messages</h2>
@@ -247,7 +253,9 @@ export default function SupportPage() {
         display: isMobile && !selectedChat ? 'none' : 'flex',
         flexDirection: 'column',
         background: '#fff',
-        width: isMobile ? '100%' : 'auto'
+        width: isMobile ? '100%' : 'auto',
+        height: isMobile ? '100%' : 'auto',
+        overflow: 'hidden'
       }}>
         {selectedChat ? (
           <>
@@ -422,9 +430,11 @@ export default function SupportPage() {
 
             {/* Input Bar */}
             <div style={{
-              padding: isMobile ? '12px 16px' : '24px 32px',
+              padding: isMobile ? '12px 16px 12px 16px' : '24px 32px',
               borderTop: '1px solid var(--border)',
-              background: '#fff'
+              background: '#fff',
+              flexShrink: 0,
+              paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom))' : '24px'
             }}>
               <form onSubmit={handleSend} style={{ display: 'flex', gap: 8, background: '#F1F5F9', padding: '6px 10px', borderRadius: 16 }}>
                 <input

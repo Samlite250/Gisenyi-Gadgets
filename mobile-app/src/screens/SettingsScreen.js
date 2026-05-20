@@ -140,7 +140,7 @@ export default function SettingsScreen({ navigation }) {
           <SettingRow
             icon={Info}
             title="Open Source Licenses"
-            onPress={() => navigation.navigate('ChatSupport')}
+            onPress={() => navigation.navigate('Licenses')}
           />
         </View>
 

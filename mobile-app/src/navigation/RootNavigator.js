@@ -36,6 +36,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import HelpSupportScreen from '../screens/HelpSupportScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import ChatSupportScreen from '../screens/ChatSupportScreen';
+import LicensesScreen from '../screens/LicensesScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -194,6 +195,7 @@ function AppStack() {
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="ChatSupport" component={ChatSupportScreen} />
+      <Stack.Screen name="Licenses" component={LicensesScreen} />
     </Stack.Navigator>
   );
 }

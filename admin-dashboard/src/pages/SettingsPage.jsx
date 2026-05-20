@@ -190,7 +190,9 @@ export default function SettingsPage() {
                     background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
                     borderRadius: 16,
                     padding: 24,
-                    border: '1px solid #BAE6FD'
+                    border: '1px solid #BAE6FD',
+                    width: '100%',
+                    maxWidth: '100%'
                   }}>
                     <h4 style={{
                       fontSize: 14,
@@ -207,16 +209,18 @@ export default function SettingsPage() {
                     </h4>
                     <div className="contact-support-grid" style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-                      gap: 20
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
+                      gap: 24,
+                      width: '100%'
                     }}>
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,
-                        padding: 20,
+                        padding: 24,
                         border: '1px solid #E0F2FE',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                        minHeight: 140
+                        minHeight: 160,
+                        width: '100%'
                       }}>
                         <div style={{
                           display: 'flex',
@@ -240,8 +244,10 @@ export default function SettingsPage() {
                           placeholder="support@example.com"
                           style={{
                             borderColor: '#BFDBFE',
-                            fontSize: 14,
-                            fontWeight: 600
+                            fontSize: 15,
+                            fontWeight: 600,
+                            padding: '12px 16px',
+                            width: '100%'
                           }}
                         />
                       </div>
@@ -249,10 +255,11 @@ export default function SettingsPage() {
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,
-                        padding: 20,
+                        padding: 24,
                         border: '1px solid #E0F2FE',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                        minHeight: 140
+                        minHeight: 160,
+                        width: '100%'
                       }}>
                         <div style={{
                           display: 'flex',
@@ -276,8 +283,10 @@ export default function SettingsPage() {
                           placeholder="+250 780 000 000"
                           style={{
                             borderColor: '#BFDBFE',
-                            fontSize: 14,
-                            fontWeight: 600
+                            fontSize: 15,
+                            fontWeight: 600,
+                            padding: '12px 16px',
+                            width: '100%'
                           }}
                         />
                       </div>
@@ -285,10 +294,11 @@ export default function SettingsPage() {
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,
-                        padding: 20,
+                        padding: 24,
                         border: '1px solid #E0F2FE',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                        minHeight: 140
+                        minHeight: 160,
+                        width: '100%'
                       }}>
                         <div style={{
                           display: 'flex',
@@ -312,8 +322,10 @@ export default function SettingsPage() {
                           placeholder="+250 780 000 000"
                           style={{
                             borderColor: '#BFDBFE',
-                            fontSize: 14,
-                            fontWeight: 600
+                            fontSize: 15,
+                            fontWeight: 600,
+                            padding: '12px 16px',
+                            width: '100%'
                           }}
                         />
                       </div>

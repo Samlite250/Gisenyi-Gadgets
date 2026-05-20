@@ -484,14 +484,13 @@ export default function SuppliersPage() {
                           <th style={{ fontSize: 11 }}>Product Name</th>
                           <th style={{ fontSize: 11 }}>Category</th>
                           <th style={{ fontSize: 11, textAlign: 'right' }}>Selling Price</th>
-                          <th style={{ fontSize: 11, textAlign: 'right' }}>Cost</th>
                           <th style={{ fontSize: 11, textAlign: 'right' }}>Your Income</th>
+                          <th style={{ fontSize: 11, textAlign: 'right' }}>Supplier Gets</th>
                         </tr>
                       </thead>
                       <tbody>
                         {supplierProducts.map((product) => {
                           const sellingPrice = Number(product.price || 0);
-                          const cost = Number(product.cost || 0);
                           const yourIncome = sellingPrice * (viewTarget.commission_rate / 100);
                           const supplierGets = sellingPrice - yourIncome;
 
@@ -512,9 +511,6 @@ export default function SuppliersPage() {
                               <td style={{ fontSize: 13, fontWeight: 700, textAlign: 'right' }}>
                                 {fmtRWF(sellingPrice)}
                               </td>
-                              <td style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'right' }}>
-                                {fmtRWF(cost)}
-                              </td>
                               <td style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}>
                                   {fmtRWF(yourIncome)}
@@ -523,6 +519,9 @@ export default function SuppliersPage() {
                                   ({viewTarget.commission_rate}%)
                                 </div>
                               </td>
+                              <td style={{ fontSize: 13, color: '#F59E0B', fontWeight: 600, textAlign: 'right' }}>
+                                {fmtRWF(supplierGets)}
+                              </td>
                             </tr>
                           );
                         })}
@@ -530,13 +529,21 @@ export default function SuppliersPage() {
                       {supplierProducts.length > 0 && (
                         <tfoot style={{ background: 'var(--surface-bg)', fontWeight: 700 }}>
                           <tr>
-                            <td colSpan={4} style={{ fontSize: 13, textAlign: 'right', paddingRight: 12 }}>
-                              Total Your Income Per Sale:
+                            <td colSpan={3} style={{ fontSize: 13, textAlign: 'right', paddingRight: 12 }}>
+                              Total Your Income (if all sell):
                             </td>
                             <td style={{ fontSize: 14, color: '#10B981', textAlign: 'right' }}>
                               {fmtRWF(
                                 supplierProducts.reduce((sum, p) => {
                                   return sum + (Number(p.price || 0) * (viewTarget.commission_rate / 100));
+                                }, 0)
+                              )}
+                            </td>
+                            <td style={{ fontSize: 14, color: '#F59E0B', textAlign: 'right' }}>
+                              {fmtRWF(
+                                supplierProducts.reduce((sum, p) => {
+                                  const income = Number(p.price || 0) * (viewTarget.commission_rate / 100);
+                                  return sum + (Number(p.price || 0) - income);
                                 }, 0)
                               )}
                             </td>

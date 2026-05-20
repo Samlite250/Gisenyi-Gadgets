@@ -207,15 +207,16 @@ export default function SettingsPage() {
                     </h4>
                     <div className="contact-support-grid" style={{
                       display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                      gap: 16
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                      gap: 20
                     }}>
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,
-                        padding: 16,
+                        padding: 20,
                         border: '1px solid #E0F2FE',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        minHeight: 140
                       }}>
                         <div style={{
                           display: 'flex',
@@ -248,9 +249,10 @@ export default function SettingsPage() {
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,
-                        padding: 16,
+                        padding: 20,
                         border: '1px solid #E0F2FE',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        minHeight: 140
                       }}>
                         <div style={{
                           display: 'flex',
@@ -283,9 +285,10 @@ export default function SettingsPage() {
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,
-                        padding: 16,
+                        padding: 20,
                         border: '1px solid #E0F2FE',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        minHeight: 140
                       }}>
                         <div style={{
                           display: 'flex',

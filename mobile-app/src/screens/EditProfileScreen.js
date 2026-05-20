@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { profileLogger } from '../utils/logger';
 
 export default function EditProfileScreen({ navigation }) {
   const { profile, user, updateProfile } = useAuth();
@@ -83,7 +84,7 @@ export default function EditProfileScreen({ navigation }) {
 
       return publicUrlData.publicUrl;
     } catch (err) {
-      console.warn('Avatar upload error:', err);
+      profileLogger.error('Avatar upload failed', err);
       throw new Error('Failed to upload profile picture.');
     }
   };
@@ -125,7 +126,7 @@ export default function EditProfileScreen({ navigation }) {
         );
       }
     } catch (err) {
-      console.error('Update Profile Error Details:', err);
+      profileLogger.error('Profile update failed', err);
       const errorMsg = err.message || 'Something went wrong';
       
       if (Platform.OS === 'web') {

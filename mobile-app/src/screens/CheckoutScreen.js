@@ -14,7 +14,8 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
-// import PaymentModal from '../components/PaymentModal'; // TODO: Create PaymentModal component
+import { orderLogger } from '../utils/logger';
+// import PaymentModal from '../components/PaymentModal'; // Payment modal component (future implementation)
 
 const PAYMENT_METHODS = [
   { id: 'mtn',    name: 'MTN MoMo',         icon: Smartphone, color: '#FBC400', bg: '#FFFBEB', border: '#FDE68A',  description: 'Pay via MTN Mobile Money' },
@@ -276,7 +277,7 @@ export default function CheckoutScreen({ navigation }) {
         });
       }
     } catch (err) {
-      console.error('Order error:', err);
+      orderLogger.error('Order placement failed', err);
       Alert.alert('Error', err.message || 'Failed to place order. Please try again.');
     } finally {
       setPlacing(false);

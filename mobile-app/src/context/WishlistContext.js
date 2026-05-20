@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../services/supabase';
+import { wishlistLogger } from '../utils/logger';
 
 const WishlistContext = createContext(null);
 const WISHLIST_CACHE_KEY = '@GisenyiGadgets_wishlist';
@@ -55,7 +56,7 @@ export function WishlistProvider({ children }) {
         if (stored) setWishlistItems(JSON.parse(stored));
       }
     } catch (err) {
-      console.warn('Wishlist load error:', err.message);
+      wishlistLogger.error('Failed to load wishlist', err);
       // Last resort: try local cache
       try {
         const stored = await AsyncStorage.getItem(WISHLIST_CACHE_KEY);
@@ -91,7 +92,7 @@ export function WishlistProvider({ children }) {
       } else if (error) {
         // Rollback
         setWishlistItems((prev) => prev.filter((item) => item.id !== product.id));
-        console.warn('Wishlist add error:', error.message);
+        wishlistLogger.error('Failed to add item to wishlist', error);
       }
     } else {
       // Guest: persist to cache
@@ -114,7 +115,7 @@ export function WishlistProvider({ children }) {
       if (error) {
         // Rollback
         setWishlistItems((prev) => [item, ...prev]);
-        console.warn('Wishlist remove error:', error.message);
+        wishlistLogger.error('Failed to remove item from wishlist', error);
       }
     } else if (!userId) {
       const updated = wishlistItems.filter((i) => i.id !== productId);

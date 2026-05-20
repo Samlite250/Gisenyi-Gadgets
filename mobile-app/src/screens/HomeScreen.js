@@ -17,6 +17,7 @@ import { useCart } from '../context/CartContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import SkeletonLoader from '../components/SkeletonLoader';
+import { productLogger } from '../utils/logger';
 
 
 const FALLBACK_IMAGES = [
@@ -133,7 +134,7 @@ export default function HomeScreen({ navigation }) {
       setAllProducts(dbProducts);
 
     } catch (err) {
-      console.warn('Supabase fetch error:', err.message);
+      productLogger.error('Failed to fetch products and categories', err);
       setCategories([]);
       setFeaturedProducts([]);
       setAllProducts([]);

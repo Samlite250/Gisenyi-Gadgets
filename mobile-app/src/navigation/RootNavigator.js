@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, Text, Platform, StyleSheet } from 'react-native';
-import { BlurView } from '../components/BlurView';
 import { Home, Search, ShoppingCart, ListOrdered, User } from 'lucide-react-native';
 
 // Auth

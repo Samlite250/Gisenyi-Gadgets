@@ -20,13 +20,13 @@ export default function FloatingSupport() {
           toValue: 1.1,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(pulseAnim, {
           toValue: 1,
           duration: 1000,
           easing: Easing.inOut(Easing.ease),
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
       ])
     ).start();
@@ -34,9 +34,9 @@ export default function FloatingSupport() {
     // Show label briefly after mount
     setTimeout(() => {
       Animated.sequence([
-        Animated.timing(labelAnim, { toValue: 1, duration: 400, useNativeDriver: true }),
+        Animated.timing(labelAnim, { toValue: 1, duration: 400, useNativeDriver: Platform.OS !== 'web' }),
         Animated.delay(3000),
-        Animated.timing(labelAnim, { toValue: 0, duration: 400, useNativeDriver: true }),
+        Animated.timing(labelAnim, { toValue: 0, duration: 400, useNativeDriver: Platform.OS !== 'web' }),
       ]).start();
     }, 1000);
   }, []);

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity,
   TextInput, ActivityIndicator, Animated, Easing,
-  ScrollView, useWindowDimensions,
+  ScrollView, useWindowDimensions, Platform,
 } from 'react-native';
 import { BlurView } from './BlurView';
 import { CircleCheckBig, X, Smartphone, AlertCircle, User, Phone, ShieldCheck } from 'lucide-react-native';
@@ -64,13 +64,13 @@ export default function PaymentModal({ visible, provider, orderId, amount, onSuc
     if (phase === 'processing') {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(pulseAnim, { toValue: 1.12, duration: 750, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
-          Animated.timing(pulseAnim, { toValue: 1, duration: 750, useNativeDriver: true, easing: Easing.inOut(Easing.ease) }),
+          Animated.timing(pulseAnim, { toValue: 1.12, duration: 750, useNativeDriver: Platform.OS !== 'web', easing: Easing.inOut(Easing.ease) }),
+          Animated.timing(pulseAnim, { toValue: 1, duration: 750, useNativeDriver: Platform.OS !== 'web', easing: Easing.inOut(Easing.ease) }),
         ])
       ).start();
     } else if (phase === 'success') {
       pulseAnim.setValue(1);
-      Animated.spring(successAnim, { toValue: 1, useNativeDriver: true, tension: 60, friction: 8 }).start();
+      Animated.spring(successAnim, { toValue: 1, useNativeDriver: Platform.OS !== 'web', tension: 60, friction: 8 }).start();
     } else {
       pulseAnim.setValue(1);
     }

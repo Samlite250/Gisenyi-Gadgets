@@ -15,12 +15,12 @@ export default function SupportPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [replyTo, setReplyTo] = useState(null);
-  const [isMobile, setIsMobile] = useState(isMobile);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const scrollRef = useRef();
 
   // Handle responsive layout
   useEffect(() => {
-    const handleResize = () => setIsMobile(isMobile);
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);

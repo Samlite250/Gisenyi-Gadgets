@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Search, Eye, Radio } from 'lucide-react';
+import { Search, Eye, Radio, CheckCircle, XCircle, ImageIcon, Phone, User } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import Loader from '../components/Loader';
-
 import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = ['All', 'pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
@@ -22,7 +21,8 @@ export default function OrdersPage() {
   const [statusFilter, setStatus] = useState('All');
   const [selected, setSelected] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
-  
+  const [approvingId, setApprovingId] = useState(null);
+
   // Modal Specific State
   const [items, setItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(false);
@@ -98,6 +98,37 @@ export default function OrdersPage() {
     }
   };
 
+  const handleApproveManual = async (order, approve) => {
+    setApprovingId(order.id);
+    const tid = toast.loading(approve ? 'Approving payment…' : 'Rejecting payment…');
+    try {
+      const updates = approve
+        ? { payment_status: 'paid', status: 'confirmed', manual_payment_reviewed_at: new Date().toISOString() }
+        : { payment_status: 'unpaid', status: 'pending', manual_payment_reviewed_at: new Date().toISOString() };
+
+      await supabase.from('orders').update(updates).eq('id', order.id);
+
+      // Notify the customer
+      await supabase.from('notifications').insert({
+        user_id: order.user_id,
+        title: approve ? 'Payment Confirmed! 🎉' : 'Payment Rejected',
+        body: approve
+          ? `Your manual payment for order ${order.order_number} has been verified. Your order is now confirmed!`
+          : `Your manual payment for order ${order.order_number} was not verified. Please contact support.`,
+        type: 'order',
+        metadata: { orderId: order.id, status: approve ? 'confirmed' : 'rejected' },
+      });
+
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, ...updates } : o));
+      setSelected(s => s ? { ...s, ...updates } : s);
+      toast.success(approve ? 'Payment approved — order confirmed!' : 'Payment rejected.', { id: tid });
+    } catch (err) {
+      toast.error(err.message, { id: tid });
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
   const filtered = orders.filter((o) => {
     const matchSearch = o.order_number?.toLowerCase().includes(search.toLowerCase())
       || o.profiles?.full_name?.toLowerCase().includes(search.toLowerCase());
@@ -159,8 +190,13 @@ export default function OrdersPage() {
                   </td>
                   <td style={{ fontWeight: 700 }}>{fmt(o.total)}</td>
                   <td>
-                    <div><span className={`badge ${PAY_BADGE[o.payment_status]}`}>{o.payment_status}</span></div>
-                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{o.payment_method}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span className={`badge ${PAY_BADGE[o.payment_status]}`}>{o.payment_status}</span>
+                      {o.payment_type === 'manual' && o.payment_status === 'unpaid' && o.manual_payment_screenshot && (
+                        <span style={{ fontSize: 10, fontWeight: 700, color: '#F59E0B', background: '#FEF3C7', padding: '2px 6px', borderRadius: 6 }}>REVIEW</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{o.payment_type === 'manual' ? '📋 Manual' : o.payment_method}</div>
                   </td>
                   <td>
                     <select
@@ -253,6 +289,80 @@ export default function OrdersPage() {
                   </table>
                 </div>
               </div>
+
+              {/* Manual Payment Review Panel */}
+              {selected.payment_type === 'manual' && selected.manual_payment_screenshot && (
+                <div style={{ marginBottom: 24, border: '2px solid #FDE68A', borderRadius: 16, overflow: 'hidden' }}>
+                  <div style={{ background: '#FFFBEB', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <ImageIcon size={16} color='#F59E0B' />
+                      <span style={{ fontWeight: 800, fontSize: 14, color: '#92400E' }}>Manual Payment Proof</span>
+                    </div>
+                    {selected.payment_status === 'paid'
+                      ? <span style={{ fontSize: 12, fontWeight: 700, color: '#16A34A', background: '#F0FDF4', padding: '3px 10px', borderRadius: 20 }}>✓ Approved</span>
+                      : selected.manual_payment_reviewed_at
+                      ? <span style={{ fontSize: 12, fontWeight: 700, color: '#EA4335', background: '#FEF2F2', padding: '3px 10px', borderRadius: 20 }}>✗ Rejected</span>
+                      : <span style={{ fontSize: 12, fontWeight: 700, color: '#F59E0B', background: '#FEF3C7', padding: '3px 10px', borderRadius: 20 }}>⏳ Awaiting Review</span>
+                    }
+                  </div>
+                  <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {/* Payer details */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div style={{ background: 'var(--surface-bg)', borderRadius: 10, padding: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <User size={13} color='var(--text-muted)' />
+                          <span className="form-label" style={{ marginBottom: 0 }}>Payer Name</span>
+                        </div>
+                        <div style={{ fontWeight: 700 }}>{selected.manual_payment_names || '—'}</div>
+                      </div>
+                      <div style={{ background: 'var(--surface-bg)', borderRadius: 10, padding: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <Phone size={13} color='var(--text-muted)' />
+                          <span className="form-label" style={{ marginBottom: 0 }}>Payer Number</span>
+                        </div>
+                        <div style={{ fontWeight: 700 }}>{selected.manual_payment_phone || '—'}</div>
+                      </div>
+                    </div>
+
+                    {/* Screenshot */}
+                    <div>
+                      <div className="form-label" style={{ marginBottom: 8 }}>Payment Screenshot</div>
+                      <a href={selected.manual_payment_screenshot} target="_blank" rel="noreferrer">
+                        <img
+                          src={selected.manual_payment_screenshot}
+                          alt="Payment proof"
+                          style={{ width: '100%', maxHeight: 320, objectFit: 'contain', borderRadius: 12, border: '1px solid var(--border)', cursor: 'zoom-in', background: '#F8FAFC' }}
+                        />
+                      </a>
+                      <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>Click image to open full size</p>
+                    </div>
+
+                    {/* Approve / Reject buttons — only if not yet reviewed */}
+                    {selected.payment_status !== 'paid' && (
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <button
+                          className="btn btn-primary"
+                          style={{ flex: 1, background: '#16A34A', borderColor: '#16A34A', gap: 8 }}
+                          disabled={approvingId === selected.id}
+                          onClick={() => handleApproveManual(selected, true)}
+                        >
+                          <CheckCircle size={16} />
+                          {approvingId === selected.id ? 'Processing…' : 'Approve & Confirm Order'}
+                        </button>
+                        <button
+                          className="btn btn-ghost"
+                          style={{ flex: 1, borderColor: '#EA4335', color: '#EA4335', gap: 8 }}
+                          disabled={approvingId === selected.id}
+                          onClick={() => handleApproveManual(selected, false)}
+                        >
+                          <XCircle size={16} />
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {selected.shipping_address && (
                 <div style={{ background: 'var(--surface-bg)', borderRadius: 'var(--radius-md)', padding: 12 }}>

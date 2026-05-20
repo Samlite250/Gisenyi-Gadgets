@@ -48,6 +48,10 @@ export default function SettingsPage() {
     supportPhone: '',
     whatsappNumber: '',
     currency: '',
+    mtnNumber: '',
+    mtnAccountName: '',
+    airtelNumber: '',
+    airtelAccountName: '',
     mtnInstructions: '',
     airtelInstructions: '',
     bankInstructions: '',
@@ -90,6 +94,7 @@ export default function SettingsPage() {
 
   const ALLOWED_KEYS = new Set([
     'platformName','supportEmail','supportPhone','whatsappNumber','currency',
+    'mtnNumber','mtnAccountName','airtelNumber','airtelAccountName',
     'mtnInstructions','airtelInstructions','bankInstructions','cryptoInstructions',
     'freeShippingThreshold','standardShippingFee','expressShippingFee',
     'emailNewOrder','emailNewUser','emailLowStock','lowStockThreshold',
@@ -210,90 +215,74 @@ export default function SettingsPage() {
               )}
 
               {activeTab === 'payments' && (
-                <div className="settings-section">
-                  <div style={{ marginBottom: 32 }}>
-                    <h3 style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>Payment Gateway Configuration</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-                      Customize the exact instructions customers see for each payment method.
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  {/* Mobile Money Accounts */}
+                  <section>
+                    <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <CreditCard size={16} /> Mobile Money Receiving Accounts
+                    </h4>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: 13, marginBottom: 20 }}>
+                      These are the accounts customers pay into. They appear automatically in the payment modal.
                     </p>
-                  </div>
-                  
-                  <div className="settings-grid">
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                      <Field label="MTN MoMo Instructions">
-                        <textarea 
-                          className="form-input" 
-                          style={{ height: 100, resize: 'vertical', lineHeight: 1.6 }}
-                          value={form.mtnInstructions} 
-                          onChange={(e) => set('mtnInstructions')(e.target.value)} 
-                        />
-                      </Field>
-
-                      <Field label="Airtel Money Instructions">
-                        <textarea 
-                          className="form-input" 
-                          style={{ height: 100, resize: 'vertical', lineHeight: 1.6 }}
-                          value={form.airtelInstructions} 
-                          onChange={(e) => set('airtelInstructions')(e.target.value)} 
-                        />
-                      </Field>
-
-                      <Field label="Bank Transfer Details">
-                        <textarea 
-                          className="form-input" 
-                          style={{ height: 100, resize: 'vertical', lineHeight: 1.6 }}
-                          value={form.bankInstructions} 
-                          onChange={(e) => set('bankInstructions')(e.target.value)} 
-                        />
-                      </Field>
-
-                      <Field label="Crypto Wallet (USDT TRC-20)">
-                        <textarea 
-                          className="form-input" 
-                          style={{ height: 100, resize: 'vertical', lineHeight: 1.6 }}
-                          value={form.cryptoInstructions} 
-                          onChange={(e) => set('cryptoInstructions')(e.target.value)} 
-                        />
-                      </Field>
-                    </div>
-
-                    <div>
-                      <div style={{ position: 'sticky', top: 20 }}>
-                        <div style={{ background: '#1E293B', borderRadius: 24, padding: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.1)' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                            <div style={{ width: 10, height: 10, borderRadius: 5, background: '#10B981' }} />
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Mobile Preview</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+                      {/* MTN */}
+                      <div style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 16, padding: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#FBC400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CreditCard size={18} color="#fff" />
                           </div>
-                          
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16, border: '1px solid rgba(255,255,255,0.1)' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                <div style={{ width: 24, height: 24, borderRadius: 6, background: '#FBC400', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <CreditCard size={14} color="#fff" />
-                                </div>
-                                <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>MTN MoMo</span>
-                              </div>
-                              <p style={{ color: '#94A3B8', fontSize: 12, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-                                {form.mtnInstructions}
-                              </p>
-                            </div>
+                          <span style={{ fontWeight: 800, fontSize: 15 }}>MTN MoMo Account</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Field label="Account Name">
+                            <input className="form-input" type="text" placeholder="e.g. Samuel Ndayambaje" value={form.mtnAccountName} onChange={(e) => set('mtnAccountName')(e.target.value)} />
+                          </Field>
+                          <Field label="MTN Number">
+                            <input className="form-input" type="text" placeholder="e.g. +250781234567" value={form.mtnNumber} onChange={(e) => set('mtnNumber')(e.target.value)} />
+                          </Field>
+                        </div>
+                      </div>
 
-                            <div style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 16, border: '1px solid rgba(255,255,255,0.1)' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                                <div style={{ width: 24, height: 24, borderRadius: 6, background: '#0EA5E9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <Globe size={14} color="#fff" />
-                                </div>
-                                <span style={{ color: '#fff', fontSize: 13, fontWeight: 700 }}>Bank Transfer</span>
-                              </div>
-                              <p style={{ color: '#94A3B8', fontSize: 12, lineHeight: 1.6, whiteSpace: 'pre-line' }}>
-                                {form.bankInstructions}
-                              </p>
-                            </div>
+                      {/* Airtel */}
+                      <div style={{ background: '#FFF1F2', border: '1.5px solid #FECDD3', borderRadius: 16, padding: 20 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 10, background: '#E8002D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <CreditCard size={18} color="#fff" />
                           </div>
+                          <span style={{ fontWeight: 800, fontSize: 15 }}>Airtel Money Account</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                          <Field label="Account Name">
+                            <input className="form-input" type="text" placeholder="e.g. Samuel Ndayambaje" value={form.airtelAccountName} onChange={(e) => set('airtelAccountName')(e.target.value)} />
+                          </Field>
+                          <Field label="Airtel Number">
+                            <input className="form-input" type="text" placeholder="e.g. +250731234567" value={form.airtelNumber} onChange={(e) => set('airtelNumber')(e.target.value)} />
+                          </Field>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </section>
+
+                  {/* Payment Instructions */}
+                  <section>
+                    <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <MessageCircle size={16} /> Customer-Facing Instructions
+                    </h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                      <Field label="MTN MoMo Instructions">
+                        <textarea className="form-input" style={{ height: 90, resize: 'vertical', lineHeight: 1.6 }} value={form.mtnInstructions} onChange={(e) => set('mtnInstructions')(e.target.value)} />
+                      </Field>
+                      <Field label="Airtel Money Instructions">
+                        <textarea className="form-input" style={{ height: 90, resize: 'vertical', lineHeight: 1.6 }} value={form.airtelInstructions} onChange={(e) => set('airtelInstructions')(e.target.value)} />
+                      </Field>
+                      <Field label="Bank Transfer Details">
+                        <textarea className="form-input" style={{ height: 90, resize: 'vertical', lineHeight: 1.6 }} value={form.bankInstructions} onChange={(e) => set('bankInstructions')(e.target.value)} />
+                      </Field>
+                      <Field label="Crypto Wallet (USDT TRC-20)">
+                        <textarea className="form-input" style={{ height: 90, resize: 'vertical', lineHeight: 1.6 }} value={form.cryptoInstructions} onChange={(e) => set('cryptoInstructions')(e.target.value)} />
+                      </Field>
+                    </div>
+                  </section>
                 </div>
               )}
 

@@ -205,7 +205,11 @@ export default function SettingsPage() {
                     }}>
                       <MessageCircle size={18} /> Contact & Support Information
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                    <div className="contact-support-grid" style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                      gap: 16
+                    }}>
                       <div style={{
                         background: '#fff',
                         borderRadius: 12,

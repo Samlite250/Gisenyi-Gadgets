@@ -794,3 +794,53 @@ select.input { cursor: pointer; }
   display: flex;
   flex-direction: column;
 }
+
+/* ── Mobile Responsive Styles ────────────────────────────────── */
+@media (max-width: 768px) {
+  .settings-tabs-layout {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .settings-tabs-layout > .card:first-child {
+    width: 100% !important;
+  }
+
+  .settings-tabs-layout > .card:first-child button {
+    display: inline-flex !important;
+  }
+
+  /* Contact & Support Cards - Single Column on Mobile */
+  .contact-support-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Payment Instructions Grid */
+  .settings-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Basic Information Grid */
+  .settings-section > section > div[style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 16px !important;
+  }
+
+  .page-title {
+    font-size: 20px !important;
+  }
+
+  .card {
+    padding: 16px !important;
+    border-radius: 12px !important;
+  }
+
+  .form-input {
+    font-size: 14px !important;
+  }
+}

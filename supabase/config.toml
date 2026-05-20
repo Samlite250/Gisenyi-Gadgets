@@ -45,3 +45,12 @@ enable_confirmations = false
 
 [auth.sms]
 enable_signup = false
+
+[functions.initiate-payment]
+verify_jwt = false
+
+[functions.check-payment-status]
+verify_jwt = false
+
+[functions.payment-callback]
+verify_jwt = false

@@ -590,14 +590,22 @@ export default function CheckoutScreen({ navigation }) {
         </TouchableOpacity>
       </View>
 
-      <PaymentModal
-        visible={showPaymentModal}
-        provider={selectedPayment}
-        orderId={pendingOrderId}
-        amount={total}
-        onSuccess={handlePaymentSuccess}
-        onClose={() => setShowPaymentModal(false)}
-      />
+      {/* PaymentModal component not yet implemented */}
+      {showPaymentModal && (
+        <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
+          <View style={{ backgroundColor: 'white', padding: 20, borderRadius: 12, margin: 20, minWidth: 280 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Payment Processing</Text>
+            <Text style={{ marginBottom: 20 }}>Order #{pendingOrderNumber}</Text>
+            <Text style={{ marginBottom: 20, color: '#666' }}>Amount: {fmt(total)}</Text>
+            <TouchableOpacity
+              style={{ backgroundColor: COLORS.primaryBlue, padding: 12, borderRadius: 8, alignItems: 'center' }}
+              onPress={() => setShowPaymentModal(false)}
+            >
+              <Text style={{ color: 'white', fontWeight: 'bold' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }

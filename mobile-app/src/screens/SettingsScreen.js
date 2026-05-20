@@ -234,7 +234,7 @@ export default function SettingsScreen({ navigation }) {
             icon={Info}
             title="App Version"
             showChevron={false}
-            onPress={() => Alert.alert('Gisenyi Gadgets', `Version ${appVersion} (Build ${buildNumber})\n\nDeveloped with ❤️ in Gisenyi, Rwanda`)}
+            onPress={() => Alert.alert('Gisenyi Gadgets', `Version v${appVersion} (Build ${buildNumber})\n\nDeveloped with ❤️ in Gisenyi, Rwanda`)}
           />
           <SettingRow
             icon={Info}

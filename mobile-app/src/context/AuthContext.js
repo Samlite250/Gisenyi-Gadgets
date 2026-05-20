@@ -179,8 +179,13 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = async (email) => {
+    // For mobile: use deep link, for web: use current origin
+    const redirectTo = Platform.OS === 'web'
+      ? `${window.location.origin}/reset-password`
+      : 'com.gisenyigadgets.app://reset-password';
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'gisenyi-gadgets://reset-password',
+      redirectTo,
     });
     if (error) throw error;
   };

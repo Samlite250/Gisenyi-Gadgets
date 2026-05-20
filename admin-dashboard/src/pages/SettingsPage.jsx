@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard } from 'lucide-react';
+import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard, Mail, Phone, MessageSquare } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import Loader from '../components/Loader';
 import toast from 'react-hot-toast';
@@ -186,20 +186,141 @@ export default function SettingsPage() {
                     </div>
                   </section>
 
-                  <section>
-                    <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <MessageCircle size={16} /> Contact & Support
+                  <section style={{
+                    background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '1px solid #BAE6FD'
+                  }}>
+                    <h4 style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: '#0369A1',
+                      textTransform: 'uppercase',
+                      letterSpacing: 1,
+                      marginBottom: 24,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10
+                    }}>
+                      <MessageCircle size={18} /> Contact & Support Information
                     </h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
-                      <Field label="Support Email">
-                        <input type="email" className="form-input" value={form.supportEmail} onChange={(e) => set('supportEmail')(e.target.value)} />
-                      </Field>
-                      <Field label="Support Phone">
-                        <input type="text" className="form-input" value={form.supportPhone} onChange={(e) => set('supportPhone')(e.target.value)} />
-                      </Field>
-                      <Field label="WhatsApp Number">
-                        <input type="text" className="form-input" value={form.whatsappNumber} onChange={(e) => set('whatsappNumber')(e.target.value)} />
-                      </Field>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
+                      <div style={{
+                        background: '#fff',
+                        borderRadius: 12,
+                        padding: 16,
+                        border: '1px solid #E0F2FE',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          marginBottom: 10,
+                          color: '#3B82F6',
+                          fontWeight: 700,
+                          fontSize: 12,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5
+                        }}>
+                          <Mail size={16} />
+                          <span>Support Email</span>
+                        </div>
+                        <input
+                          type="email"
+                          className="form-input"
+                          value={form.supportEmail}
+                          onChange={(e) => set('supportEmail')(e.target.value)}
+                          placeholder="support@example.com"
+                          style={{
+                            borderColor: '#BFDBFE',
+                            fontSize: 14,
+                            fontWeight: 600
+                          }}
+                        />
+                      </div>
+
+                      <div style={{
+                        background: '#fff',
+                        borderRadius: 12,
+                        padding: 16,
+                        border: '1px solid #E0F2FE',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          marginBottom: 10,
+                          color: '#10B981',
+                          fontWeight: 700,
+                          fontSize: 12,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5
+                        }}>
+                          <Phone size={16} />
+                          <span>Support Phone</span>
+                        </div>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={form.supportPhone}
+                          onChange={(e) => set('supportPhone')(e.target.value)}
+                          placeholder="+250 780 000 000"
+                          style={{
+                            borderColor: '#BFDBFE',
+                            fontSize: 14,
+                            fontWeight: 600
+                          }}
+                        />
+                      </div>
+
+                      <div style={{
+                        background: '#fff',
+                        borderRadius: 12,
+                        padding: 16,
+                        border: '1px solid #E0F2FE',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          marginBottom: 10,
+                          color: '#22C55E',
+                          fontWeight: 700,
+                          fontSize: 12,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.5
+                        }}>
+                          <MessageSquare size={16} />
+                          <span>WhatsApp Number</span>
+                        </div>
+                        <input
+                          type="text"
+                          className="form-input"
+                          value={form.whatsappNumber}
+                          onChange={(e) => set('whatsappNumber')(e.target.value)}
+                          placeholder="+250 780 000 000"
+                          style={{
+                            borderColor: '#BFDBFE',
+                            fontSize: 14,
+                            fontWeight: 600
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{
+                      marginTop: 16,
+                      padding: 12,
+                      background: 'rgba(59, 130, 246, 0.08)',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: '#1E40AF',
+                      lineHeight: 1.6
+                    }}>
+                      <strong>💡 Tip:</strong> This information will be displayed to customers in the mobile app for support inquiries.
                     </div>
                   </section>
 

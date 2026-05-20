@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search, Plus, Edit2, Trash2, X, Phone,
   User, Percent, Package, TrendingUp, Eye,
-  ChevronRight, Building2, CheckCircle
+  ChevronRight, Building2, CheckCircle, ShoppingBag, DollarSign
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { supabase } from '../services/supabase';
@@ -26,20 +26,52 @@ export default function SuppliersPage() {
   const [showModal, setShowModal] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [viewTarget, setViewTarget] = useState(null);
+  const [supplierProducts, setSupplierProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(null);
 
-  // Try to fetch from a `suppliers` table if it exists
+  // Fetch suppliers with product counts
   const fetchSuppliers = useCallback(async () => {
     try {
       const { data, error } = await supabase.from('suppliers').select('*').order('created_at', { ascending: false });
-      if (!error && data?.length) setSuppliers(data);
+      if (!error && data?.length) {
+        // Get product counts for each supplier
+        const suppliersWithCounts = await Promise.all(
+          data.map(async (supplier) => {
+            const { count } = await supabase
+              .from('products')
+              .select('*', { count: 'exact', head: true })
+              .eq('supplier_id', supplier.id);
+            return { ...supplier, products_count: count || 0 };
+          })
+        );
+        setSuppliers(suppliersWithCounts);
+      }
     } catch { /* use demo data */ }
     finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchSuppliers(); }, [fetchSuppliers]);
+
+  // Fetch products when viewing a supplier
+  useEffect(() => {
+    if (viewTarget) {
+      setLoadingProducts(true);
+      supabase
+        .from('products')
+        .select('*, categories(name)')
+        .eq('supplier_id', viewTarget.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          setSupplierProducts(data || []);
+          setLoadingProducts(false);
+        });
+    } else {
+      setSupplierProducts([]);
+    }
+  }, [viewTarget]);
 
   const openAdd = () => {
     setEditTarget(null);
@@ -230,7 +262,7 @@ export default function SuppliersPage() {
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 13 }}>{fmtRWF(s.total_sold)}</div>
                       <div style={{ fontSize: 11, color: '#10B981', fontWeight: 600 }}>
-                        → Your cut: {fmtRWF((s.total_sold || 0) * s.commission_rate / 100)}
+                        → My cut: {fmtRWF((s.total_sold || 0) * s.commission_rate / 100)}
                       </div>
                     </div>
                   </td>
@@ -326,7 +358,7 @@ export default function SuppliersPage() {
                   <Percent size={14} style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 </div>
                 <div style={{ fontSize: 11, color: '#10B981', marginTop: 4, fontWeight: 600 }}>
-                  You keep {form.commission_rate}% of every sale from this supplier
+                  I keep {form.commission_rate}% of every sale from this supplier
                 </div>
               </div>
               <div style={{ gridColumn: 'span 2' }}>
@@ -359,7 +391,7 @@ export default function SuppliersPage() {
       {/* View Detail Modal */}
       {viewTarget && (
         <div className="modal-overlay" onClick={() => setViewTarget(null)}>
-          <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 900, maxHeight: '90vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{
@@ -393,7 +425,7 @@ export default function SuppliersPage() {
                   {[
                     { label: 'Total Sales', value: fmtRWF(viewTarget.total_sold), color: '#1E293B' },
                     { label: 'Commission Rate', value: `${viewTarget.commission_rate}%`, color: '#7C3AED' },
-                    { label: 'Your Earnings', value: fmtRWF((viewTarget.total_sold || 0) * viewTarget.commission_rate / 100), color: '#10B981' },
+                    { label: 'My Earnings', value: fmtRWF((viewTarget.total_sold || 0) * viewTarget.commission_rate / 100), color: '#10B981' },
                     { label: 'Amount to Pay Back', value: fmtRWF((viewTarget.total_sold || 0) * (1 - viewTarget.commission_rate / 100)), color: '#EF4444' },
                   ].map(({ label, value, color }) => (
                     <div key={label}>
@@ -403,8 +435,9 @@ export default function SuppliersPage() {
                   ))}
                 </div>
               </div>
-              {/* Details */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
+              {/* Contact & Basic Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 {[
                   { label: 'Phone', value: viewTarget.phone },
                   { label: 'Location', value: viewTarget.location },
@@ -418,12 +451,112 @@ export default function SuppliersPage() {
                   </div>
                 ))}
               </div>
+
               {viewTarget.notes && (
-                <div style={{ marginTop: 14, background: 'var(--surface-bg)', borderRadius: 10, padding: 12, border: '1px solid var(--border)' }}>
+                <div style={{ marginBottom: 16, background: 'var(--surface-bg)', borderRadius: 10, padding: 12, border: '1px solid var(--border)' }}>
                   <div className="form-label" style={{ marginBottom: 4 }}>Notes</div>
                   <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>{viewTarget.notes}</div>
                 </div>
               )}
+
+              {/* Products from this supplier */}
+              <div style={{ marginTop: 20, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ShoppingBag size={16} color="#7C3AED" />
+                    <div className="form-label" style={{ marginBottom: 0 }}>
+                      Products from {viewTarget.name} ({supplierProducts.length})
+                    </div>
+                  </div>
+                </div>
+
+                {loadingProducts ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>Loading products...</div>
+                ) : supplierProducts.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', background: 'var(--surface-bg)', borderRadius: 8 }}>
+                    No products assigned to this supplier yet. Assign products when adding/editing them.
+                  </div>
+                ) : (
+                  <div style={{ border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ margin: 0, width: '100%', minWidth: 700 }}>
+                        <thead style={{ background: 'var(--surface-bg)', position: 'sticky', top: 0 }}>
+                          <tr>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'left', minWidth: 200 }}>Product Name</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'left', minWidth: 120 }}>Category</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'right', minWidth: 130 }}>Selling Price</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'right', minWidth: 130 }}>My Income</th>
+                            <th style={{ fontSize: 12, padding: '12px', textAlign: 'right', minWidth: 130 }}>Supplier Gets</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {supplierProducts.map((product) => {
+                            const sellingPrice = Number(product.price || 0);
+                            const myIncome = sellingPrice * (viewTarget.commission_rate / 100);
+                            const supplierGets = sellingPrice - myIncome;
+
+                            return (
+                              <tr key={product.id}>
+                                <td style={{ fontSize: 14, fontWeight: 600, padding: '12px' }}>{product.name}</td>
+                                <td style={{ fontSize: 13, padding: '12px' }}>
+                                  <span style={{
+                                    background: 'var(--surface-bg)',
+                                    padding: '4px 10px',
+                                    borderRadius: 6,
+                                    fontSize: 12,
+                                    fontWeight: 600,
+                                    whiteSpace: 'nowrap'
+                                  }}>
+                                    {product.categories?.name || 'Uncategorized'}
+                                  </span>
+                                </td>
+                                <td style={{ fontSize: 14, fontWeight: 700, textAlign: 'right', padding: '12px' }}>
+                                  {fmtRWF(sellingPrice)}
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '12px' }}>
+                                  <div style={{ fontSize: 14, fontWeight: 700, color: '#10B981' }}>
+                                    {fmtRWF(myIncome)}
+                                  </div>
+                                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                                    ({viewTarget.commission_rate}%)
+                                  </div>
+                                </td>
+                                <td style={{ fontSize: 14, color: '#F59E0B', fontWeight: 700, textAlign: 'right', padding: '12px' }}>
+                                  {fmtRWF(supplierGets)}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                        {supplierProducts.length > 0 && (
+                          <tfoot style={{ background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)', borderTop: '2px solid #10B981' }}>
+                            <tr>
+                              <td colSpan={3} style={{ fontSize: 14, textAlign: 'right', paddingRight: 16, fontWeight: 700, color: '#1E293B', padding: '14px 12px' }}>
+                                My Total Income (If I sell all):
+                              </td>
+                              <td style={{ fontSize: 16, color: '#10B981', textAlign: 'right', fontWeight: 800, padding: '14px 12px' }}>
+                                {fmtRWF(
+                                  supplierProducts.reduce((sum, p) => {
+                                    return sum + (Number(p.price || 0) * (viewTarget.commission_rate / 100));
+                                  }, 0)
+                                )}
+                              </td>
+                              <td style={{ fontSize: 16, color: '#F59E0B', textAlign: 'right', fontWeight: 800, padding: '14px 12px' }}>
+                                {fmtRWF(
+                                  supplierProducts.reduce((sum, p) => {
+                                    const income = Number(p.price || 0) * (viewTarget.commission_rate / 100);
+                                    return sum + (Number(p.price || 0) - income);
+                                  }, 0)
+                                )}
+                              </td>
+                            </tr>
+                          </tfoot>
+                        )}
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-primary" onClick={() => { setViewTarget(null); openEdit(viewTarget); }}>

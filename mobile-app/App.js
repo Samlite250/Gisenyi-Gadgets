@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 
 // Context Providers
 import { AuthProvider } from './src/context/AuthContext';
@@ -12,7 +13,22 @@ import { WishlistProvider } from './src/context/WishlistContext';
 // Navigator
 import RootNavigator from './src/navigation/RootNavigator';
 
+const prefix = Linking.createURL('/');
+
 export default function App() {
+  const linking = {
+    prefixes: [prefix, 'com.gisenyigadgets.app://'],
+    config: {
+      screens: {
+        Auth: {
+          screens: {
+            ResetPassword: 'reset-password',
+          },
+        },
+      },
+    },
+  };
+
   return (
     <SafeAreaProvider>
       <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
@@ -25,7 +41,7 @@ export default function App() {
         <AuthProvider>
           <CartProvider>
             <WishlistProvider>
-              <NavigationContainer>
+              <NavigationContainer linking={linking}>
                 <StatusBar style="dark" backgroundColor="transparent" translucent />
                 <RootNavigator />
               </NavigationContainer>

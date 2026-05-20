@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../services/supabase';
+import { authLogger } from '../utils/logger';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -42,7 +43,7 @@ export function AuthProvider({ children }) {
     // Listen for auth state changes (persistent login)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth event:', event);
+        authLogger.info('Auth state change:', event);
 
         // After email sign-up, force user back to Login (email confirmation flow)
         // Google OAuth fires SIGNED_IN (not SIGNED_UP), so this never blocks Google users
@@ -55,7 +56,7 @@ export function AuthProvider({ children }) {
 
         // Handle token refresh errors
         if (event === 'TOKEN_REFRESHED' && !session) {
-          console.warn('Token refresh failed, logging out');
+          authLogger.warn('Token refresh failed, logging out');
           await supabase.auth.signOut();
           setSession(null);
           setUser(null);
@@ -92,12 +93,12 @@ export function AuthProvider({ children }) {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.warn('Profile fetch error:', error.message);
+        authLogger.warn('Profile fetch error', error);
       } else {
         setProfile(data);
       }
     } catch (err) {
-      console.warn('Profile fetch error:', err.message);
+      authLogger.error('Profile fetch failed', err);
     }
   };
 
@@ -179,8 +180,13 @@ export function AuthProvider({ children }) {
   };
 
   const resetPassword = async (email) => {
+    // For mobile: use deep link, for web: use current origin
+    const redirectTo = Platform.OS === 'web'
+      ? `${window.location.origin}/reset-password`
+      : 'com.gisenyigadgets.app://reset-password';
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'gisenyi-gadgets://reset-password',
+      redirectTo,
     });
     if (error) throw error;
   };

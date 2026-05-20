@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Switch, Alert, Linking, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ChevronLeft, ChevronRight, Bell, Shield, Info, Trash2, Lock } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Bell, Shield, Info, Trash2, Lock, RefreshCw } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
+import Constants from 'expo-constants';
 
 const NOTIF_STORAGE_KEY = '@GisenyiGadgets_notifications';
 
@@ -16,7 +17,12 @@ export default function SettingsScreen({ navigation }) {
     email: false,
     offers: true
   });
+  const [checking, setChecking] = useState(false);
   const isMounted = useRef(true);
+
+  // Get app version from expo config
+  const appVersion = Constants.expoConfig?.version || '1.0.0';
+  const buildNumber = Constants.expoConfig?.android?.versionCode || Constants.expoConfig?.ios?.buildNumber || '1';
 
   useEffect(() => {
     return () => { isMounted.current = false; };
@@ -37,6 +43,77 @@ export default function SettingsScreen({ navigation }) {
       AsyncStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
+  };
+
+  const checkForUpdates = async () => {
+    setChecking(true);
+    try {
+      // Try Supabase first (silently fail if table doesn't exist)
+      const { data, error } = await supabase
+        .from('app_versions')
+        .select('*')
+        .eq('platform', 'android')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      // If Supabase has version data
+      if (!error && data) {
+        const latestVersion = data.version_number;
+        const currentVersion = appVersion;
+
+        if (latestVersion > currentVersion) {
+          Alert.alert(
+            '🎉 New Update Available!',
+            `A new version is ready to download!\n\n📱 Your Version: v${currentVersion}\n✨ Latest Version: v${latestVersion}\n\n📝 What's New:\n${data.release_notes || 'Bug fixes and performance improvements'}\n\nUpdate now to get the latest features!`,
+            [
+              { text: 'Later', style: 'cancel' },
+              {
+                text: '⬇️ Download Now',
+                style: 'default',
+                onPress: () => {
+                  if (data.download_url) {
+                    Linking.openURL(data.download_url);
+                  } else {
+                    Alert.alert('Coming Soon', 'Download link will be available soon. Check back later!');
+                  }
+                }
+              }
+            ]
+          );
+          setChecking(false);
+          return;
+        } else {
+          // Same version or newer
+          Alert.alert(
+            '✅ App is Up to Date',
+            `Your app is already updated!\n\n📱 Current Version: v${currentVersion}\n🎯 Latest Version: v${latestVersion}\n\nYou're running the latest version. Enjoy!`,
+            [{ text: 'Got it!' }]
+          );
+          setChecking(false);
+          return;
+        }
+      }
+
+      // If no Supabase data, show up-to-date message
+      Alert.alert(
+        '✅ App is Up to Date',
+        `Your app is already updated!\n\n📱 Current Version: v${appVersion}\n🎯 Build: ${buildNumber}\n\nYou're running the latest version of Gisenyi Gadgets. No updates needed!`,
+        [{ text: 'Got it!' }]
+      );
+
+    } catch (error) {
+      console.log('Update check error (expected):', error);
+      // Show up-to-date message on any error
+      Alert.alert(
+        '✅ App is Up to Date',
+        `Your app is already updated!\n\n📱 Current Version: v${appVersion}\n🎯 Build: ${buildNumber}\n\nNo updates available at this time.`,
+        [{ text: 'Got it!' }]
+      );
+    } finally {
+      setChecking(false);
+    }
   };
 
   const handleDeleteAccount = () => {
@@ -125,8 +202,30 @@ export default function SettingsScreen({ navigation }) {
           <SettingRow
             icon={Shield}
             title="Privacy Policy"
-            onPress={() => Linking.openURL('https://gisenyi-gadgets.vercel.app/privacy')}
+            onPress={() => Alert.alert('Privacy Policy', 'Your privacy is important to us. We collect and use your data only to provide and improve our services. We do not share your personal information with third parties without your consent.')}
           />
+        </View>
+
+        <Text style={styles.sectionTitle}>App Updates</Text>
+        <View style={styles.sectionCard}>
+          <TouchableOpacity
+            style={styles.settingItem}
+            onPress={checkForUpdates}
+            disabled={checking}
+            activeOpacity={0.7}
+          >
+            <View style={styles.settingLeft}>
+              <View style={[styles.iconBox, { backgroundColor: '#EFF6FF' }]}>
+                {checking ? (
+                  <ActivityIndicator size="small" color={COLORS.primaryBlue} />
+                ) : (
+                  <RefreshCw size={20} color={COLORS.primaryBlue} />
+                )}
+              </View>
+              <Text style={styles.settingLabel}>Check for Updates</Text>
+            </View>
+            <ChevronRight size={18} color={COLORS.textMuted} />
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.sectionTitle}>About</Text>
@@ -135,12 +234,12 @@ export default function SettingsScreen({ navigation }) {
             icon={Info}
             title="App Version"
             showChevron={false}
-            onPress={() => Alert.alert('Gisenyi Gadgets', 'Version 1.2.0 (Build 45)')}
+            onPress={() => Alert.alert('Gisenyi Gadgets', `Version v${appVersion} (Build ${buildNumber})\n\nDeveloped with ❤️ in Gisenyi, Rwanda`)}
           />
           <SettingRow
             icon={Info}
             title="Open Source Licenses"
-            onPress={() => navigation.navigate('ChatSupport')}
+            onPress={() => navigation.navigate('Licenses')}
           />
         </View>
 

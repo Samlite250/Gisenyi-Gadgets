@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../services/supabase';
+import { cartLogger } from '../utils/logger';
 
 const CartContext = createContext(null);
 
@@ -29,7 +30,7 @@ export function CartProvider({ children }) {
       const stored = await AsyncStorage.getItem(CART_STORAGE_KEY);
       if (stored) setCartItems(JSON.parse(stored));
     } catch (err) {
-      console.warn('Cart load error:', err);
+      cartLogger.error('Failed to load cart from storage', err);
     } finally {
       setLoading(false);
     }
@@ -39,7 +40,7 @@ export function CartProvider({ children }) {
     try {
       await AsyncStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
     } catch (err) {
-      console.warn('Cart save error:', err);
+      cartLogger.error('Failed to save cart to storage', err);
     }
   };
 

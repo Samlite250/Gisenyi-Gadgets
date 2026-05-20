@@ -8,6 +8,7 @@ import { ChevronLeft, ShoppingBag, Package, Tag, Bell, Star, Truck } from 'lucid
 import { COLORS, SIZES } from '../constants/theme';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { notificationLogger } from '../utils/logger';
 
 const TYPE_MAP = {
     order: { icon: Package, color: '#4285F4' },
@@ -57,7 +58,7 @@ export default function NotificationsScreen({ navigation }) {
             if (error) throw error;
             setNotifications(data?.length ? data : DEMO_NOTIFICATIONS);
         } catch (err) {
-            console.warn('Notifications fetch error:', err.message);
+            notificationLogger.error('Failed to fetch notifications', err);
             setNotifications(DEMO_NOTIFICATIONS);
         } finally {
             setLoading(false);

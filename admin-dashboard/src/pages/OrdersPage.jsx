@@ -108,7 +108,6 @@ export default function OrdersPage() {
 
       await supabase.from('orders').update(updates).eq('id', order.id);
 
-      // Notify the customer
       await supabase.from('notifications').insert({
         user_id: order.user_id,
         title: approve ? 'Payment Confirmed! 🎉' : 'Payment Rejected',
@@ -126,6 +125,33 @@ export default function OrdersPage() {
       toast.error(err.message, { id: tid });
     } finally {
       setApprovingId(null);
+    }
+  };
+
+  const handleMarkAsPaid = async (orderId) => {
+    setUpdatingId(orderId);
+    const tid = toast.loading('Marking order as paid…');
+    try {
+      const { data: order } = await supabase.from('orders').select('user_id, order_number').eq('id', orderId).single();
+      await supabase.from('orders').update({ payment_status: 'paid' }).eq('id', orderId);
+
+      if (order) {
+        await supabase.from('notifications').insert({
+          user_id: order.user_id,
+          title: 'Payment Confirmed',
+          body: `Payment for order ${order.order_number} has been verified and confirmed.`,
+          type: 'order',
+          metadata: { orderId, payment_status: 'paid' },
+        });
+      }
+
+      setOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, payment_status: 'paid' } : o));
+      if (selected?.id === orderId) setSelected((s) => ({ ...s, payment_status: 'paid' }));
+      toast.success('Order marked as paid! Revenue will now be counted.', { id: tid });
+    } catch (err) {
+      toast.error(err.message, { id: tid });
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -213,9 +239,22 @@ export default function OrdersPage() {
                   </td>
                   <td className="text-muted">{fmtDate(o.created_at)}</td>
                   <td>
-                    <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setSelected(o)} title="View">
-                      <Eye size={14} />
-                    </button>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      {o.payment_status === 'unpaid' && (
+                        <button
+                          className="btn btn-success btn-sm"
+                          onClick={() => handleMarkAsPaid(o.id)}
+                          disabled={updatingId === o.id}
+                          title="Mark as Paid"
+                          style={{ fontSize: 11, padding: '4px 10px' }}
+                        >
+                          💰 Paid
+                        </button>
+                      )}
+                      <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setSelected(o)} title="View">
+                        <Eye size={14} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

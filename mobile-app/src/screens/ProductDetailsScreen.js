@@ -21,6 +21,7 @@ import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { ReviewCard, WriteReviewModal } from '../components/ReviewComponents';
 import { productLogger } from '../utils/logger';
+import { addToRecentlyViewed } from '../utils/recentlyViewed';
 
 const { width } = Dimensions.get('window');
 
@@ -47,6 +48,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [descOverflows, setDescOverflows] = useState(false);
   const [supplier, setSupplier] = useState(null);
   const [hasBought, setHasBought] = useState(false);
+  const [recentPurchases, setRecentPurchases] = useState(0);
   const scrollRef = useRef(null);
 
   // Fetch full product if only ID was passed or for fresh data
@@ -61,6 +63,9 @@ export default function ProductDetailsScreen({ route, navigation }) {
           setProduct(data);
           if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
           if (data.storage_options?.length > 0) setSelectedStorage(data.storage_options[0]);
+
+          // Track as recently viewed
+          addToRecentlyViewed(data);
         }
       } catch (err) {
         productLogger.error('Product fetch failed', err);
@@ -223,6 +228,33 @@ export default function ProductDetailsScreen({ route, navigation }) {
     };
     checkPurchase();
   }, [user, product.id]);
+
+  // Fetch recent purchases count (last 24 hours)
+  useEffect(() => {
+    const fetchRecentPurchases = async () => {
+      if (!product.id || product.id === 'demo-1') return;
+
+      try {
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        const { count, error } = await supabase
+          .from('order_items')
+          .select('*, orders!inner(created_at, payment_status)', { count: 'exact', head: true })
+          .eq('product_id', product.id)
+          .eq('orders.payment_status', 'paid')
+          .gte('orders.created_at', twentyFourHoursAgo.toISOString());
+
+        if (!error && count) {
+          setRecentPurchases(count);
+        }
+      } catch (e) {
+        // Silent fail - not critical
+      }
+    };
+
+    fetchRecentPurchases();
+  }, [product.id]);
 
   const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
   const discount = product.compare_price
@@ -416,6 +448,15 @@ export default function ProductDetailsScreen({ route, navigation }) {
               </Text>
             </View>
           </View>
+
+          {/* Recent Purchases Badge */}
+          {recentPurchases > 0 && (
+            <View style={styles.recentPurchasesBadge}>
+              <Text style={styles.recentPurchasesText}>
+                🔥 {recentPurchases} {recentPurchases === 1 ? 'person' : 'people'} bought this in the last 24 hours
+              </Text>
+            </View>
+          )}
 
           {/* Price */}
           <View style={styles.priceRow}>
@@ -785,6 +826,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: SIZES.sm, paddingVertical: 2,
   },
   stockText: { fontSize: SIZES.fontXs, color: COLORS.primaryGreen, fontWeight: '600' },
+  recentPurchasesBadge: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  recentPurchasesText: {
+    fontSize: 13,
+    color: '#92400E',
+    fontWeight: '600',
+    lineHeight: 18,
+  },
   priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: SIZES.sm },
   price: { fontSize: SIZES.fontXxl, fontWeight: '800', color: COLORS.primaryGreen },
   comparePrice: {

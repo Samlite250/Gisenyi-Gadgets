@@ -18,6 +18,7 @@ import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import SkeletonLoader from '../components/SkeletonLoader';
 import { productLogger } from '../utils/logger';
+import { getRecentlyViewed } from '../utils/recentlyViewed';
 
 
 const FALLBACK_IMAGES = [
@@ -91,6 +92,7 @@ export default function HomeScreen({ navigation }) {
   const offerAutoScrollRef = React.useRef(null);
   const [bannerPaused, setBannerPaused] = React.useState(false);
   const [offerPaused, setOfferPaused] = React.useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState([]);
 
 
   const displayName = profile?.full_name?.split(' ')[0]
@@ -169,6 +171,20 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Load recently viewed on mount and when screen is focused
+  useEffect(() => {
+    const loadRecentlyViewed = async () => {
+      const recent = await getRecentlyViewed();
+      setRecentlyViewed(recent);
+    };
+
+    loadRecentlyViewed();
+
+    // Reload when screen comes into focus
+    const unsubscribe = navigation.addListener('focus', loadRecentlyViewed);
+    return unsubscribe;
+  }, [navigation]);
 
   // ── Real-time subscriptions ────────────────────────────────────
   useEffect(() => {
@@ -685,6 +701,28 @@ export default function HomeScreen({ navigation }) {
             </View>
           ))}
         </View>
+
+        {/* Recently Viewed by You */}
+        {!searchQuery && recentlyViewed.length > 0 && (
+          <View style={styles.sectionContainer}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>👁️ Recently Viewed</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
+              {recentlyViewed.map((p) => (
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  style={styles.featuredCard}
+                  onPress={() => navigation.navigate('ProductDetails', { productId: p.id })}
+                  onWishlist={() => toggleWishlist(p)}
+                  wishlisted={isInWishlist(p.id)}
+                  fmt={fmt}
+                />
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <View style={{ height: SIZES.xxl || 40 }} />
       </ScrollView>

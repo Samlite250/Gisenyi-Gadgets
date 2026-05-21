@@ -61,11 +61,19 @@ export default function OrdersScreen({ navigation }) {
           }
 
           // Check how many products have reviews
-          const { data: reviews, error: reviewError } = await supabase
+          let query = supabase
             .from('reviews')
             .select('product_id')
-            .eq('user_id', user.id)
-            .in('product_id', productIds);
+            .eq('user_id', user.id);
+
+          // Use .eq() for single product or .in() for multiple
+          if (productIds.length === 1) {
+            query = query.eq('product_id', productIds[0]);
+          } else {
+            query = query.in('product_id', productIds);
+          }
+
+          const { data: reviews, error: reviewError } = await query;
 
           if (reviewError) {
             console.warn('Failed to check review status:', reviewError);

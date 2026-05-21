@@ -50,11 +50,19 @@ export default function OrderReviewScreen({ route, navigation }) {
 
       let existingReviews = [];
       if (productIds.length > 0) {
-        const { data, error: reviewError } = await supabase
+        let query = supabase
           .from('reviews')
           .select('product_id, rating, comment')
-          .eq('user_id', user.id)
-          .in('product_id', productIds);
+          .eq('user_id', user.id);
+
+        // Use .in() for multiple products or .eq() for single product
+        if (productIds.length === 1) {
+          query = query.eq('product_id', productIds[0]);
+        } else {
+          query = query.in('product_id', productIds);
+        }
+
+        const { data, error: reviewError } = await query;
 
         if (!reviewError) {
           existingReviews = data || [];

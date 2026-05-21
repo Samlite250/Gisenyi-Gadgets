@@ -83,12 +83,7 @@ export default function RegisterScreen({ navigation }) {
         fullName: form.fullName.trim(),
       });
 
-      Alert.alert(
-        'Account Created!',
-        'Your account has been created. Please sign in to continue.',
-        [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }],
-        { cancelable: false }
-      );
+      navigation.replace('Login', { message: 'Account created! Please sign in.' });
     } catch (e) {
       setError(e.message || 'Registration failed. Please try again.');
     } finally {

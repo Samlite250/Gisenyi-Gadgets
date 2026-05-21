@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES } from '../constants/theme';
 
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen({ navigation, route }) {
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,6 +18,7 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState(null);
+  const successMessage = route?.params?.message || null;
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
@@ -53,6 +54,9 @@ export default function LoginScreen({ navigation }) {
             <Text style={styles.subtitle}>Login to continue</Text>
           </View>
 
+          {successMessage ? (
+            <View style={styles.successBanner}><Text style={styles.successText}>✓ {successMessage}</Text></View>
+          ) : null}
           {error ? (
             <View style={styles.errorBanner}><Text style={styles.errorText}>{error}</Text></View>
           ) : null}
@@ -128,6 +132,8 @@ const styles = StyleSheet.create({
   logoWrap: { marginBottom: 24 },
   title: { fontSize: 24, fontWeight: '700', color: COLORS.textPrimary, marginBottom: 8 },
   subtitle: { fontSize: 14, color: COLORS.textSecondary },
+  successBanner: { backgroundColor: '#D1FAE5', padding: 12, borderRadius: 8, marginBottom: 12 },
+  successText: { color: '#065F46', fontSize: 13, fontWeight: '600', textAlign: 'center' },
   errorBanner: { backgroundColor: '#FEE2E2', padding: 12, borderRadius: 8, marginBottom: 20 },
   errorText: { color: COLORS.error, fontSize: 13, textAlign: 'center' },
   formCard: {

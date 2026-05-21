@@ -186,8 +186,12 @@ export default function OrdersScreen({ navigation }) {
         {isDelivered && !isConfirmed && (
           <TouchableOpacity
             style={styles.confirmReceiptBtn}
-            onPress={() => handleConfirmReceipt(item.id)}
+            onPress={(e) => {
+              e?.stopPropagation?.();
+              handleConfirmReceipt(item.id);
+            }}
             activeOpacity={0.8}
+            pointerEvents="auto"
           >
             <CircleCheckBig size={16} color="#fff" />
             <Text style={styles.confirmReceiptText}>Confirm Receipt & Review</Text>
@@ -386,6 +390,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 10,
     marginTop: 12,
+    cursor: 'pointer',
+    zIndex: 10,
   },
   confirmReceiptText: {
     color: '#fff',

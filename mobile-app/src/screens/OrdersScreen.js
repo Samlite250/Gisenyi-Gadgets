@@ -36,7 +36,7 @@ export default function OrdersScreen({ navigation }) {
     try {
       let query = supabase
         .from('orders')
-        .select('*, order_items(id, product_name, quantity, price)')
+        .select('*, order_items(id, product_name, quantity, price, product_id)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -46,7 +46,33 @@ export default function OrdersScreen({ navigation }) {
 
       const { data, error } = await query;
       if (error) throw error;
-      setOrders(data || []);
+
+      // For each order, check if all products have been reviewed
+      const ordersWithReviewStatus = await Promise.all(
+        (data || []).map(async (order) => {
+          if (!order.receipt_confirmed || order.order_items?.length === 0) {
+            return { ...order, allProductsReviewed: false };
+          }
+
+          const productIds = order.order_items.map(item => item.product_id).filter(Boolean);
+
+          if (productIds.length === 0) {
+            return { ...order, allProductsReviewed: false };
+          }
+
+          // Check how many products have reviews
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('product_id')
+            .eq('user_id', user.id)
+            .in('product_id', productIds);
+
+          const allProductsReviewed = reviews?.length === productIds.length;
+          return { ...order, allProductsReviewed };
+        })
+      );
+
+      setOrders(ordersWithReviewStatus);
     } catch (err) {
       orderLogger.error('Orders fetch failed', err);
     } finally {
@@ -123,8 +149,9 @@ export default function OrdersScreen({ navigation }) {
     const itemCount = item.order_items?.length || 0;
     const isDelivered = item.status?.toLowerCase() === 'delivered';
     const isConfirmed = item.receipt_confirmed === true;
+    const allReviewed = item.allProductsReviewed === true;
 
-    console.log('Order:', item.order_number, '| Status:', item.status, '| Delivered:', isDelivered, '| Confirmed:', isConfirmed);
+    console.log('Order:', item.order_number, '| Status:', item.status, '| Delivered:', isDelivered, '| Confirmed:', isConfirmed, '| All Reviewed:', allReviewed);
 
     return (
       <BlurView intensity={40} tint="light" style={styles.orderCard}>
@@ -199,25 +226,34 @@ export default function OrdersScreen({ navigation }) {
           </TouchableOpacity>
         )}
 
-        {/* Confirmed Badge with Review Button */}
+        {/* Confirmed Badge with Review Button or Reviewed Badge */}
         {isDelivered && isConfirmed && (
-          <View style={styles.confirmedContainer}>
-            <View style={styles.confirmedBadge}>
-              <CircleCheckBig size={14} color="#34A853" />
-              <Text style={styles.confirmedText}>Receipt Confirmed</Text>
+          allReviewed ? (
+            // All products reviewed - show badge only
+            <View style={styles.reviewedBadge}>
+              <CircleCheckBig size={14} color="#0EA5E9" />
+              <Text style={styles.reviewedText}>All Products Reviewed</Text>
             </View>
-            <TouchableOpacity
-              style={styles.reviewBtn}
-              onPress={(e) => {
-                e?.stopPropagation?.();
-                navigation.navigate('OrderReview', { orderId: item.id });
-              }}
-              activeOpacity={0.8}
-              pointerEvents="auto"
-            >
-              <Text style={styles.reviewBtnText}>Leave Review</Text>
-            </TouchableOpacity>
-          </View>
+          ) : (
+            // Not all reviewed - show review button
+            <View style={styles.confirmedContainer}>
+              <View style={styles.confirmedBadge}>
+                <CircleCheckBig size={14} color="#34A853" />
+                <Text style={styles.confirmedText}>Receipt Confirmed</Text>
+              </View>
+              <TouchableOpacity
+                style={styles.reviewBtn}
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  navigation.navigate('OrderReview', { orderId: item.id });
+                }}
+                activeOpacity={0.8}
+                pointerEvents="auto"
+              >
+                <Text style={styles.reviewBtnText}>Leave Review</Text>
+              </TouchableOpacity>
+            </View>
+          )
         )}
       </BlurView>
     );
@@ -445,6 +481,23 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 13,
     fontWeight: '700',
+  },
+
+  // All Products Reviewed Badge
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#E0F2FE',
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  reviewedText: {
+    color: '#075985',
+    fontSize: 13,
+    fontWeight: '600',
   },
 
   // Empty State

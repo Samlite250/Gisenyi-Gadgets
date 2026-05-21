@@ -98,6 +98,13 @@ export default function OrderReviewScreen({ route, navigation }) {
       return;
     }
 
+    // Confirm submission (reviews cannot be edited later)
+    const confirmed = window.confirm(
+      'Submit Reviews?\n\nOnce submitted, you cannot edit or change your reviews. Are you sure you want to continue?'
+    );
+
+    if (!confirmed) return;
+
     setSubmitting(true);
     try {
       // Prepare reviews to insert (only new ones with ratings)
@@ -160,6 +167,17 @@ export default function OrderReviewScreen({ route, navigation }) {
           <Text style={styles.subtitle}>
             Help others make informed decisions by sharing your experience
           </Text>
+
+          {/* One-time Review Warning */}
+          <View style={styles.warningBox}>
+            <Text style={styles.warningIcon}>⚠️</Text>
+            <View style={styles.warningTextContainer}>
+              <Text style={styles.warningTitle}>One-time Review</Text>
+              <Text style={styles.warningText}>
+                Reviews are permanent and cannot be edited or deleted after submission
+              </Text>
+            </View>
+          </View>
 
           {/* Products List */}
           {products.map((item, index) => {
@@ -302,8 +320,36 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: '#6B7280',
-    marginBottom: 20,
+    marginBottom: 16,
     lineHeight: 20,
+  },
+  warningBox: {
+    flexDirection: 'row',
+    backgroundColor: '#FEF3C7',
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 20,
+    gap: 10,
+  },
+  warningIcon: {
+    fontSize: 20,
+    marginTop: 2,
+  },
+  warningTextContainer: {
+    flex: 1,
+  },
+  warningTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400E',
+    marginBottom: 2,
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#92400E',
+    lineHeight: 16,
   },
   productCard: {
     backgroundColor: '#fff',

@@ -40,7 +40,7 @@ DELETE FROM public.notifications WHERE title LIKE '%demo%' OR title LIKE '%test%
 
 -- ─── STEP 5: Clear Reviews ─────────────────────────────────
 -- Delete test reviews (optional)
-DELETE FROM public.reviews WHERE content LIKE '%test%' OR content LIKE '%demo%';
+DELETE FROM public.reviews WHERE body LIKE '%test%' OR body LIKE '%demo%';
 
 -- ─── STEP 6: Clear Wishlists ───────────────────────────────
 -- Clear test wishlists (optional - only if you want fresh start)

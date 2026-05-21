@@ -4,7 +4,7 @@ import {
   TextInput, Image, ActivityIndicator, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Star, ArrowLeft, CheckCircle2 } from 'lucide-react-native';
+import { Star, ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
 import { COLORS, SIZES } from '../constants/theme';
@@ -180,7 +180,7 @@ export default function OrderReviewScreen({ route, navigation }) {
 
           {/* Appreciation Message */}
           <View style={styles.appreciationBox}>
-            <Text style={styles.appreciationIcon}>💙</Text>
+            <Sparkles size={24} color="#3B82F6" style={styles.appreciationIcon} />
             <View style={styles.appreciationTextContainer}>
               <Text style={styles.appreciationTitle}>Thank You for Your Purchase!</Text>
               <Text style={styles.appreciationText}>
@@ -344,7 +344,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   appreciationIcon: {
-    fontSize: 24,
     marginTop: 2,
   },
   appreciationTextContainer: {

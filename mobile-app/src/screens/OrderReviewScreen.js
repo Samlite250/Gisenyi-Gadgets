@@ -108,9 +108,9 @@ export default function OrderReviewScreen({ route, navigation }) {
       return;
     }
 
-    // Confirm submission (reviews cannot be edited later)
+    // Confirm submission with appreciative message
     const confirmed = window.confirm(
-      'Submit Reviews?\n\nOnce submitted, you cannot edit or change your reviews. Are you sure you want to continue?'
+      'Submit Your Reviews?\n\nThank you for sharing your valuable feedback! Your reviews will help other customers make informed decisions. Ready to submit?'
     );
 
     if (!confirmed) return;
@@ -178,13 +178,13 @@ export default function OrderReviewScreen({ route, navigation }) {
             Help others make informed decisions by sharing your experience
           </Text>
 
-          {/* One-time Review Warning */}
-          <View style={styles.warningBox}>
-            <Text style={styles.warningIcon}>⚠️</Text>
-            <View style={styles.warningTextContainer}>
-              <Text style={styles.warningTitle}>One-time Review</Text>
-              <Text style={styles.warningText}>
-                Reviews are permanent and cannot be edited or deleted after submission
+          {/* Appreciation Message */}
+          <View style={styles.appreciationBox}>
+            <Text style={styles.appreciationIcon}>💙</Text>
+            <View style={styles.appreciationTextContainer}>
+              <Text style={styles.appreciationTitle}>Thank You for Your Purchase!</Text>
+              <Text style={styles.appreciationText}>
+                Your honest feedback helps our community make better choices. We truly appreciate you taking the time to share your experience!
               </Text>
             </View>
           </View>
@@ -333,33 +333,33 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 20,
   },
-  warningBox: {
+  appreciationBox: {
     flexDirection: 'row',
-    backgroundColor: '#FEF3C7',
+    backgroundColor: '#EFF6FF',
     borderLeftWidth: 4,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: '#3B82F6',
     borderRadius: 8,
-    padding: 12,
+    padding: 14,
     marginBottom: 20,
-    gap: 10,
+    gap: 12,
   },
-  warningIcon: {
-    fontSize: 20,
+  appreciationIcon: {
+    fontSize: 24,
     marginTop: 2,
   },
-  warningTextContainer: {
+  appreciationTextContainer: {
     flex: 1,
   },
-  warningTitle: {
-    fontSize: 13,
+  appreciationTitle: {
+    fontSize: 14,
     fontWeight: '700',
-    color: '#92400E',
-    marginBottom: 2,
+    color: '#1E40AF',
+    marginBottom: 4,
   },
-  warningText: {
-    fontSize: 12,
-    color: '#92400E',
-    lineHeight: 16,
+  appreciationText: {
+    fontSize: 13,
+    color: '#1E3A8A',
+    lineHeight: 18,
   },
   productCard: {
     backgroundColor: '#fff',

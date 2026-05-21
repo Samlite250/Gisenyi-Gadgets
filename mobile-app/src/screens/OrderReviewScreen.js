@@ -45,43 +45,14 @@ export default function OrderReviewScreen({ route, navigation }) {
 
       if (itemsError) throw itemsError;
 
-      // Check if user already reviewed these products
-      const productIds = orderItems.map(item => item.product_id).filter(Boolean);
-
-      let existingReviews = [];
-      if (productIds.length > 0 && user?.id) {
-        try {
-          // Fetch each product's review individually to avoid RLS issues
-          const reviewPromises = productIds.map(async (productId) => {
-            const { data, error } = await supabase
-              .from('reviews')
-              .select('product_id, rating, comment')
-              .eq('user_id', user.id)
-              .eq('product_id', productId)
-              .maybeSingle(); // Use maybeSingle to handle no results gracefully
-
-            if (error) {
-              console.warn(`Failed to fetch review for product ${productId}:`, error);
-              return null;
-            }
-            return data;
-          });
-
-          const results = await Promise.all(reviewPromises);
-          existingReviews = results.filter(Boolean); // Remove nulls
-        } catch (err) {
-          console.warn('Failed to fetch existing reviews:', err);
-        }
-      }
-
-      // Initialize reviews state
+      // Initialize all products as reviewable
+      // Database unique constraint will prevent duplicate reviews
       const initialReviews = {};
       orderItems.forEach(item => {
-        const existing = existingReviews?.find(r => r.product_id === item.product_id);
         initialReviews[item.product_id] = {
-          rating: existing?.rating || 0,
-          comment: existing?.comment || '',
-          alreadyReviewed: !!existing,
+          rating: 0,
+          comment: '',
+          alreadyReviewed: false,
         };
       });
 
@@ -112,7 +83,7 @@ export default function OrderReviewScreen({ route, navigation }) {
 
   const handleSubmitReviews = async () => {
     // Validate: at least one product must have a rating
-    const hasAnyRating = Object.values(reviews).some(r => r.rating > 0 && !r.alreadyReviewed);
+    const hasAnyRating = Object.values(reviews).some(r => r.rating > 0);
 
     if (!hasAnyRating) {
       window.alert('Please rate at least one product before submitting.');
@@ -128,9 +99,9 @@ export default function OrderReviewScreen({ route, navigation }) {
 
     setSubmitting(true);
     try {
-      // Prepare reviews to insert (only new ones with ratings)
+      // Prepare reviews to insert (only ones with ratings)
       const reviewsToInsert = Object.entries(reviews)
-        .filter(([_, review]) => review.rating > 0 && !review.alreadyReviewed)
+        .filter(([_, review]) => review.rating > 0)
         .map(([productId, review]) => ({
           product_id: productId,
           user_id: user.id,
@@ -149,7 +120,15 @@ export default function OrderReviewScreen({ route, navigation }) {
         .from('reviews')
         .insert(reviewsToInsert);
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's a duplicate key error (unique constraint violation)
+        if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
+          window.alert('You have already reviewed one or more of these products. Each product can only be reviewed once.');
+          navigation.goBack();
+          return;
+        }
+        throw error;
+      }
 
       window.alert(`Success! ${reviewsToInsert.length} review(s) submitted. Thank you for your feedback!`);
       navigation.goBack();
@@ -222,12 +201,6 @@ export default function OrderReviewScreen({ route, navigation }) {
                   </View>
                 </View>
 
-                {review.alreadyReviewed && (
-                  <View style={styles.alreadyReviewedBadge}>
-                    <CheckCircle2 size={14} color="#059669" />
-                    <Text style={styles.alreadyReviewedText}>Already reviewed</Text>
-                  </View>
-                )}
 
                 {/* Rating Stars */}
                 <View style={styles.ratingSection}>
@@ -236,8 +209,7 @@ export default function OrderReviewScreen({ route, navigation }) {
                     {[1, 2, 3, 4, 5].map((star) => (
                       <TouchableOpacity
                         key={star}
-                        onPress={() => !review.alreadyReviewed && updateRating(item.product_id, star)}
-                        disabled={review.alreadyReviewed}
+                        onPress={() => updateRating(item.product_id, star)}
                         activeOpacity={0.7}
                       >
                         <Star
@@ -255,15 +227,14 @@ export default function OrderReviewScreen({ route, navigation }) {
                 <View style={styles.commentSection}>
                   <Text style={styles.commentLabel}>Your Review (Optional)</Text>
                   <TextInput
-                    style={[styles.commentInput, review.alreadyReviewed && styles.disabledInput]}
+                    style={styles.commentInput}
                     placeholder="Share your thoughts about this product..."
                     placeholderTextColor="#9CA3AF"
                     multiline
                     numberOfLines={4}
                     maxLength={500}
                     value={review.comment}
-                    onChangeText={(text) => !review.alreadyReviewed && updateComment(item.product_id, text)}
-                    editable={!review.alreadyReviewed}
+                    onChangeText={(text) => updateComment(item.product_id, text)}
                   />
                   <Text style={styles.charCount}>{review.comment.length}/500</Text>
                 </View>

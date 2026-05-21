@@ -162,7 +162,7 @@ export default function OrderReviewScreen({ route, navigation }) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={COLORS.primary} />
+          <ActivityIndicator size="large" color={COLORS.primaryBlue} />
           <Text style={styles.loadingText}>Loading products...</Text>
         </View>
       </SafeAreaView>
@@ -334,6 +334,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingBottom: 40,
   },
   subtitle: {
     fontSize: 14,
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   submitButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.primaryBlue,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -482,7 +483,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 8,
     gap: 8,
-    shadowColor: COLORS.primary,
+    shadowColor: COLORS.primaryBlue,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,

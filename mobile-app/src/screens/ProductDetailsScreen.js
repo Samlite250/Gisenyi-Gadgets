@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, Alert, Dimensions, ActivityIndicator, Platform,
@@ -8,7 +8,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   ChevronLeft, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CircleCheckBig,
-  Maximize2, X, Store,
+  Maximize2, X, Store, ChevronDown, ChevronUp,
+  ShieldCheck, Truck, RefreshCw, Award,
 } from 'lucide-react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { Modal } from 'react-native';
@@ -41,6 +42,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const [loadingReviews, setLoadingReviews] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showAllReviews, setShowAllReviews] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
   const [supplier, setSupplier] = useState(null);
   const [hasBought, setHasBought] = useState(false);
   const scrollRef = useRef(null);
@@ -472,12 +475,87 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
           </View>
 
+          {/* Trust Badges */}
+          <View style={styles.badgesRow}>
+            {[
+              { Icon: ShieldCheck, label: 'Warranty' },
+              { Icon: Truck, label: 'Fast Delivery' },
+              { Icon: RefreshCw, label: 'Easy Returns' },
+              { Icon: Award, label: 'Genuine' },
+            ].map(({ Icon, label }) => (
+              <View key={label} style={styles.badge}>
+                <Icon size={18} color={COLORS.primaryBlue} strokeWidth={2} />
+                <Text style={styles.badgeText}>{label}</Text>
+              </View>
+            ))}
+          </View>
+
           {/* Description */}
           {!!product.description && (
             <View style={styles.descSection}>
-              <Text style={styles.descText}>{product.description}</Text>
+              <View style={styles.descHeader}>
+                <View style={styles.descHeaderAccent} />
+                <Text style={styles.descTitle}>About this Product</Text>
+              </View>
+              <View>
+                <Text
+                  style={styles.descText}
+                  numberOfLines={descExpanded ? undefined : 4}
+                  onTextLayout={(e) => {
+                    if (!descExpanded) setDescOverflows(e.nativeEvent.lines.length >= 4);
+                  }}
+                >
+                  {product.description}
+                </Text>
+                {(descOverflows || descExpanded) && (
+                  <TouchableOpacity
+                    style={styles.readMoreBtn}
+                    onPress={() => setDescExpanded(v => !v)}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.readMoreText}>
+                      {descExpanded ? 'Show less' : 'Read more'}
+                    </Text>
+                    {descExpanded
+                      ? <ChevronUp size={14} color={COLORS.primaryBlue} />
+                      : <ChevronDown size={14} color={COLORS.primaryBlue} />
+                    }
+                  </TouchableOpacity>
+                )}
+              </View>
             </View>
           )}
+
+          {/* Specs Table */}
+          {(() => {
+            const specs = [];
+            if (product.brand) specs.push(['Brand', product.brand]);
+            if (product.model) specs.push(['Model', product.model]);
+            if (product.storage_options?.length) specs.push(['Storage', product.storage_options.join(', ')]);
+            if (product.colors?.length) specs.push(['Colors', product.colors.join(', ')]);
+            if (product.category_id) specs.push(['Category', product.category_id]);
+            if (product.sku) specs.push(['SKU', product.sku]);
+            if (product.weight) specs.push(['Weight', `${product.weight}g`]);
+            if (product.dimensions) specs.push(['Dimensions', product.dimensions]);
+            if (product.warranty) specs.push(['Warranty', product.warranty]);
+            if (specs.length === 0) return null;
+            return (
+              <View style={styles.specsSection}>
+                <View style={styles.descHeader}>
+                  <View style={styles.descHeaderAccent} />
+                  <Text style={styles.descTitle}>Specifications</Text>
+                </View>
+                <View style={styles.specsTable}>
+                  {specs.map(([label, value], i) => (
+                    <View key={label} style={[styles.specRow, i % 2 === 0 && styles.specRowAlt]}>
+                      <Text style={styles.specLabel}>{label}</Text>
+                      <Text style={styles.specValue}>{value}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            );
+          })()}
 
           {/* Seller Information Section */}
           <View style={styles.sellerSection}>
@@ -719,8 +797,30 @@ const styles = StyleSheet.create({
   qtyText: {
     fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary,
   },
-  descSection: { marginTop: SIZES.md },
-  descText: { fontSize: SIZES.fontSm, color: COLORS.textSecondary, lineHeight: 22 },
+  badgesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: SIZES.md,
+    paddingVertical: SIZES.sm,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  badge: { alignItems: 'center', gap: 5, flex: 1 },
+  badgeText: { fontSize: 10, fontWeight: '600', color: COLORS.textSecondary, textAlign: 'center' },
+  descSection: { marginTop: SIZES.lg },
+  descHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  descHeaderAccent: { width: 4, height: 18, borderRadius: 2, backgroundColor: COLORS.primaryBlue },
+  descTitle: { fontSize: 15, fontWeight: '800', color: COLORS.textPrimary, letterSpacing: -0.3 },
+  descText: { fontSize: 14, color: '#475569', lineHeight: 24, letterSpacing: 0.1 },
+  readMoreBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 10 },
+  readMoreText: { fontSize: 13, fontWeight: '700', color: COLORS.primaryBlue },
+  specsSection: { marginTop: SIZES.lg },
+  specsTable: { borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: '#F1F5F9' },
+  specRow: { flexDirection: 'row', paddingVertical: 11, paddingHorizontal: 14, backgroundColor: '#fff' },
+  specRowAlt: { backgroundColor: '#F8FAFC' },
+  specLabel: { flex: 1, fontSize: 13, fontWeight: '600', color: COLORS.textSecondary },
+  specValue: { flex: 1.5, fontSize: 13, fontWeight: '700', color: COLORS.textPrimary, textAlign: 'right' },
   footer: {
     flexDirection: 'row',
     padding: SIZES.lg,

@@ -221,18 +221,41 @@ function AppInner({ user, onLogout }) {
   );
 }
 
+async function verifyAdminSession(session) {
+  if (!session?.user) return null;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session.user.id)
+    .single();
+  if (profile?.role !== 'admin') {
+    await supabase.auth.signOut({ scope: 'local' });
+    return null;
+  }
+  return session;
+}
+
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    // On load: restore session only if the user is an admin
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const adminSession = await verifyAdminSession(session);
+      setSession(adminSession);
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
+        return;
+      }
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        const adminSession = await verifyAdminSession(session);
+        setSession(adminSession);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -248,7 +271,7 @@ export default function App() {
   if (!session) {
     return (
       <>
-        <LoginPage onLogin={(user) => setSession({ user })} />
+        <LoginPage onLogin={(s) => setSession(s)} />
         <Toaster position="top-right" />
       </>
     );

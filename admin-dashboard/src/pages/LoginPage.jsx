@@ -28,7 +28,7 @@ export default function LoginPage({ onLogin }) {
       }
 
       toast.success('Welcome back!');
-      onLogin(data.user);
+      onLogin(data.session);
     } catch (err) {
       toast.error(err.message || 'Failed to sign in.');
     } finally {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard, Mail, Phone, MessageSquare } from 'lucide-react';
+import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard, Mail, Phone, MessageSquare, Send } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import Loader from '../components/Loader';
 import toast from 'react-hot-toast';
@@ -42,6 +42,12 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword]     = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPw, setChangingPw] = useState(false);
+
+  // Notification composer state
+  const [notificationTitle, setNotificationTitle] = useState('');
+  const [notificationBody, setNotificationBody] = useState('');
+  const [notificationType, setNotificationType] = useState('general');
+  const [sendingNotification, setSendingNotification] = useState(false);
   const [form, setForm]     = useState({
     platformName: '',
     supportEmail: '',
@@ -137,6 +143,57 @@ export default function SettingsPage() {
       toast.error('Failed to update password: ' + err.message);
     } finally {
       setChangingPw(false);
+    }
+  };
+
+  const handleSendNotification = async () => {
+    if (!notificationTitle.trim()) return toast.error('Please enter a notification title.');
+    if (!notificationBody.trim()) return toast.error('Please enter notification content.');
+
+    setSendingNotification(true);
+
+    try {
+      // Get all customer users
+      const { data: users, error: usersError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'customer')
+        .eq('is_active', true);
+
+      if (usersError) throw usersError;
+
+      if (!users || users.length === 0) {
+        toast.error('No active customers found to notify.');
+        setSendingNotification(false);
+        return;
+      }
+
+      // Create notification for each user
+      const notifications = users.map(user => ({
+        user_id: user.id,
+        title: notificationTitle.trim(),
+        body: notificationBody.trim(),
+        type: notificationType,
+        is_read: false,
+        created_at: new Date().toISOString()
+      }));
+
+      const { error: insertError } = await supabase
+        .from('notifications')
+        .insert(notifications);
+
+      if (insertError) throw insertError;
+
+      toast.success(`Notification sent to ${users.length} user${users.length !== 1 ? 's' : ''}!`);
+
+      // Clear form
+      setNotificationTitle('');
+      setNotificationBody('');
+      setNotificationType('general');
+    } catch (err) {
+      toast.error('Failed to send notification: ' + err.message);
+    } finally {
+      setSendingNotification(false);
     }
   };
 
@@ -458,13 +515,223 @@ export default function SettingsPage() {
               )}
 
               {activeTab === 'notify' && (
-                <div>
-                  <Toggle label="New Order Notifications"  desc="Get notified when a new order is placed"         checked={form.emailNewOrder}  onChange={setCheck('emailNewOrder')} />
-                  <Toggle label="New User Registrations"   desc="Get notified when a new customer registers"      checked={form.emailNewUser}   onChange={setCheck('emailNewUser')}  />
-                  <Toggle label="Low Stock Alerts"         desc="Get notified when product stock is running low"  checked={form.emailLowStock}  onChange={setCheck('emailLowStock')} />
-                  <div style={{ marginTop: 16 }}>
-                    <Field label="Low Stock Threshold (units)"><input className="input" type="number" value={form.lowStockThreshold} onChange={(e) => set('lowStockThreshold')(e.target.value)} style={{ maxWidth: 120 }} /></Field>
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  {/* Send Notification to Users Section */}
+                  <section style={{
+                    background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '1.5px solid #3B82F6'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      marginBottom: 20
+                    }}>
+                      <div style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 12,
+                        background: 'var(--primary-blue)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        <Send size={20} color="#fff" />
+                      </div>
+                      <div>
+                        <h4 style={{
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: '#1E40AF',
+                          marginBottom: 2
+                        }}>
+                          Send Notification to All Users
+                        </h4>
+                        <p style={{
+                          fontSize: 13,
+                          color: '#3B82F6'
+                        }}>
+                          Compose and broadcast notifications to all active customers
+                        </p>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      background: '#fff',
+                      borderRadius: 12,
+                      padding: 20,
+                      border: '1px solid #BFDBFE'
+                    }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                        {/* Notification Type */}
+                        <Field label="Notification Type">
+                          <select
+                            className="form-input"
+                            value={notificationType}
+                            onChange={(e) => setNotificationType(e.target.value)}
+                            style={{ fontWeight: 600 }}
+                          >
+                            <option value="general">📢 General Announcement</option>
+                            <option value="promo">🎉 Promotion / Sale</option>
+                            <option value="system">⚙️ System Update</option>
+                            <option value="order">📦 Order Related</option>
+                          </select>
+                        </Field>
+
+                        {/* Notification Title */}
+                        <Field label="Notification Title">
+                          <input
+                            type="text"
+                            className="form-input"
+                            placeholder="e.g., New Products Available!"
+                            value={notificationTitle}
+                            onChange={(e) => setNotificationTitle(e.target.value)}
+                            maxLength={100}
+                            style={{ fontWeight: 600, fontSize: 15 }}
+                          />
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--text-muted)',
+                            marginTop: 4,
+                            textAlign: 'right'
+                          }}>
+                            {notificationTitle.length}/100 characters
+                          </div>
+                        </Field>
+
+                        {/* Notification Body */}
+                        <Field label="Notification Message">
+                          <textarea
+                            className="form-input"
+                            placeholder="Write your notification message here... This will be displayed to all active users in the mobile app."
+                            value={notificationBody}
+                            onChange={(e) => setNotificationBody(e.target.value)}
+                            maxLength={500}
+                            rows={6}
+                            style={{
+                              resize: 'vertical',
+                              lineHeight: 1.6,
+                              fontSize: 14
+                            }}
+                          />
+                          <div style={{
+                            fontSize: 11,
+                            color: 'var(--text-muted)',
+                            marginTop: 4,
+                            textAlign: 'right'
+                          }}>
+                            {notificationBody.length}/500 characters
+                          </div>
+                        </Field>
+
+                        {/* Preview */}
+                        {(notificationTitle || notificationBody) && (
+                          <div style={{
+                            background: '#F8FAFC',
+                            borderRadius: 10,
+                            padding: 16,
+                            border: '1px dashed #CBD5E1'
+                          }}>
+                            <div style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              color: '#64748B',
+                              marginBottom: 8,
+                              textTransform: 'uppercase',
+                              letterSpacing: 0.5
+                            }}>
+                              Preview
+                            </div>
+                            {notificationTitle && (
+                              <div style={{
+                                fontWeight: 700,
+                                fontSize: 15,
+                                color: '#0F172A',
+                                marginBottom: 6
+                              }}>
+                                {notificationTitle}
+                              </div>
+                            )}
+                            {notificationBody && (
+                              <div style={{
+                                fontSize: 13,
+                                color: '#475569',
+                                lineHeight: 1.5
+                              }}>
+                                {notificationBody}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Send Button */}
+                        <button
+                          type="button"
+                          className="btn btn-primary"
+                          onClick={handleSendNotification}
+                          disabled={sendingNotification || !notificationTitle.trim() || !notificationBody.trim()}
+                          style={{
+                            width: '100%',
+                            padding: '14px 20px',
+                            fontSize: 15,
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: 8
+                          }}
+                        >
+                          <Send size={18} />
+                          {sendingNotification ? 'Sending Notification...' : 'Send Notification to All Users'}
+                        </button>
+
+                        <div style={{
+                          fontSize: 12,
+                          color: '#64748B',
+                          textAlign: 'center',
+                          paddingTop: 8,
+                          borderTop: '1px solid #E2E8F0'
+                        }}>
+                          💡 This will send notifications to all active customers in the mobile app
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* Admin Notification Settings */}
+                  <section>
+                    <h4 style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: 'var(--primary-blue)',
+                      textTransform: 'uppercase',
+                      letterSpacing: 1,
+                      marginBottom: 16,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      <Bell size={16} /> Admin Notification Preferences
+                    </h4>
+                    <div style={{ background: 'var(--surface-bg)', borderRadius: 12, padding: 16 }}>
+                      <Toggle label="New Order Notifications"  desc="Get notified when a new order is placed"         checked={form.emailNewOrder}  onChange={setCheck('emailNewOrder')} />
+                      <Toggle label="New User Registrations"   desc="Get notified when a new customer registers"      checked={form.emailNewUser}   onChange={setCheck('emailNewUser')}  />
+                      <Toggle label="Low Stock Alerts"         desc="Get notified when product stock is running low"  checked={form.emailLowStock}  onChange={setCheck('emailLowStock')} />
+                      <div style={{ marginTop: 16, paddingLeft: 16 }}>
+                        <Field label="Low Stock Threshold (units)">
+                          <input
+                            className="input"
+                            type="number"
+                            value={form.lowStockThreshold}
+                            onChange={(e) => set('lowStockThreshold')(e.target.value)}
+                            style={{ maxWidth: 120 }}
+                          />
+                        </Field>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               )}
 

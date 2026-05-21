@@ -223,16 +223,21 @@ function AppInner({ user, onLogout }) {
 
 async function verifyAdminSession(session) {
   if (!session?.user) return null;
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single();
-  if (profile?.role !== 'admin') {
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+    if (error || profile?.role !== 'admin') {
+      await supabase.auth.signOut({ scope: 'local' });
+      return null;
+    }
+    return session;
+  } catch {
     await supabase.auth.signOut({ scope: 'local' });
     return null;
   }
-  return session;
 }
 
 export default function App() {
@@ -241,9 +246,14 @@ export default function App() {
 
   useEffect(() => {
     // On load: restore session only if the user is an admin
+    const timeout = setTimeout(() => setLoading(false), 5000); // safety net
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(timeout);
       const adminSession = await verifyAdminSession(session);
       setSession(adminSession);
+      setLoading(false);
+    }).catch(() => {
+      clearTimeout(timeout);
       setLoading(false);
     });
 

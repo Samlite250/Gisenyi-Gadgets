@@ -80,40 +80,39 @@ export default function OrdersScreen({ navigation }) {
 
   const handleConfirmReceipt = async (orderId) => {
     console.log('Button clicked! Order ID:', orderId);
-    Alert.alert(
-      'Confirm Order Receipt',
-      'Have you received all items in this order? This will allow you to leave reviews for the products.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes, Received',
-          onPress: async () => {
-            try {
-              console.log('Confirming receipt for order:', orderId);
-              const { error } = await supabase
-                .from('orders')
-                .update({
-                  receipt_confirmed: true,
-                  receipt_confirmed_at: new Date().toISOString(),
-                })
-                .eq('id', orderId);
 
-              if (error) {
-                console.error('Error confirming receipt:', error);
-                throw error;
-              }
-
-              console.log('Receipt confirmed successfully!');
-              Alert.alert('Success', 'Order receipt confirmed! You can now review your products.');
-              fetchOrders();
-            } catch (err) {
-              console.error('Catch error:', err);
-              Alert.alert('Error', 'Failed to confirm receipt. Please try again.');
-            }
-          },
-        },
-      ]
+    // Use window.confirm for web compatibility
+    const confirmed = window.confirm(
+      'Confirm Order Receipt\n\nHave you received all items in this order? This will allow you to leave reviews for the products.'
     );
+
+    if (!confirmed) {
+      console.log('User cancelled confirmation');
+      return;
+    }
+
+    try {
+      console.log('Confirming receipt for order:', orderId);
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          receipt_confirmed: true,
+          receipt_confirmed_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      if (error) {
+        console.error('Error confirming receipt:', error);
+        throw error;
+      }
+
+      console.log('Receipt confirmed successfully!');
+      window.alert('Success! Order receipt confirmed. You can now review your products.');
+      fetchOrders();
+    } catch (err) {
+      console.error('Catch error:', err);
+      window.alert('Error: Failed to confirm receipt. Please try again.');
+    }
   };
 
   const renderOrder = ({ item }) => {

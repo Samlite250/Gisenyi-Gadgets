@@ -37,6 +37,7 @@ import HelpSupportScreen from '../screens/HelpSupportScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import ChatSupportScreen from '../screens/ChatSupportScreen';
 import LicensesScreen from '../screens/LicensesScreen';
+import OrderReviewScreen from '../screens/OrderReviewScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -194,6 +195,7 @@ function AppStack() {
         options={{ gestureEnabled: false }} // Prevent swiping back after order
       />
       <Stack.Screen name="OrderTracking" component={OrderTrackingScreen} />
+      <Stack.Screen name="OrderReview" component={OrderReviewScreen} />
       <Stack.Screen name="Wishlist" component={WishlistScreen} />
       <Stack.Screen name="Addresses" component={AddressesScreen} />
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />

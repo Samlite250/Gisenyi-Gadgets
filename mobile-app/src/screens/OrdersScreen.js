@@ -107,8 +107,10 @@ export default function OrdersScreen({ navigation }) {
       }
 
       console.log('Receipt confirmed successfully!');
-      window.alert('Success! Order receipt confirmed. You can now review your products.');
       fetchOrders();
+
+      // Navigate to review screen
+      navigation.navigate('OrderReview', { orderId });
     } catch (err) {
       console.error('Catch error:', err);
       window.alert('Error: Failed to confirm receipt. Please try again.');
@@ -197,13 +199,24 @@ export default function OrdersScreen({ navigation }) {
           </TouchableOpacity>
         )}
 
-        {/* Confirmed Badge */}
+        {/* Confirmed Badge with Review Button */}
         {isDelivered && isConfirmed && (
-          <View style={styles.confirmedBadge}>
-            <CircleCheckBig size={14} color="#34A853" />
-            <Text style={styles.confirmedText}>
-              Receipt Confirmed • Ready to Review
-            </Text>
+          <View style={styles.confirmedContainer}>
+            <View style={styles.confirmedBadge}>
+              <CircleCheckBig size={14} color="#34A853" />
+              <Text style={styles.confirmedText}>Receipt Confirmed</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.reviewBtn}
+              onPress={(e) => {
+                e?.stopPropagation?.();
+                navigation.navigate('OrderReview', { orderId: item.id });
+              }}
+              activeOpacity={0.8}
+              pointerEvents="auto"
+            >
+              <Text style={styles.reviewBtnText}>Leave Review</Text>
+            </TouchableOpacity>
           </View>
         )}
       </BlurView>
@@ -398,8 +411,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Confirmed Badge
+  // Confirmed Container (badge + button)
+  confirmedContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 12,
+  },
   confirmedBadge: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -407,12 +427,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#DCFCE7',
     paddingVertical: 10,
     borderRadius: 8,
-    marginTop: 12,
   },
   confirmedText: {
     color: '#166534',
     fontSize: 13,
     fontWeight: '600',
+  },
+  reviewBtn: {
+    backgroundColor: COLORS.primaryBlue,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    cursor: 'pointer',
+    zIndex: 10,
+  },
+  reviewBtnText: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
   },
 
   // Empty State

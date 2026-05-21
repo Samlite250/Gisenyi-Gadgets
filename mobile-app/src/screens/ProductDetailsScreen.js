@@ -56,7 +56,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
       if (!pId) return;
       
       try {
-        const { data, error } = await supabase.from('products').select('*').eq('id', pId).single();
+        const { data, error } = await supabase.from('products').select('*, categories(name)').eq('id', pId).single();
         if (!error && data) {
           setProduct(data);
           if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
@@ -540,7 +540,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
             if (product.model) specs.push(['Model', product.model]);
             if (product.storage_options?.length) specs.push(['Storage', product.storage_options.join(', ')]);
             if (product.colors?.length) specs.push(['Colors', product.colors.join(', ')]);
-            if (product.category_id) specs.push(['Category', product.category_id]);
+            if (product.categories?.name) specs.push(['Category', product.categories.name]);
             if (product.sku) specs.push(['SKU', product.sku]);
             if (product.weight) specs.push(['Weight', `${product.weight}g`]);
             if (product.dimensions) specs.push(['Dimensions', product.dimensions]);

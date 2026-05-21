@@ -16,6 +16,7 @@ export default function BannersPage() {
   const [editItem, setEditItem] = useState(null);
   const [form, setForm]         = useState(EMPTY_BANNER);
   const [saving, setSaving]     = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -40,6 +41,53 @@ export default function BannersPage() {
     setEditItem(item);
     setForm({ ...item });
     setShowModal(true);
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Create unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `banners/${fileName}`;
+
+      // Upload to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('products')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      setForm({ ...form, image_url: publicUrl });
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      toast.error('Failed to upload image: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSave = async (e) => {
@@ -215,9 +263,75 @@ export default function BannersPage() {
                   )}
 
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
-                    <label className="form-label">Image URL *</label>
-                    <input className="input" required value={form.image_url || ''} onChange={e => setForm({ ...form, image_url: e.target.value })} placeholder="https://images.unsplash.com/..." />
-                    {form.image_url && <img src={form.image_url} alt="Preview" style={{ marginTop: 8, height: 80, borderRadius: 8, objectFit: 'cover' }} />}
+                    <label className="form-label">Image *</label>
+                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <label
+                        htmlFor="banner-image-upload"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          padding: '10px 16px',
+                          backgroundColor: '#4285F4',
+                          color: 'white',
+                          borderRadius: 8,
+                          cursor: uploading ? 'not-allowed' : 'pointer',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          opacity: uploading ? 0.6 : 1,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <ImageIcon size={16} />
+                        {uploading ? 'Uploading...' : 'Upload Image'}
+                      </label>
+                      <input
+                        id="banner-image-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                        style={{ display: 'none' }}
+                      />
+                      <input
+                        className="input"
+                        value={form.image_url || ''}
+                        onChange={e => setForm({ ...form, image_url: e.target.value })}
+                        placeholder="Or paste image URL"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                    {form.image_url && (
+                      <div style={{ marginTop: 12, position: 'relative', display: 'inline-block' }}>
+                        <img
+                          src={form.image_url}
+                          alt="Preview"
+                          style={{ height: 100, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border)' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setForm({ ...form, image_url: '' })}
+                          style={{
+                            position: 'absolute',
+                            top: -8,
+                            right: -8,
+                            width: 24,
+                            height: 24,
+                            borderRadius: '50%',
+                            backgroundColor: '#EF4444',
+                            color: 'white',
+                            border: 'none',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: 12
+                          }}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="form-group">

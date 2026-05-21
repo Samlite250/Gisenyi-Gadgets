@@ -91,7 +91,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
           </View>
         </BlurView>
 
-        <View style={styles.timeline}>
+        <View style={styles.timelineCard}>
           {ALL_STEPS.map((step, index) => {
             const done = completedSteps > index;
             const active = completedSteps === index + 1;
@@ -167,7 +167,19 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: 11, color: '#64748B', fontWeight: '600', textTransform: 'uppercase', marginBottom: 4 },
   summaryValue: { fontSize: 14, color: '#1E293B', fontWeight: '700' },
   summaryDivider: { width: 1, height: 30, backgroundColor: 'rgba(0,0,0,0.1)' },
-  timeline: { marginBottom: 32 },
+  timelineCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 32,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
   timelineItem: { flexDirection: 'row', marginBottom: 28 },
   timelineIconContainer: { alignItems: 'center', marginRight: 16 },
   stepCircle: {

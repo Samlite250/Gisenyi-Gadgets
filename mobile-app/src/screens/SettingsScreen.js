@@ -251,8 +251,9 @@ export default function SettingsScreen({ navigation }) {
         </TouchableOpacity>
 
         <View style={styles.footerInfo}>
-          <Text style={styles.footerText}>Made with ❤️ in Gisenyi, RW</Text>
-          <Text style={styles.footerText}>© 2024 Gisenyi Gadgets Ltd.</Text>
+          <Text style={styles.footerText}>Developed by SamDev • Gisenyi, Rwanda</Text>
+          <Text style={styles.footerText}>© 2024 Gisenyi Gadgets Ltd. All rights reserved.</Text>
+          <Text style={[styles.footerText, { fontSize: 11, marginTop: 4, opacity: 0.7 }]}>v{appVersion}</Text>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
   TouchableOpacity, Image, FlatList, RefreshControl, Platform, Dimensions,
@@ -84,6 +84,7 @@ export default function HomeScreen({ navigation }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
 
+  const scrollRef = React.useRef(null);
   const bannerScrollRef = React.useRef(null);
   const offerScrollRef = React.useRef(null);
   const bannerAutoScrollRef = React.useRef(null);
@@ -95,6 +96,29 @@ export default function HomeScreen({ navigation }) {
   const displayName = profile?.full_name?.split(' ')[0]
     || user?.user_metadata?.full_name?.split(' ')[0]
     || 'there';
+
+  const userLocation = profile?.city || profile?.address?.split(',')[0] || 'Gisenyi';
+  const userCountry = profile?.country || 'RW';
+
+  // Memoized filtered products for better performance
+  const displayProducts = useMemo(() => {
+    if (searchQuery) {
+      return allProducts.filter(p =>
+        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.brand?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (activeCategory !== 'all') {
+      const selectedCat = categories.find(c => c.id === activeCategory);
+      return allProducts.filter(p =>
+        p.category_id === activeCategory ||
+        (selectedCat && p.category_id === selectedCat.slug)
+      );
+    }
+
+    return featuredProducts;
+  }, [activeCategory, allProducts, featuredProducts, searchQuery, categories]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -284,6 +308,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
+        ref={scrollRef}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={COLORS.primaryBlue} />}
@@ -302,7 +327,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.headerTextGroup}>
               <View style={styles.locationPill}>
                 <MapPin size={10} color="#3B82F6" />
-                <Text style={styles.locationText}>Gisenyi, RW</Text>
+                <Text style={styles.locationText}>{userLocation}, {userCountry}</Text>
               </View>
               <Text style={styles.greeting}>Hello, {displayName}</Text>
               <Text style={styles.tagline}>Find your next tech obsession</Text>
@@ -369,7 +394,30 @@ export default function HomeScreen({ navigation }) {
                   <View style={styles.bannerContent}>
                     <Text style={styles.bannerSubtitle}>{b.subtitle}</Text>
                     <Text style={styles.bannerTitle}>{b.title}</Text>
-                    <TouchableOpacity style={styles.bannerButton} onPress={() => navigation.navigate('Search')}>
+                    <TouchableOpacity
+                      style={styles.bannerButton}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        if (b.link_category) {
+                          // Find category by name or slug
+                          const category = categories.find(c =>
+                            c.name?.toLowerCase() === b.link_category?.toLowerCase() ||
+                            c.slug?.toLowerCase() === b.link_category?.toLowerCase()
+                          );
+                          if (category) {
+                            setActiveCategory(category.id);
+                            // Scroll to products section
+                            setTimeout(() => {
+                              scrollRef.current?.scrollTo({ y: 600, animated: true });
+                            }, 100);
+                          } else {
+                            navigation.navigate('Search', { category: b.link_category });
+                          }
+                        } else {
+                          navigation.navigate('Search');
+                        }
+                      }}
+                    >
                       <Text style={styles.bannerButtonText}>{b.button_text}</Text>
                     </TouchableOpacity>
                   </View>
@@ -426,7 +474,22 @@ export default function HomeScreen({ navigation }) {
                     index !== offers.length - 1 && { marginRight: 16 }
                   ]}
                   activeOpacity={0.9}
-                  onPress={() => navigation.navigate('Search', { category: offer.link_category })}
+                  onPress={() => {
+                    if (offer.link_category) {
+                      const category = categories.find(c =>
+                        c.name?.toLowerCase() === offer.link_category?.toLowerCase() ||
+                        c.slug?.toLowerCase() === offer.link_category?.toLowerCase()
+                      );
+                      if (category) {
+                        setActiveCategory(category.id);
+                        setTimeout(() => {
+                          scrollRef.current?.scrollTo({ y: 600, animated: true });
+                        }, 100);
+                      } else {
+                        navigation.navigate('Search', { category: offer.link_category });
+                      }
+                    }
+                  }}
                 >
                   <View style={styles.offerImageHalf}>
                     <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
@@ -480,6 +543,7 @@ export default function HomeScreen({ navigation }) {
                 <TouchableOpacity
                   key={c.id}
                   style={styles.catItem}
+                  activeOpacity={0.7}
                   onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
                 >
                   <View style={[styles.catIconCircle, isActive && styles.catIconCircleActive]}>
@@ -534,23 +598,8 @@ export default function HomeScreen({ navigation }) {
               ));
             }
 
-            const selectedCat = categories.find(c => c.id === activeCategory);
-            if (activeCategory !== 'all') {
-              return allProducts
-                .filter(p => p.category_id === activeCategory || (selectedCat && p.category_id === selectedCat.slug))
-                .map((p) => (
-                  <ProductCard
-                    key={p.id}
-                    product={p}
-                    style={styles.featuredCard}
-                    onPress={() => navigation.navigate('ProductDetails', { product: p })}
-                    onWishlist={() => toggleWishlist(p)}
-                    wishlisted={isInWishlist(p.id)}
-                    fmt={fmt}
-                  />
-                ));
-            }
-            return featuredProducts.map((p) => (
+            // Use memoized displayProducts for instant filtering
+            return displayProducts.map((p) => (
               <ProductCard
                 key={p.id}
                 product={p}

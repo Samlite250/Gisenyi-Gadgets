@@ -49,25 +49,28 @@ export default function OrderReviewScreen({ route, navigation }) {
       const productIds = orderItems.map(item => item.product_id).filter(Boolean);
 
       let existingReviews = [];
-      if (productIds.length > 0) {
-        let query = supabase
-          .from('reviews')
-          .select('product_id, rating, comment')
-          .eq('user_id', user.id);
+      if (productIds.length > 0 && user?.id) {
+        try {
+          // Fetch each product's review individually to avoid RLS issues
+          const reviewPromises = productIds.map(async (productId) => {
+            const { data, error } = await supabase
+              .from('reviews')
+              .select('product_id, rating, comment')
+              .eq('user_id', user.id)
+              .eq('product_id', productId)
+              .maybeSingle(); // Use maybeSingle to handle no results gracefully
 
-        // Use .in() for multiple products or .eq() for single product
-        if (productIds.length === 1) {
-          query = query.eq('product_id', productIds[0]);
-        } else {
-          query = query.in('product_id', productIds);
-        }
+            if (error) {
+              console.warn(`Failed to fetch review for product ${productId}:`, error);
+              return null;
+            }
+            return data;
+          });
 
-        const { data, error: reviewError } = await query;
-
-        if (!reviewError) {
-          existingReviews = data || [];
-        } else {
-          console.warn('Failed to fetch existing reviews:', reviewError);
+          const results = await Promise.all(reviewPromises);
+          existingReviews = results.filter(Boolean); // Remove nulls
+        } catch (err) {
+          console.warn('Failed to fetch existing reviews:', err);
         }
       }
 

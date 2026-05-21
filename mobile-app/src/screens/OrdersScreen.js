@@ -60,28 +60,28 @@ export default function OrdersScreen({ navigation }) {
             return { ...order, allProductsReviewed: false };
           }
 
-          // Check how many products have reviews
-          let query = supabase
-            .from('reviews')
-            .select('product_id')
-            .eq('user_id', user.id);
+          // Check how many products have reviews (fetch individually to avoid RLS issues)
+          try {
+            const reviewPromises = productIds.map(async (productId) => {
+              const { data, error } = await supabase
+                .from('reviews')
+                .select('product_id')
+                .eq('user_id', user.id)
+                .eq('product_id', productId)
+                .maybeSingle();
 
-          // Use .eq() for single product or .in() for multiple
-          if (productIds.length === 1) {
-            query = query.eq('product_id', productIds[0]);
-          } else {
-            query = query.in('product_id', productIds);
-          }
+              if (error) return null;
+              return data;
+            });
 
-          const { data: reviews, error: reviewError } = await query;
-
-          if (reviewError) {
-            console.warn('Failed to check review status:', reviewError);
+            const results = await Promise.all(reviewPromises);
+            const reviews = results.filter(Boolean);
+            const allProductsReviewed = reviews.length === productIds.length;
+            return { ...order, allProductsReviewed };
+          } catch (err) {
+            console.warn('Failed to check review status:', err);
             return { ...order, allProductsReviewed: false };
           }
-
-          const allProductsReviewed = reviews?.length === productIds.length;
-          return { ...order, allProductsReviewed };
         })
       );
 

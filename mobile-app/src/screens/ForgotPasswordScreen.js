@@ -70,12 +70,6 @@ export default function ForgotPasswordScreen({ navigation }) {
             <Text style={styles.resendBtnText}>Try Again</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.backToLoginBtn}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.backToLoginText}>Back to Login</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -151,13 +145,6 @@ export default function ForgotPasswordScreen({ navigation }) {
               </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.backLink}
-              onPress={() => navigation.navigate('Login')}
-            >
-              <ArrowLeft size={16} color={COLORS.primaryBlue} />
-              <Text style={styles.backLinkText}>Back to Login</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

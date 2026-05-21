@@ -87,23 +87,19 @@ function NotifCard({ item, onMarkRead }) {
                     </View>
                 </View>
 
-                <Text
-                    style={styles.notifMessage}
-                    numberOfLines={expanded ? undefined : 2}
-                >
-                    {body}
-                </Text>
-
                 {expanded && body.length > 0 && (
-                    <View style={[styles.expandedFooter, { borderTopColor: cfg.color + '30' }]}>
-                        <View style={[styles.typeBadge, { backgroundColor: cfg.color + '15' }]}>
-                            <Icon size={11} color={cfg.color} />
-                            <Text style={[styles.typeBadgeText, { color: cfg.color }]}>
-                                {(item.type || 'general').charAt(0).toUpperCase() + (item.type || 'general').slice(1)}
-                            </Text>
+                    <>
+                        <Text style={[styles.notifMessage, { marginTop: 8 }]}>{body}</Text>
+                        <View style={[styles.expandedFooter, { borderTopColor: cfg.color + '30' }]}>
+                            <View style={[styles.typeBadge, { backgroundColor: cfg.color + '15' }]}>
+                                <Icon size={11} color={cfg.color} />
+                                <Text style={[styles.typeBadgeText, { color: cfg.color }]}>
+                                    {(item.type || 'general').charAt(0).toUpperCase() + (item.type || 'general').slice(1)}
+                                </Text>
+                            </View>
+                            <Text style={styles.notifTime}>{fmtTime(item.created_at)}</Text>
                         </View>
-                        <Text style={styles.notifTime}>{fmtTime(item.created_at)}</Text>
-                    </View>
+                    </>
                 )}
 
                 {!expanded && (

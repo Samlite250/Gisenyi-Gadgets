@@ -152,7 +152,9 @@ export default function SupportPage() {
       .update({ reactions: newReactions })
       .eq('id', msgId);
 
-    if (error) // console.error(error);
+    if (error) {
+      // Silent fail
+    }
   };
 
   if (loading) return (

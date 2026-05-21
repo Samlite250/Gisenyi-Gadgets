@@ -27,8 +27,11 @@ export default function UsersPage() {
       
       const { count } = await supabase.from('suppliers').select('*', { count: 'exact', head: true });
       setSupplierCount(count || 0);
-    } catch (err) { // // console.warn(err.message); }
-    finally { setLoading(false); }
+    } catch (err) {
+      // Silent fail
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);

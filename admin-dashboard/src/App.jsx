@@ -257,14 +257,14 @@ export default function App() {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
         setSession(null);
-        return;
       }
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        const adminSession = await verifyAdminSession(session);
-        setSession(adminSession);
+      // SIGNED_IN is handled directly by LoginPage via onLogin — skip here to avoid double round-trip
+      // TOKEN_REFRESHED just updates the session tokens, role hasn't changed
+      if (event === 'TOKEN_REFRESHED' && session) {
+        setSession(prev => prev ? { ...prev, access_token: session.access_token, refresh_token: session.refresh_token } : prev);
       }
     });
 

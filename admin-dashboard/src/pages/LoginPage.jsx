@@ -12,24 +12,38 @@ export default function LoginPage({ onLogin }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    const timer = setTimeout(() => {
+      setLoading(false);
+      toast.error('Request timed out. Please try again.');
+    }, 10000);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .single();
-
-      if (profile?.role !== 'admin') {
-        await supabase.auth.signOut();
+      // Check role from user metadata first (instant), fall back to DB query
+      const role = data.user?.user_metadata?.role || data.user?.app_metadata?.role;
+      if (role && role !== 'admin') {
+        await supabase.auth.signOut({ scope: 'local' });
         throw new Error('Access denied. Admin only.');
       }
 
+      if (!role) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+        if (profile?.role !== 'admin') {
+          await supabase.auth.signOut({ scope: 'local' });
+          throw new Error('Access denied. Admin only.');
+        }
+      }
+
+      clearTimeout(timer);
       toast.success('Welcome back!');
       onLogin(data.session);
     } catch (err) {
+      clearTimeout(timer);
       toast.error(err.message || 'Failed to sign in.');
     } finally {
       setLoading(false);

@@ -29,14 +29,10 @@ export function AuthProvider({ children }) {
       if (error) {
         await clearStaleSession();
       } else if (session) {
-        const { error: userError } = await supabase.auth.getUser();
-        if (userError) {
-          await clearStaleSession();
-        } else {
-          setSession(session);
-          setUser(session.user);
-          fetchProfile(session.user.id);
-        }
+        // Session already contains user - no need to call getUser()
+        setSession(session);
+        setUser(session.user);
+        fetchProfile(session.user.id);
       }
       setLoading(false);
     });

@@ -171,6 +171,7 @@ export default function OrdersScreen({ navigation }) {
             <ChevronRight size={16} color={COLORS.primaryBlue} />
           </View>
         </View>
+      </TouchableOpacity>
 
         {/* Confirm Receipt Button for Delivered Orders */}
         {isDelivered && !isConfirmed && (
@@ -193,7 +194,6 @@ export default function OrdersScreen({ navigation }) {
             </Text>
           </View>
         )}
-        </TouchableOpacity>
       </BlurView>
     );
   };

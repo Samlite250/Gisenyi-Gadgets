@@ -25,7 +25,11 @@ DELETE FROM public.orders WHERE order_number LIKE 'SEED%';
 
 -- ─── STEP 3: Reset Suppliers ───────────────────────────────
 -- Reset supplier sales to zero
-UPDATE public.suppliers SET total_sold = 0;
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='suppliers' AND column_name='total_sold') THEN
+    UPDATE public.suppliers SET total_sold = 0;
+  END IF;
+END $$;
 
 -- Or delete test suppliers completely (uncomment if needed):
 -- DELETE FROM public.suppliers WHERE name IN ('Jean-Pierre Habimana', 'Marie Claire Uwimana');
@@ -36,7 +40,7 @@ DELETE FROM public.notifications WHERE title LIKE '%demo%' OR title LIKE '%test%
 
 -- ─── STEP 5: Clear Reviews ─────────────────────────────────
 -- Delete test reviews (optional)
-DELETE FROM public.reviews WHERE comment LIKE '%test%' OR comment LIKE '%demo%';
+DELETE FROM public.reviews WHERE content LIKE '%test%' OR content LIKE '%demo%';
 
 -- ─── STEP 6: Clear Wishlists ───────────────────────────────
 -- Clear test wishlists (optional - only if you want fresh start)

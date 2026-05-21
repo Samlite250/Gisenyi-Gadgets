@@ -77,11 +77,11 @@ export default function BannersPage() {
       if (error) throw error;
 
       // Get public URL
-      const { data } = supabase.storage
+      const { data: urlData } = supabase.storage
         .from('Products')
         .getPublicUrl(filePath);
 
-      const publicUrl = data.publicUrl;
+      const publicUrl = urlData.publicUrl;
 
       if (!publicUrl) {
         throw new Error('Failed to generate public URL');

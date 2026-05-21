@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
       },
     }),
   },
-  filterChipActive: { backgroundColor: COLORS.primaryBlue, shadowOpacity: 0.15 },
+  filterChipActive: { backgroundColor: COLORS.primaryBlue },
   filterText: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary, letterSpacing: 0.2 },
   filterTextActive: { color: '#fff' },
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Modal, TouchableOpacity,
   TextInput, ScrollView, useWindowDimensions,
-  Image, ActivityIndicator, Alert,
+  Image, ActivityIndicator, Alert, Platform,
 } from 'react-native';
 import { BlurView } from './BlurView';
 import * as ImagePicker from 'expo-image-picker';
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   uploadText: { fontSize: 14, fontWeight: '600', color: COLORS.textSecondary },
   uploadHint: { fontSize: 12, color: COLORS.textMuted },
   errorText: { fontSize: 12, color: '#EA4335', fontWeight: '500' },
-  btn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 8, elevation: 4 },
+  btn: { height: 56, borderRadius: 16, justifyContent: 'center', alignItems: 'center', elevation: 4, ...Platform.select({ web: { boxShadow: '0px 4px 8px rgba(0,0,0,0.12)' }, default: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 8 } }) },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '800', letterSpacing: 0.3 },
   cancelBtn: { alignItems: 'center', paddingVertical: 6 },
   cancelText: { fontSize: 14, color: COLORS.textMuted, fontWeight: '500' },

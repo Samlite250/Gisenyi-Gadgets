@@ -79,6 +79,7 @@ export default function OrdersScreen({ navigation }) {
     new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' });
 
   const handleConfirmReceipt = async (orderId) => {
+    console.log('Button clicked! Order ID:', orderId);
     Alert.alert(
       'Confirm Order Receipt',
       'Have you received all items in this order? This will allow you to leave reviews for the products.',
@@ -88,6 +89,7 @@ export default function OrdersScreen({ navigation }) {
           text: 'Yes, Received',
           onPress: async () => {
             try {
+              console.log('Confirming receipt for order:', orderId);
               const { error } = await supabase
                 .from('orders')
                 .update({
@@ -96,11 +98,16 @@ export default function OrdersScreen({ navigation }) {
                 })
                 .eq('id', orderId);
 
-              if (error) throw error;
+              if (error) {
+                console.error('Error confirming receipt:', error);
+                throw error;
+              }
 
+              console.log('Receipt confirmed successfully!');
               Alert.alert('Success', 'Order receipt confirmed! You can now review your products.');
               fetchOrders();
             } catch (err) {
+              console.error('Catch error:', err);
               Alert.alert('Error', 'Failed to confirm receipt. Please try again.');
             }
           },
@@ -115,6 +122,8 @@ export default function OrdersScreen({ navigation }) {
     const itemCount = item.order_items?.length || 0;
     const isDelivered = item.status?.toLowerCase() === 'delivered';
     const isConfirmed = item.receipt_confirmed === true;
+
+    console.log('Order:', item.order_number, '| Status:', item.status, '| Delivered:', isDelivered, '| Confirmed:', isConfirmed);
 
     return (
       <BlurView intensity={40} tint="light" style={styles.orderCard}>

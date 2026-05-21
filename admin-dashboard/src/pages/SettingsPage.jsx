@@ -81,7 +81,7 @@ export default function SettingsPage() {
           setForm(newForm);
         }
       } catch (err) {
-        console.warn('Settings fetch error:', err.message);
+        // // console.warn('Settings fetch error:', err.message);
       } finally {
         setLoading(false);
       }

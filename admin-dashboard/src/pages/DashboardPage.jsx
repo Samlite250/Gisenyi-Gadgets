@@ -206,7 +206,7 @@ export default function DashboardPage() {
           revenueForecast,
         });
       } catch (err) {
-        console.warn('Dashboard fetch error:', err.message);
+        // Silent fail - dashboard will show cached/empty data
       } finally {
         setLoading(false);
       }

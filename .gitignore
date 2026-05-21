@@ -21,3 +21,6 @@ ios/
 Thumbs.db
 .vercel
 .env*.local
+scratch/
+debug/
+*.log

@@ -34,7 +34,7 @@ export default function OrdersPage() {
       const { data } = await q;
       if (data) setOrders(data);
     } catch (err) {
-      console.warn('Orders fetch error:', err.message);
+      // // console.warn('Orders fetch error:', err.message);
     } finally { setLoading(false); }
   }, [statusFilter]);
 

@@ -22,7 +22,7 @@ export default function BannersPage() {
       const { data } = await supabase.from('banners').select('*').order('sort_order');
       if (data) setItems(data);
     } catch (err) {
-      console.warn('Banners fetch error:', err.message);
+      // // console.warn('Banners fetch error:', err.message);
     } finally { setLoading(false); }
   }, []);
 

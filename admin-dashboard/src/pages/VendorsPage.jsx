@@ -20,7 +20,7 @@ export default function VendorsPage() {
         setVendors(data || []);
       }
     } catch (err) {
-      console.warn('Fetch error:', err.message);
+      // // console.warn('Fetch error:', err.message);
     } finally {
       setLoading(false);
     }

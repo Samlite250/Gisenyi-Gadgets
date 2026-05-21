@@ -30,7 +30,7 @@ export default function ProductsPage() {
         .order('created_at', { ascending: false });
       if (data) setProducts(data);
     } catch (err) {
-      console.warn('Products fetch error:', err.message);
+      // // console.warn('Products fetch error:', err.message);
     } finally { setLoading(false); }
   }, []);
 
@@ -39,7 +39,7 @@ export default function ProductsPage() {
       const { data } = await supabase.from('suppliers').select('*').order('name');
       if (data) setSuppliers(data);
     } catch (err) {
-      console.warn('Suppliers fetch error:', err.message);
+      // // console.warn('Suppliers fetch error:', err.message);
     }
   }, []);
 
@@ -48,7 +48,7 @@ export default function ProductsPage() {
       const { data } = await supabase.from('categories').select('*').order('name');
       if (data) setCategories(data);
     } catch (err) {
-      console.warn('Categories fetch error:', err.message);
+      // // console.warn('Categories fetch error:', err.message);
     }
   }, []);
 

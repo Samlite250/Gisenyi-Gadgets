@@ -12,39 +12,42 @@ export default function LoginPage({ onLogin }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    const timer = setTimeout(() => {
-      setLoading(false);
-      toast.error('Request timed out. Please try again.');
-    }, 10000);
+
     try {
+      // Step 1: Authenticate user
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
 
-      // Check role from user metadata first (instant), fall back to DB query
-      const role = data.user?.user_metadata?.role || data.user?.app_metadata?.role;
-      if (role && role !== 'admin') {
+      // Step 2: Single authoritative role check with timeout
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Request timed out')), 10000)
+      );
+
+      const roleCheckPromise = supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      const { data: profile, error: profileError } = await Promise.race([
+        roleCheckPromise,
+        timeoutPromise
+      ]);
+
+      // Step 3: Enforce admin-only access
+      if (profileError || profile?.role !== 'admin') {
         await supabase.auth.signOut({ scope: 'local' });
-        throw new Error('Access denied. Admin only.');
+        throw new Error('Access denied. Admin privileges required.');
       }
 
-      if (!role) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .single();
-        if (profile?.role !== 'admin') {
-          await supabase.auth.signOut({ scope: 'local' });
-          throw new Error('Access denied. Admin only.');
-        }
-      }
-
-      clearTimeout(timer);
       toast.success('Welcome back!');
       onLogin(data.session);
     } catch (err) {
-      clearTimeout(timer);
-      toast.error(err.message || 'Failed to sign in.');
+      if (err.message === 'Request timed out') {
+        toast.error('Request timed out. Please check your connection and try again.');
+      } else {
+        toast.error(err.message || 'Failed to sign in.');
+      }
     } finally {
       setLoading(false);
     }

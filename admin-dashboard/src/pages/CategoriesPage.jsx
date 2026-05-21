@@ -19,7 +19,7 @@ export default function CategoriesPage() {
       const { data } = await supabase.from('categories').select('*').order('sort_order', { ascending: true });
       if (data) setCategories(data);
     } catch (err) {
-      console.warn('Categories fetch error:', err.message);
+      // // console.warn('Categories fetch error:', err.message);
     } finally { setLoading(false); }
   }, []);
 

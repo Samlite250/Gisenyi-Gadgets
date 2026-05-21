@@ -35,7 +35,7 @@ export default function SupportPage() {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Critical Fetch Chats Error:', error.message);
+        // console.error('Critical Fetch Chats Error:', error.message);
         setLoading(false);
         return;
       }
@@ -84,7 +84,7 @@ export default function SupportPage() {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Fetch messages error:', error.message);
+        // console.error('Fetch messages error:', error.message);
       } else {
           setMessages(data || []);
       }
@@ -152,7 +152,7 @@ export default function SupportPage() {
       .update({ reactions: newReactions })
       .eq('id', msgId);
 
-    if (error) console.error(error);
+    if (error) // console.error(error);
   };
 
   if (loading) return (

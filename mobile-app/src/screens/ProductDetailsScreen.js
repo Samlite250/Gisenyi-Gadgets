@@ -200,30 +200,31 @@ export default function ProductDetailsScreen({ route, navigation }) {
     fetchContactInfo();
   }, [product.id, product.supplier_id, product.whatsapp, product.phone]);
 
-  // Check if user has bought this product
+  // Check if user has bought this product AND confirmed receipt
   useEffect(() => {
     const checkPurchase = async () => {
       if (!user || !product.id || product.id === 'demo-1') return;
       try {
-        const { count, error } = await supabase
-          .from('order_items')
-          .select('*', { count: 'exact', head: true })
-          .eq('product_id', product.id)
-          .innerJoin('orders', 'order_items.order_id', 'orders.id')
-          .eq('orders.user_id', user.id)
-          .eq('orders.status', 'delivered'); 
-        
-        if (!error && count > 0) setHasBought(true);
+        // Only allow reviews if user confirmed receipt
+        const { data: myOrders } = await supabase
+          .from('orders')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'delivered')
+          .eq('receipt_confirmed', true);
+
+        if (myOrders && myOrders.length > 0) {
+          const orderIds = myOrders.map(o => o.id);
+          const { count } = await supabase
+            .from('order_items')
+            .select('*', { count: 'exact', head: true })
+            .in('order_id', orderIds)
+            .eq('product_id', product.id);
+
+          if (count > 0) setHasBought(true);
+        }
       } catch (e) {
-        // Fallback check if join fails
-        try {
-          const { data: myOrders } = await supabase.from('orders').select('id').eq('user_id', user.id).eq('status', 'delivered');
-          if (myOrders?.length > 0) {
-            const orderIds = myOrders.map(o => o.id);
-            const { count: itemMatch } = await supabase.from('order_items').select('*', { count: 'exact', head: true }).in('order_id', orderIds).eq('product_id', product.id);
-            if (itemMatch > 0) setHasBought(true);
-          }
-        } catch(e2) {}
+        // Silent fail
       }
     };
     checkPurchase();

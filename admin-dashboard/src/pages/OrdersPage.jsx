@@ -204,7 +204,7 @@ export default function OrdersPage() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Date</th><th>Actions</th></tr>
+              <tr><th>Order</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th><th>Receipt</th><th>Date</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {filtered.map((o) => (
@@ -236,6 +236,20 @@ export default function OrdersPage() {
                         <option key={s} value={s} style={{ textTransform: 'capitalize' }}>{s}</option>
                       ))}
                     </select>
+                  </td>
+                  <td>
+                    {o.status === 'delivered' ? (
+                      o.receipt_confirmed ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span style={{ color: '#34A853', fontSize: 14 }}>✓</span>
+                          <span style={{ fontSize: 12, color: '#166534', fontWeight: 600 }}>Confirmed</span>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: 12, color: '#94A3B8', fontStyle: 'italic' }}>Pending</span>
+                      )
+                    ) : (
+                      <span style={{ fontSize: 12, color: '#E2E8F0' }}>—</span>
+                    )}
                   </td>
                   <td className="text-muted">{fmtDate(o.created_at)}</td>
                   <td>

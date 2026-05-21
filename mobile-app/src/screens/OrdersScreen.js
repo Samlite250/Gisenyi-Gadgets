@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, RefreshControl, Image,
-  Dimensions,
+  Dimensions, Alert,
 } from 'react-native';
 import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin } from 'lucide-react-native';
+import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin, CircleCheckBig } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
@@ -78,10 +78,43 @@ export default function OrdersScreen({ navigation }) {
   const formatDate = (iso) =>
     new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' });
 
+  const handleConfirmReceipt = async (orderId) => {
+    Alert.alert(
+      'Confirm Order Receipt',
+      'Have you received all items in this order? This will allow you to leave reviews for the products.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Yes, Received',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('orders')
+                .update({
+                  receipt_confirmed: true,
+                  receipt_confirmed_at: new Date().toISOString(),
+                })
+                .eq('id', orderId);
+
+              if (error) throw error;
+
+              Alert.alert('Success', 'Order receipt confirmed! You can now review your products.');
+              fetchOrders();
+            } catch (err) {
+              Alert.alert('Error', 'Failed to confirm receipt. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderOrder = ({ item }) => {
     const status = STATUS_CONFIG[item.status?.toLowerCase()] || STATUS_CONFIG.pending;
     const StatusIcon = status.icon;
     const itemCount = item.order_items?.length || 0;
+    const isDelivered = item.status?.toLowerCase() === 'delivered';
+    const isConfirmed = item.receipt_confirmed === true;
 
     return (
       <BlurView intensity={40} tint="light" style={styles.orderCard}>
@@ -138,6 +171,28 @@ export default function OrdersScreen({ navigation }) {
             <ChevronRight size={16} color={COLORS.primaryBlue} />
           </View>
         </View>
+
+        {/* Confirm Receipt Button for Delivered Orders */}
+        {isDelivered && !isConfirmed && (
+          <TouchableOpacity
+            style={styles.confirmReceiptBtn}
+            onPress={() => handleConfirmReceipt(item.id)}
+            activeOpacity={0.8}
+          >
+            <CircleCheckBig size={16} color="#fff" />
+            <Text style={styles.confirmReceiptText}>Confirm Receipt & Review</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Confirmed Badge */}
+        {isDelivered && isConfirmed && (
+          <View style={styles.confirmedBadge}>
+            <CircleCheckBig size={14} color="#34A853" />
+            <Text style={styles.confirmedText}>
+              Receipt Confirmed • Ready to Review
+            </Text>
+          </View>
+        )}
         </TouchableOpacity>
       </BlurView>
     );
@@ -311,6 +366,40 @@ const styles = StyleSheet.create({
   itemCountText: { fontSize: 13, color: COLORS.textSecondary, fontWeight: '500' },
   trackBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: `${COLORS.primaryBlue}10`, paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20 },
   trackBtnText: { fontSize: 13, color: COLORS.primaryBlue, fontWeight: '700' },
+
+  // Confirm Receipt Button
+  confirmReceiptBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: COLORS.primaryBlue,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 12,
+  },
+  confirmReceiptText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+
+  // Confirmed Badge
+  confirmedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#DCFCE7',
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  confirmedText: {
+    color: '#166534',
+    fontSize: 13,
+    fontWeight: '600',
+  },
 
   // Empty State
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },

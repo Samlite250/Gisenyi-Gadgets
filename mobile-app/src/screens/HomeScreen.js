@@ -482,10 +482,10 @@ export default function HomeScreen({ navigation }) {
                   style={styles.catItem}
                   onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
                 >
-                  <View style={styles.catIconCircle}>
+                  <View style={[styles.catIconCircle, isActive && styles.catIconCircleActive]}>
                     <Icon size={28} color={isActive ? '#FFFFFF' : '#64748B'} strokeWidth={2.2} />
                   </View>
-                  <Text style={[styles.catName, isActive && { color: '#3B82F6' }]}>{c.name}</Text>
+                  <Text style={[styles.catName, isActive && styles.catNameActive]}>{c.name}</Text>
                 </TouchableOpacity>
               );
             })}
@@ -829,8 +829,13 @@ const styles = StyleSheet.create({
   catIconCircleActive: {
     backgroundColor: COLORS.primaryBlue,
     borderColor: COLORS.primaryBlue,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 12px rgba(66,133,244,0.35)' },
+      default: { shadowColor: COLORS.primaryBlue, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 6 },
+    }),
   },
-  catName: { fontSize: 11, fontWeight: '700', color: '#64748B', textAlign: 'center' },
+  catName: { fontSize: 11, fontWeight: '600', color: '#64748B', textAlign: 'center' },
+  catNameActive: { color: COLORS.primaryBlue, fontWeight: '700' },
 
   hScroll: { paddingHorizontal: SIZES.md, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },

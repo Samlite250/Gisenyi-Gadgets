@@ -22,8 +22,9 @@ import SupportPage    from './pages/SupportPage';
 import CategoriesPage from './pages/CategoriesPage';
 import SuppliersPage  from './pages/SuppliersPage';
 import BannersPage       from './pages/BannersPage';
-import TransactionsPage  from './pages/TransactionsPage';
-import LoginPage         from './pages/LoginPage';
+import TransactionsPage    from './pages/TransactionsPage';
+import NotificationsPage   from './pages/NotificationsPage';
+import LoginPage           from './pages/LoginPage';
 import Loader         from './components/Loader';
 import { supabase }   from './services/supabase';
 
@@ -39,6 +40,7 @@ const NAV_ITEMS = [
   { path: '/users',      icon: Users,           label: 'Users'      },
   { path: '/reviews',    icon: Star,            label: 'Reviews'    },
   { path: '/support',    icon: MessageCircle,   label: 'Support'    },
+  { path: '/notifications', icon: Bell,          label: 'Notifications' },
   { path: '/settings',   icon: Settings,        label: 'Settings'   },
 ];
 
@@ -207,6 +209,7 @@ function AppInner({ user, onLogout }) {
               <Route path="/banners"    element={<BannersPage />}    />
               <Route path="/support"       element={<SupportPage />}      />
               <Route path="/transactions" element={<TransactionsPage />} />
+              <Route path="/notifications"  element={<NotificationsPage />} />
               <Route path="/settings"     element={<SettingsPage />}     />
             </Routes>
           </main>

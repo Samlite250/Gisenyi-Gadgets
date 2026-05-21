@@ -77,9 +77,15 @@ export default function BannersPage() {
       if (error) throw error;
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
+      const { data } = supabase.storage
         .from('Products')
         .getPublicUrl(filePath);
+
+      const publicUrl = data.publicUrl;
+
+      if (!publicUrl) {
+        throw new Error('Failed to generate public URL');
+      }
 
       setForm({ ...form, image_url: publicUrl });
       toast.success('Image uploaded successfully!');

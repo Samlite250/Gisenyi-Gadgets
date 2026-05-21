@@ -46,12 +46,22 @@ export default function OrderReviewScreen({ route, navigation }) {
       if (itemsError) throw itemsError;
 
       // Check if user already reviewed these products
-      const productIds = orderItems.map(item => item.product_id);
-      const { data: existingReviews } = await supabase
-        .from('reviews')
-        .select('product_id, rating, comment')
-        .eq('user_id', user.id)
-        .in('product_id', productIds);
+      const productIds = orderItems.map(item => item.product_id).filter(Boolean);
+
+      let existingReviews = [];
+      if (productIds.length > 0) {
+        const { data, error: reviewError } = await supabase
+          .from('reviews')
+          .select('product_id, rating, comment')
+          .eq('user_id', user.id)
+          .in('product_id', productIds);
+
+        if (!reviewError) {
+          existingReviews = data || [];
+        } else {
+          console.warn('Failed to fetch existing reviews:', reviewError);
+        }
+      }
 
       // Initialize reviews state
       const initialReviews = {};

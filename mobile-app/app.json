@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gisenyi Gadgets",
     "slug": "gisenyi-gadgets",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F172A"
       },
-      "package": "com.gisenyigadgets.app"
+      "package": "com.gisenyigadgets.app",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"

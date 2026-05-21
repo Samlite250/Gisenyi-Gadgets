@@ -15,6 +15,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import SkeletonLoader from '../components/SkeletonLoader';
+import { productLogger } from '../utils/logger';
 
 const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gaming', 'Offers'];
 
@@ -103,7 +104,7 @@ export default function SearchScreen({ navigation, route }) {
       }).start();
 
     } catch (err) {
-      console.warn('Search error:', err.message);
+      productLogger.error('Search failed', err);
       setResults([]);
     } finally {
       setLoading(false);

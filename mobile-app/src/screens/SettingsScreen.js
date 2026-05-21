@@ -104,7 +104,7 @@ export default function SettingsScreen({ navigation }) {
       );
 
     } catch (error) {
-      console.log('Update check error (expected):', error);
+      // Silent error - expected when no updates available
       // Show up-to-date message on any error
       Alert.alert(
         '✅ App is Up to Date',

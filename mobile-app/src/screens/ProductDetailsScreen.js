@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { ReviewCard, WriteReviewModal } from '../components/ReviewComponents';
+import { productLogger } from '../utils/logger';
 
 const { width } = Dimensions.get('window');
 
@@ -61,8 +62,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
           if (data.colors?.length > 0) setSelectedColor(data.colors[0]);
           if (data.storage_options?.length > 0) setSelectedStorage(data.storage_options[0]);
         }
-      } catch (err) { console.warn('Product fetch error:', err.message); }
-      finally { setLoadingProduct(false); }
+      } catch (err) {
+        productLogger.error('Product fetch failed', err);
+      } finally {
+        setLoadingProduct(false);
+      }
     };
     fetchFullProduct();
   }, [route.params?.product?.id, route.params?.productId]);
@@ -92,8 +96,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
         }));
         setReviews(reviewsWithNames);
       }
-    } catch (e) { console.warn('Reviews fetch:', e.message); }
-    finally { setLoadingReviews(false); }
+    } catch (e) {
+      productLogger.error('Reviews fetch failed', e);
+    } finally {
+      setLoadingReviews(false);
+    }
   }, [product.id]);
 
   useEffect(() => { fetchReviews(); }, [fetchReviews]);
@@ -139,7 +146,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           setRelatedProducts(parsed);
         }
       } catch (err) {
-        console.warn('Related products fetch error:', err.message);
+        productLogger.error('Related products fetch failed', err);
       } finally {
         setLoadingRelated(false);
       }
@@ -181,8 +188,8 @@ export default function ProductDetailsScreen({ route, navigation }) {
         if (settings?.value) {
           setSupplier({ phone: settings.value, business_name: 'Gisenyi Gadgets' });
         }
-      } catch (e) { 
-        console.warn('Contact info fetch error:', e.message); 
+      } catch (e) {
+        productLogger.error('Contact info fetch failed', e);
       }
     };
     fetchContactInfo();

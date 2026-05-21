@@ -10,6 +10,7 @@ import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin } from 'lucide
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { orderLogger } from '../utils/logger';
 
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#F59E0B', bg: '#FEF3C7', icon: Clock },
@@ -47,7 +48,7 @@ export default function OrdersScreen({ navigation }) {
       if (error) throw error;
       setOrders(data || []);
     } catch (err) {
-      console.warn('Orders fetch error:', err.message);
+      orderLogger.error('Orders fetch failed', err);
     } finally {
       setLoading(false);
       setRefreshing(false);

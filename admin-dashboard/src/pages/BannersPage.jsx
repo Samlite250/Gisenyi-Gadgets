@@ -264,43 +264,35 @@ export default function BannersPage() {
 
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Image *</label>
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                      <label
-                        htmlFor="banner-image-upload"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '10px 16px',
-                          backgroundColor: '#4285F4',
-                          color: 'white',
-                          borderRadius: 8,
-                          cursor: uploading ? 'not-allowed' : 'pointer',
-                          fontSize: 14,
-                          fontWeight: 600,
-                          opacity: uploading ? 0.6 : 1,
-                          transition: 'all 0.2s'
-                        }}
-                      >
-                        <ImageIcon size={16} />
-                        {uploading ? 'Uploading...' : 'Upload Image'}
-                      </label>
-                      <input
-                        id="banner-image-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        disabled={uploading}
-                        style={{ display: 'none' }}
-                      />
-                      <input
-                        className="input"
-                        value={form.image_url || ''}
-                        onChange={e => setForm({ ...form, image_url: e.target.value })}
-                        placeholder="Or paste image URL"
-                        style={{ flex: 1 }}
-                      />
-                    </div>
+                    <label
+                      htmlFor="banner-image-upload"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '12px 20px',
+                        backgroundColor: '#4285F4',
+                        color: 'white',
+                        borderRadius: 8,
+                        cursor: uploading ? 'not-allowed' : 'pointer',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        opacity: uploading ? 0.6 : 1,
+                        transition: 'all 0.2s',
+                        border: 'none'
+                      }}
+                    >
+                      <ImageIcon size={18} />
+                      {uploading ? 'Uploading...' : 'Select Image from Device'}
+                    </label>
+                    <input
+                      id="banner-image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      style={{ display: 'none' }}
+                    />
                     {form.image_url && (
                       <div style={{ marginTop: 12, position: 'relative', display: 'inline-block' }}>
                         <img

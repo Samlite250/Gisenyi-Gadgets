@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const justRegistered = useRef(false);
   const [profile, setProfile] = useState(null);
 
   // Use scope:'local' so we don't hit the server with an already-dead token
@@ -45,12 +46,10 @@ export function AuthProvider({ children }) {
       async (event, session) => {
         authLogger.info('Auth state change:', event);
 
-        // After email sign-up, force user back to Login (email confirmation flow)
-        // Google OAuth fires SIGNED_IN (not SIGNED_UP), so this never blocks Google users
-        const isEmailProvider = session?.user?.app_metadata?.provider === 'email'
-          || session?.user?.identities?.[0]?.provider === 'email';
-        if (event === 'SIGNED_UP' && isEmailProvider) {
-          await supabase.auth.signOut();
+        // If signUp() set the flag, immediately sign out so the user lands on Login
+        if ((event === 'SIGNED_IN' || event === 'SIGNED_UP') && justRegistered.current) {
+          justRegistered.current = false;
+          await supabase.auth.signOut({ scope: 'local' });
           return;
         }
 
@@ -99,12 +98,16 @@ export function AuthProvider({ children }) {
   };
 
   const signUp = async ({ email, password, fullName, phone }) => {
+    justRegistered.current = true;
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { full_name: fullName, phone } },
     });
-    if (error) throw error;
+    if (error) {
+      justRegistered.current = false;
+      throw error;
+    }
     return data;
   };
 

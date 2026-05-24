@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -72,6 +73,7 @@ export default function HomeScreen({ navigation }) {
   const { profile, user } = useAuth();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { addToCart } = useCart();
+  const { t } = useLanguage();
 
   const [categories, setCategories] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -361,7 +363,7 @@ export default function HomeScreen({ navigation }) {
           <View style={styles.searchBar}>
             <Search size={20} color={isSearchFocused ? COLORS.primaryBlue : COLORS.textMuted} />
             <TextInput
-              placeholder="Search gadgets, brands..."
+              placeholder={t('home.searchPlaceholder')}
               placeholderTextColor={COLORS.textMuted}
               style={styles.searchInput}
               value={searchQuery}
@@ -527,9 +529,9 @@ export default function HomeScreen({ navigation }) {
 
         {/* Categories */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Categories</Text>
+          <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
-            <Text style={styles.seeAll}>See all</Text>
+            <Text style={styles.seeAll}>{t('home.viewAll')}</Text>
           </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -575,11 +577,11 @@ export default function HomeScreen({ navigation }) {
         {/* Products Section */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>
-            {searchQuery ? `Results for "${searchQuery}"` : (activeCategory === 'all' ? 'Featured Products' : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products')}
+            {searchQuery ? `${t('common.search')} "${searchQuery}"` : (activeCategory === 'all' ? t('home.featured') : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products')}
           </Text>
           {!searchQuery && (
             <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
-              <Text style={styles.seeAll}>See all</Text>
+              <Text style={styles.seeAll}>{t('home.viewAll')}</Text>
             </TouchableOpacity>
           )}
         </View>

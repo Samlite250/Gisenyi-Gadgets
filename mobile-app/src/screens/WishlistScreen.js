@@ -8,11 +8,13 @@ import { BlurView } from '../components/BlurView';
 import { ChevronLeft, Heart, ShoppingCart } from 'lucide-react-native';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function WishlistScreen({ navigation }) {
   const { wishlistItems, removeFromWishlist } = useWishlist();
   const { addToCart, isInCart } = useCart();
+  const { t } = useLanguage();
 
   const fmt = (n) => `RWF ${n.toLocaleString()}`;
 

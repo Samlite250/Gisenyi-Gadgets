@@ -6,6 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Minus, Plus, Trash2, ShoppingBag, Ticket, CircleCheckBig } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function CartScreen({ navigation }) {
@@ -14,6 +15,7 @@ export default function CartScreen({ navigation }) {
     subtotal, shippingFee, total,
     promoDiscount, activePromo, applyPromoCode
   } = useCart();
+  const { t } = useLanguage();
   const [promoInput, setPromoInput] = React.useState('');
   const [promoMsg, setPromoMsg] = React.useState(null);
   const [applyingPromo, setApplyingPromo] = React.useState(false);
@@ -86,13 +88,13 @@ export default function CartScreen({ navigation }) {
       <View style={styles.emptyIcon}>
         <ShoppingBag size={52} color={COLORS.textMuted} />
       </View>
-      <Text style={styles.emptyTitle}>Your cart is empty</Text>
-      <Text style={styles.emptySub}>Add items you love to your cart</Text>
+      <Text style={styles.emptyTitle}>{t('cart.empty')}</Text>
+      <Text style={styles.emptySub}>{t('cart.startShopping')}</Text>
       <TouchableOpacity
         style={styles.shopBtn}
         onPress={() => navigation.navigate('Home')}
       >
-        <Text style={styles.shopBtnText}>Start Shopping</Text>
+        <Text style={styles.shopBtnText}>{t('cart.startShopping')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -155,24 +157,24 @@ export default function CartScreen({ navigation }) {
 
           <View style={styles.summaryRows}>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Subtotal</Text>
+              <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
               <Text style={styles.summaryValue}>{fmt(subtotal)}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Shipping</Text>
+              <Text style={styles.summaryLabel}>{t('cart.shipping')}</Text>
               <Text style={[styles.summaryValue, shippingFee === 0 && { color: COLORS.primaryGreen }]}>
-                {shippingFee === 0 ? 'FREE' : fmt(shippingFee)}
+                {shippingFee === 0 ? t('common.free', 'FREE') : fmt(shippingFee)}
               </Text>
             </View>
             {promoDiscount > 0 && (
               <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Discount ({activePromo})</Text>
+                <Text style={styles.summaryLabel}>{t('common.discount', 'Discount')} ({activePromo})</Text>
                 <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
               </View>
             )}
             <View style={styles.divider} />
             <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalLabel}>{t('cart.total')}</Text>
               <Text style={styles.totalAmount}>{fmt(total)}</Text>
             </View>
           </View>
@@ -181,7 +183,7 @@ export default function CartScreen({ navigation }) {
             onPress={() => navigation.navigate('Checkout')}
             activeOpacity={0.85}
           >
-            <Text style={styles.checkoutBtnText}>Proceed to Checkout</Text>
+            <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
           </TouchableOpacity>
         </View>
       )}

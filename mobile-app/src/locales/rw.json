@@ -55,6 +55,7 @@
     "alreadyHaveAccount": "Usanzwe ufite konti?",
     "signIn": "Injira",
     "signUp": "Iyandikishe",
+    "signingUp": "Iyandikisha...",
     "resetPassword": "Ongera ushyireho ijambo ryibanga",
     "sendResetLink": "Ohereza",
     "backToLogin": "Subira kwinjira",
@@ -62,7 +63,24 @@
     "loginSuccess": "Murakaza neza!",
     "registerSuccess": "Konti yakozwe neza!",
     "loginError": "Imeri cyangwa ijambo ryibanga ntibikora",
-    "registerError": "Habaye ikibazo mu gukora konti"
+    "registerError": "Habaye ikibazo mu gukora konti",
+    "createAccount": "Kora konti",
+    "signUpToGetStarted": "Iyandikishe kugirango utangire",
+    "agreeToTerms": "Nemera",
+    "termsAndConditions": "Amategeko n'ibisabwa",
+    "orContinueWith": "cyangwa komeza ukoresheje",
+    "continueWithGoogle": "Komeza ukoresheje Google",
+    "openingGoogle": "Gufungura Google...",
+    "accountCreatedMessage": "Konti yarakozwe! Nyamuneka winjire.",
+    "googleSignInFailed": "Kwinjira kwa Google ntabwo byashobotse. Ongera ugerageze.",
+    "errors": {
+      "fullNameRequired": "Amazina yose arakenewe.",
+      "invalidEmail": "Andika imeri nyayo.",
+      "passwordTooShort": "Ijambo ryibanga rigomba kuba nibura inyuguti 6.",
+      "passwordsDoNotMatch": "Amagambo yibanga ntabwo ahuje.",
+      "mustAgreeToTerms": "Ugomba kwemera Amategeko n'ibisabwa.",
+      "registrationFailed": "Iyandikisha ntabwo ryashobotse. Ongera ugerageze."
+    }
   },
   "home": {
     "title": "Ahabanza",
@@ -73,6 +91,27 @@
     "topDeals": "Amakuru meza",
     "viewAll": "Reba byose",
     "seeMore": "Reba byinshi"
+  },
+  "search": {
+    "title": "Shakisha",
+    "placeholder": "Shakisha terefone, mudasobwa...",
+    "sortBy": "Shiraho",
+    "priceRange": "Ikigereranyo cy'igiciro",
+    "relevance": "Bifitanye isano",
+    "priceLowToHigh": "Igiciro: Gito→Kinini",
+    "priceHighToLow": "Igiciro: Kinini→Gito",
+    "topRated": "Byakunzwe cyane",
+    "allPrices": "Ibiciro byose",
+    "under50k": "Munsi ya 50K",
+    "range50kTo200k": "50K - 200K",
+    "over200k": "Hejuru ya 200K",
+    "itemsFound": "Ikintu {{count}} kibonetse",
+    "itemsFound_plural": "Ibintu {{count}} byabonetse",
+    "noResults": "Nta bisubizo bya \"{{query}}\"",
+    "noResultsDescription": "Ntidushoboye kubona ibintu bijyanye n'ushakishije. Gerageza kwandika neza cyangwa ukoreshe amagambo agaragara nka \"Galaxy\" cyangwa \"Mac\".",
+    "clearAllFilters": "Kurandura byose",
+    "recentSearches": "Ushakishije vuba aha",
+    "trendingTags": "Ibikunda abantu"
   },
   "categories": {
     "electronics": "Ibikoresho bya elegitoroniki",
@@ -102,7 +141,27 @@
     "selectVariant": "Hitamo ubwoko",
     "soldBy": "Kigurishijwe na",
     "deliveryInfo": "Amakuru yo gutanga",
-    "returnPolicy": "Amategeko yo gusubiza"
+    "returnPolicy": "Amategeko yo gusubiza",
+    "writeReview": "Tanga Igitekerezo kuri Ibyo Wategetse",
+    "reviewSubtitle": "Fasha abandi gufata ibyemezo byiza usangira uburambe bwawe",
+    "thankYouPurchase": "Murakoze Kugura!",
+    "feedbackAppreciation": "Ibitekerezo byawe byukuri bifasha umuryango wacu guhitamo neza. Turabashima cyane kwita umwanya wo gusangira uburambe bwanyu!",
+    "yourRating": "Amanota Yawe",
+    "yourReview": "Igitekerezo Cyawe (Ntabwo ari ngombwa)",
+    "reviewPlaceholder": "Sangira ibyo wibwira kuri iyi bicuruzwa...",
+    "charCount": "{{count}}/500",
+    "submitReviews": "Ohereza Ibitekerezo",
+    "loadingProducts": "Tegereza ibicuruzwa...",
+    "rateAtLeastOne": "Nyamuneka tanga amanota ku bicuruzwa byibuze kimwe mbere yo kohereza.",
+    "confirmSubmitTitle": "Ohereza Ibitekerezo Byawe?",
+    "confirmSubmitMessage": "Murakoze ko musangiye ibitekerezo byanyu byagaciro! Ibitekerezo byawe bizafasha abakiriya bandi gufata ibyemezo byiza. Uri witeguye kohereza?",
+    "noNewReviews": "Nta bitekerezo bishya byo kohereza.",
+    "reviewsSubmitted": "Byagenze neza! Ibitekerezo {{count}} byoherejwe. Murakoze kubitekerezo byanyu!",
+    "alreadyReviewed": "Wamaze gutanga igitekerezo ku bicuruzwa kimwe cyangwa byinshi. Buri gicuruzwa gishobora gutangirwa igitekerezo rimwe gusa.",
+    "reviewSubmitError": "Ikosa: Ntibyashobotse kohereza ibitekerezo. Nyamuneka ongera ugerageze.",
+    "reviewLoadError": "Ikosa: Ntibyashobotse gupakurura ibicuruzwa",
+    "reviewFooterNote": "Ibitekerezo byawe bifasha umuryango wacu gufata ibyemezo byiza byo kugura",
+    "qty": "Umubare: {{quantity}}"
   },
   "cart": {
     "title": "Icyebo",
@@ -134,10 +193,15 @@
     "mobilePayment": "Kwishyura na terefone",
     "cardPayment": "Ikarita yo kwishyura",
     "cashOnDelivery": "Kwishyura ugihabwa",
-    "orderPlaced": "Icyategetse cyoherejwe neza!",
+    "orderPlaced": "Icyategetse cyoherejwe!",
     "orderNumber": "Numero yicyategetse",
     "viewOrder": "Reba icyategetse",
-    "paymentFailed": "Kwishyura ntabwo byakunze. Ongera ugerageze."
+    "paymentFailed": "Kwishyura ntabwo byakunze. Ongera ugerageze.",
+    "thankYouMessage": "Murakoze kugura muri Gisenyi Gadgets. Icyategetse cyawe cyemejwe kandi kiratunganywa.",
+    "orderID": "ID yicyategetse",
+    "estimatedDelivery": "Igihe giteganyijwe cyo gutanga",
+    "totalPaid": "Igiteranyo wishyuye",
+    "whatHappensNext": "Ibizakurikira ni iki?"
   },
   "orders": {
     "title": "Ibyanjye nategetse",
@@ -148,13 +212,26 @@
     "shipped": "Byoherejwe",
     "delivered": "Byatanzwe",
     "cancelled": "Byakuweho",
+    "confirmed": "Byemejwe",
+    "refunded": "Byasubijwe",
     "orderNumber": "Icyategetse nº{{number}}",
     "orderedOn": "Watumije ku",
     "trackOrder": "Kurikirana icyategetse",
     "cancelOrder": "Kureka icyategetse",
     "viewDetails": "Reba amakuru",
     "reorder": "Ongera utumize",
-    "downloadInvoice": "Kuramo ifishi"
+    "downloadInvoice": "Kuramo ifishi",
+    "orderPlaced": "Icyategetse cyashyizwe",
+    "outForDelivery": "Kiri ku gushyikirizwa",
+    "placedOn": "Cyatumijwe ku",
+    "orderCancelled": "Iki cyategetse cyakuweho",
+    "total": "Igiteranyo",
+    "payment": "Kwishyura",
+    "items": "Ibintu",
+    "completed": "Byarangiye",
+    "backToOrders": "Garuka kuri ibyategetse",
+    "orderConfirmed": "Icyategetse cyemejwe",
+    "beingPacked": "Kirapakwa"
   },
   "wishlist": {
     "title": "Ibyifuzo",
@@ -181,7 +258,39 @@
     "version": "Verisiyo",
     "totalOrders": "Byose wategetse",
     "totalSpent": "Amafaranga wakoresheje",
-    "memberSince": "Umunyamuryango kuva"
+    "memberSince": "Umunyamuryango kuva",
+    "tapToChange": "Kanda uhindure",
+    "address": "Aho uherereye",
+    "addressPlaceholder": "KG 15 Ave",
+    "cityPlaceholder": "Gisenyi",
+    "saveChanges": "Bika impinduka",
+    "profileUpdated": "Umwirondoro wawe waravuguruwe!",
+    "updateFailed": "Kuvugurura byanze",
+    "fullNameRequired": "Amazina yose arakenewe.",
+    "avatarUploadFailed": "Kohereza ifoto ntabwo byashobotse.",
+    "cameraPermissionRequired": "Twifuza uruhushya rwo gukoresha ifoto kugirango uhindure ifoto yawe.",
+    "contactUs": "Duhamagare kugirango tuguhe ubufasha!",
+    "faqComingSoon": "Ibibazo bikunze kubazwa bizaza vuba."
+  },
+  "chat": {
+    "title": "Ubufasha bwa Gadgets",
+    "online": "Kuri murandasi",
+    "today": "Uyu munsi",
+    "inputPlaceholder": "Andika ubutumwa...",
+    "sendButton": "Ohereza",
+    "support": "Ubufasha",
+    "you": "Wowe",
+    "image": "Ifoto",
+    "replyingTo": "Gusubiza {{name}}",
+    "replyingToSupport": "Gusubiza ubufasha",
+    "replyingToYourself": "Wisubiza wenyine",
+    "reply": "Subiza",
+    "sendFailed": "Kohereza ntabwo byashobotse. Ongera ugerageze.",
+    "imageSendFailed": "Kohereza ifoto ntabwo byashobotse. Ongera ugerageze.",
+    "photoPermissionRequired": "Twifuza uruhushya rwo gukoresha ifoto kugirango wohereze ifoto.",
+    "callSupport": "Hamagara ubufasha",
+    "callSupportSubtitle": "Abakiriya ba Gisenyi Gadgets",
+    "callNow": "Hamagara ubu"
   },
   "settings": {
     "title": "Igenamiterere",
@@ -210,7 +319,35 @@
   "notifications": {
     "title": "Ubutumwa",
     "empty": "Nta butumwa",
+    "allCaughtUp": "Urabizi byose!",
     "markAllRead": "Menya byose nkibasomye",
+    "unread": "{count} utarasoma",
+    "justNow": "Ubu",
+    "minutesAgo": "{minutes}m irashize",
+    "hoursAgo": "{hours}h irashize",
+    "daysAgo": "{days}i irashize",
+    "type": {
+      "order": "Icyateguwe",
+      "promo": "Igihembo",
+      "review": "Igitekerezo",
+      "delivery": "Gutanga",
+      "general": "Rusange",
+      "system": "Sisitemu"
+    },
+    "demo": {
+      "welcome": {
+        "title": "Murakaza neza kuri Gisenyi Gadgets!",
+        "body": "Tangira guhaha kandi amakuru yo kugura yawe azagaragara hano. Urashobora gukurikirana ibyo watumije byose ukoresheje akajisho ka Ibyo watumije."
+      },
+      "flashSale": {
+        "title": "🔥 Igicuruzwa cyihuse — 40% kugabanuka",
+        "body": "Amahitamo y'igihe gito kuri AirPods Pro na casque za Sony! Koresha code FLASH40 mu gucuruza. Serivisi irangira mu ijoro."
+      },
+      "newArrivals": {
+        "title": "Ibicuruzwa Bishya Byageze",
+        "body": "Reba MacBook Pro M4 n'ibindi bishya, Galaxy S25 n'ibindi. Shakisha mu icyiciro cyose mu kajisho ka Gushakisha."
+      }
+    },
     "orderShipped": "Icyategetse cyoherejwe",
     "orderDelivered": "Icyategetse cyageze",
     "newOffer": "Ubutumwa bushya",
@@ -224,5 +361,16 @@
     "permissionDenied": "Ntawuhabwa uruhushya.",
     "notFound": "Ntikibonetse.",
     "unknown": "Habaye ikibazo. Ongera ugerageze."
+  },
+  "licenses": {
+    "title": "Uruhushya rwa Open Source",
+    "introTitle": "Ryubatswe hamwe na Open Source",
+    "introText": "Gisenyi Gadgets yubatswe ukoresheje amasomero ya Open Source akomeye akabungabungwa nabatunganya porogaramu kwisi yose. Turabashimira kumusanzu wabo.",
+    "thirdPartyLibraries": "Amasomero y'Abandi",
+    "version": "v{{version}}",
+    "by": "na {{author}}",
+    "mitLicenseTitle": "Incamake y'Uruhushya rwa MIT",
+    "mitLicenseText": "Uruhushya rwa MIT ni uruhushya rwa Open Source rwemerera gukoresha byoroshye hamwe n'imbogamizi nke cyane. Rwemerera gukoresha, guhindura, no gukwirakwiza software ku ntego zose, harimo no mubucuruzi.",
+    "fullLicenseNote": "Inyandiko zuzuye z'uruhushya ziraboneka kuri buri somero."
   }
 }

@@ -2,10 +2,12 @@ import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Image, ActivityIndicator, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from '../components/BlurView';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen({ navigation, onFinish }) {
+  const { t } = useLanguage();
   useEffect(() => {
     const timer = setTimeout(() => {
       if (onFinish) {
@@ -45,7 +47,7 @@ export default function SplashScreen({ navigation, onFinish }) {
           </View>
 
           <View style={styles.footer}>
-            <Text style={styles.tagline}>Shop Smart. Live Better.</Text>
+            <Text style={styles.tagline}>{t('splash.tagline')}</Text>
           </View>
         </BlurView>
       </SafeAreaView>

@@ -8,26 +8,28 @@ import { ChevronLeft, User, Phone, MapPin, Building, Camera } from 'lucide-react
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { profileLogger } from '../utils/logger';
 
 export default function EditProfileScreen({ navigation }) {
   const { profile, user, updateProfile } = useAuth();
-  
+  const { t } = useLanguage();
+
   const [fullName, setFullName] = useState(profile?.full_name || user?.user_metadata?.full_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [address, setAddress] = useState(profile?.address || '');
   const [city, setCity] = useState(profile?.city || '');
   const [avatar, setAvatar] = useState(profile?.avatar_url || '');
   const [avatarToUpload, setAvatarToUpload] = useState(null); // stores the local URI
-  
+
   const [saving, setSaving] = useState(false);
 
   const pickImage = async () => {
     // Request permission
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to update your profile picture.');
+      Alert.alert(t('errors.permissionDenied'), t('profile.cameraPermissionRequired'));
       return;
     }
 
@@ -85,13 +87,13 @@ export default function EditProfileScreen({ navigation }) {
       return publicUrlData.publicUrl;
     } catch (err) {
       profileLogger.error('Avatar upload failed', err);
-      throw new Error('Failed to upload profile picture.');
+      throw new Error(t('profile.avatarUploadFailed'));
     }
   };
 
   const handleSave = async () => {
     if (!fullName.trim()) {
-      Alert.alert('Error', 'Full name is required.');
+      Alert.alert(t('common.error'), t('profile.fullNameRequired'));
       return;
     }
 
@@ -116,23 +118,23 @@ export default function EditProfileScreen({ navigation }) {
 
       // Show success feedback
       if (Platform.OS === 'web') {
-        alert('Your profile has been updated!');
+        alert(t('profile.profileUpdated'));
         navigation.goBack();
       } else {
         Alert.alert(
-          'Success', 
-          'Your profile has been updated!', 
-          [{ text: 'OK', onPress: () => navigation.goBack() }]
+          t('common.success'),
+          t('profile.profileUpdated'),
+          [{ text: t('common.done'), onPress: () => navigation.goBack() }]
         );
       }
     } catch (err) {
       profileLogger.error('Profile update failed', err);
-      const errorMsg = err.message || 'Something went wrong';
-      
+      const errorMsg = err.message || t('errors.unknown');
+
       if (Platform.OS === 'web') {
-        alert('Update Failed: ' + errorMsg);
+        alert(t('profile.updateFailed') + ': ' + errorMsg);
       } else {
-        Alert.alert('Update Failed', errorMsg);
+        Alert.alert(t('profile.updateFailed'), errorMsg);
       }
     } finally {
       setSaving(false);
@@ -145,7 +147,7 @@ export default function EditProfileScreen({ navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <Text style={styles.headerTitle}>{t('profile.editProfile')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -165,16 +167,16 @@ export default function EditProfileScreen({ navigation }) {
               <Camera size={16} color="#fff" />
             </View>
           </TouchableOpacity>
-          <Text style={styles.avatarLabel}>Tap to change</Text>
+          <Text style={styles.avatarLabel}>{t('profile.tapToChange')}</Text>
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.label}>{t('auth.fullName')}</Text>
           <View style={styles.inputWrap}>
             <User size={20} color={COLORS.textMuted} />
             <TextInput
               style={styles.input}
-              placeholder="John Doe"
+              placeholder={t('auth.fullName')}
               value={fullName}
               onChangeText={setFullName}
               placeholderTextColor={COLORS.textMuted}
@@ -183,7 +185,7 @@ export default function EditProfileScreen({ navigation }) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Phone Number</Text>
+          <Text style={styles.label}>{t('auth.phone')}</Text>
           <View style={styles.inputWrap}>
             <Phone size={20} color={COLORS.textMuted} />
             <TextInput
@@ -198,12 +200,12 @@ export default function EditProfileScreen({ navigation }) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>Address</Text>
+          <Text style={styles.label}>{t('profile.address')}</Text>
           <View style={styles.inputWrap}>
             <MapPin size={20} color={COLORS.textMuted} />
             <TextInput
               style={styles.input}
-              placeholder="KG 15 Ave"
+              placeholder={t('profile.addressPlaceholder')}
               value={address}
               onChangeText={setAddress}
               placeholderTextColor={COLORS.textMuted}
@@ -212,12 +214,12 @@ export default function EditProfileScreen({ navigation }) {
         </View>
 
         <View style={styles.inputGroup}>
-          <Text style={styles.label}>City</Text>
+          <Text style={styles.label}>{t('checkout.city')}</Text>
           <View style={styles.inputWrap}>
             <Building size={20} color={COLORS.textMuted} />
             <TextInput
               style={styles.input}
-              placeholder="Gisenyi"
+              placeholder={t('profile.cityPlaceholder')}
               value={city}
               onChangeText={setCity}
               placeholderTextColor={COLORS.textMuted}
@@ -237,7 +239,7 @@ export default function EditProfileScreen({ navigation }) {
           {saving ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveBtnText}>Save Changes</Text>
+            <Text style={styles.saveBtnText}>{t('profile.saveChanges')}</Text>
           )}
         </TouchableOpacity>
       </View>

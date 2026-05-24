@@ -49,7 +49,7 @@ export default function WishlistScreen({ navigation }) {
         >
           <ShoppingCart size={14} color="#fff" />
           <Text style={styles.addBtnText}>
-            {isInCart(item.id) ? 'In Cart' : 'Add to Cart'}
+            {isInCart(item.id) ? t('wishlist.inCart') : t('wishlist.moveToCart')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -62,7 +62,7 @@ export default function WishlistScreen({ navigation }) {
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Wishlist</Text>
+        <Text style={styles.headerTitle}>{t('wishlist.title')}</Text>
         <Text style={styles.headerCount}>{wishlistItems.length}</Text>
       </BlurView>
 
@@ -79,10 +79,10 @@ export default function WishlistScreen({ navigation }) {
             <View style={styles.emptyIcon}>
               <Heart size={48} color={COLORS.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>No saved items</Text>
-            <Text style={styles.emptySub}>Tap the heart icon on any product to save it here</Text>
+            <Text style={styles.emptyTitle}>{t('wishlist.empty')}</Text>
+            <Text style={styles.emptySub}>{t('wishlist.addItems')}</Text>
             <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate('Home')}>
-              <Text style={styles.browseBtnText}>Browse Products</Text>
+              <Text style={styles.browseBtnText}>{t('wishlist.browseProducts')}</Text>
             </TouchableOpacity>
           </View>
         }

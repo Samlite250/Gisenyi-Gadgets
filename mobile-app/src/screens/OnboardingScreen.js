@@ -3,35 +3,37 @@ import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from '../components/BlurView';
 import { Smartphone, Headphones, Watch } from 'lucide-react-native';
+import { useLanguage } from '../context/LanguageContext';
 
 const { width, height } = Dimensions.get('window');
 
-const SLIDES = [
-  {
-    id: '1',
-    title: 'Buy the best\ngadgets easily',
-    description: 'Find electronics, accessories, clothes and more at the best prices.',
-    icon: Smartphone,
-    color: '#3B82F6',
-  },
-  {
-    id: '2',
-    title: 'Fast & Secure\nPayments',
-    description: 'Multiple payment methods including Mobile Money and Cards.',
-    icon: Headphones,
-    color: '#10B981',
-  },
-  {
-    id: '3',
-    title: 'Quick Delivery\nto your Door',
-    description: 'Track your orders in real-time and get them delivered fast.',
-    icon: Watch,
-    color: '#F59E0B',
-  }
-];
-
 export default function OnboardingScreen({ navigation, onFinish }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { t } = useLanguage();
+
+  const SLIDES = [
+    {
+      id: '1',
+      title: t('onboarding.slide1.title'),
+      description: t('onboarding.slide1.description'),
+      icon: Smartphone,
+      color: '#3B82F6',
+    },
+    {
+      id: '2',
+      title: t('onboarding.slide2.title'),
+      description: t('onboarding.slide2.description'),
+      icon: Headphones,
+      color: '#10B981',
+    },
+    {
+      id: '3',
+      title: t('onboarding.slide3.title'),
+      description: t('onboarding.slide3.description'),
+      icon: Watch,
+      color: '#F59E0B',
+    }
+  ];
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -80,13 +82,13 @@ export default function OnboardingScreen({ navigation, onFinish }) {
               ))}
             </View>
 
-            <TouchableOpacity 
-              style={[styles.button, { backgroundColor: activeColor }]} 
+            <TouchableOpacity
+              style={[styles.button, { backgroundColor: activeColor }]}
               onPress={handleNext}
               activeOpacity={0.8}
             >
               <Text style={styles.buttonText}>
-                {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
+                {currentIndex === SLIDES.length - 1 ? t('onboarding.getStarted') : t('onboarding.next')}
               </Text>
             </TouchableOpacity>
           </BlurView>
@@ -207,3 +209,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+

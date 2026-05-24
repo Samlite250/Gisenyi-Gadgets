@@ -3,20 +3,23 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import { COLORS, SIZES } from '../constants/theme';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function HelpSupportScreen({ navigation }) {
+    const { t } = useLanguage();
+
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <ChevronLeft size={24} color={COLORS.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Help & Support</Text>
+                <Text style={styles.headerTitle}>{t('profile.help')}</Text>
                 <View style={{ width: 40 }} />
             </View>
             <View style={styles.content}>
-                <Text style={styles.text}>Contact us at support@gisenyigadgets.com</Text>
-                <Text style={styles.subText}>FAQs and Live Chat coming soon!</Text>
+                <Text style={styles.text}>{t('profile.contactUs')}</Text>
+                <Text style={styles.subText}>{t('profile.faqComingSoon')}</Text>
             </View>
         </SafeAreaView>
     );

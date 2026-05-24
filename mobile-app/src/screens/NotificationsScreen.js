@@ -9,6 +9,7 @@ import { ChevronLeft, ChevronRight, ShoppingBag, Package, Tag, Bell, Star, Truck
 import { COLORS, SIZES } from '../constants/theme';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { notificationLogger } from '../utils/logger';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -24,26 +25,26 @@ const TYPE_MAP = {
     system:   { icon: Bell,        color: '#F97316' },
 };
 
-const DEMO_NOTIFICATIONS = [
-    { id: 'demo_1', type: 'order',   title: 'Welcome to Gisenyi Gadgets!', body: 'Start shopping and your order updates will appear here. You can track all your orders from the Orders tab.',            is_read: false, created_at: new Date().toISOString() },
-    { id: 'demo_2', type: 'promo',   title: '🔥 Flash Sale — 40% OFF',    body: 'Limited time deals on AirPods Pro and Sony headphones! Use code FLASH40 at checkout. Offer valid until midnight.',   is_read: false, created_at: new Date().toISOString() },
-    { id: 'demo_3', type: 'general', title: 'New Arrivals Just Dropped',   body: 'Check out the latest MacBook Pro M4, Galaxy S25 and more. Browse the full collection in the Search tab.',           is_read: true,  created_at: new Date().toISOString() },
+const getDemoNotifications = (t) => [
+    { id: 'demo_1', type: 'order',   title: t('notifications.demo.welcome.title'), body: t('notifications.demo.welcome.body'), is_read: false, created_at: new Date().toISOString() },
+    { id: 'demo_2', type: 'promo',   title: t('notifications.demo.flashSale.title'), body: t('notifications.demo.flashSale.body'), is_read: false, created_at: new Date().toISOString() },
+    { id: 'demo_3', type: 'general', title: t('notifications.demo.newArrivals.title'), body: t('notifications.demo.newArrivals.body'), is_read: true, created_at: new Date().toISOString() },
 ];
 
-const fmtTime = (iso) => {
+const fmtTime = (iso, t) => {
     if (!iso) return '';
     const diff = Date.now() - new Date(iso).getTime();
     const mins = Math.floor(diff / 60000);
-    if (mins < 1)  return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
+    if (mins < 1)  return t('notifications.justNow');
+    if (mins < 60) return t('notifications.minutesAgo', `${mins}m ago`).replace('{minutes}', mins);
     const hrs = Math.floor(mins / 60);
-    if (hrs < 24)  return `${hrs}h ago`;
+    if (hrs < 24)  return t('notifications.hoursAgo', `${hrs}h ago`).replace('{hours}', hrs);
     const days = Math.floor(hrs / 24);
-    if (days < 7)  return `${days}d ago`;
+    if (days < 7)  return t('notifications.daysAgo', `${days}d ago`).replace('{days}', days);
     return new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short' });
 };
 
-function NotifCard({ item, onMarkRead }) {
+function NotifCard({ item, onMarkRead, t }) {
     const [expanded, setExpanded] = useState(false);
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const cfg = TYPE_MAP[item.type] || TYPE_MAP.general;
@@ -94,16 +95,16 @@ function NotifCard({ item, onMarkRead }) {
                             <View style={[styles.typeBadge, { backgroundColor: cfg.color + '15' }]}>
                                 <Icon size={11} color={cfg.color} />
                                 <Text style={[styles.typeBadgeText, { color: cfg.color }]}>
-                                    {(item.type || 'general').charAt(0).toUpperCase() + (item.type || 'general').slice(1)}
+                                    {t(`notifications.type.${item.type || 'general'}`)}
                                 </Text>
                             </View>
-                            <Text style={styles.notifTime}>{fmtTime(item.created_at)}</Text>
+                            <Text style={styles.notifTime}>{fmtTime(item.created_at, t)}</Text>
                         </View>
                     </>
                 )}
 
                 {!expanded && (
-                    <Text style={styles.notifTime}>{fmtTime(item.created_at)}</Text>
+                    <Text style={styles.notifTime}>{fmtTime(item.created_at, t)}</Text>
                 )}
             </View>
         </TouchableOpacity>
@@ -112,12 +113,14 @@ function NotifCard({ item, onMarkRead }) {
 
 export default function NotificationsScreen({ navigation }) {
     const { user } = useAuth();
+    const { t } = useLanguage();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     const fetchNotifications = useCallback(async () => {
-        if (!user) { setNotifications(DEMO_NOTIFICATIONS); setLoading(false); return; }
+        const demoNotifs = getDemoNotifications(t);
+        if (!user) { setNotifications(demoNotifs); setLoading(false); return; }
         try {
             const { data, error } = await supabase
                 .from('notifications')
@@ -127,15 +130,15 @@ export default function NotificationsScreen({ navigation }) {
                 .limit(50);
 
             if (error) throw error;
-            setNotifications(data?.length ? data : DEMO_NOTIFICATIONS);
+            setNotifications(data?.length ? data : demoNotifs);
         } catch (err) {
             notificationLogger.error('Failed to fetch notifications', err);
-            setNotifications(DEMO_NOTIFICATIONS);
+            setNotifications(demoNotifs);
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
-    }, [user]);
+    }, [user, t]);
 
     useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
@@ -162,11 +165,11 @@ export default function NotificationsScreen({ navigation }) {
                     <ChevronLeft size={24} color={COLORS.textPrimary} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>Notifications</Text>
-                    {unreadCount > 0 && <Text style={styles.headerSub}>{unreadCount} unread</Text>}
+                    <Text style={styles.headerTitle}>{t('notifications.title')}</Text>
+                    {unreadCount > 0 && <Text style={styles.headerSub}>{t('notifications.unread', `${unreadCount} unread`).replace('{count}', unreadCount)}</Text>}
                 </View>
                 {unreadCount > 0
-                    ? <TouchableOpacity onPress={markAllRead}><Text style={styles.markAllText}>Mark all read</Text></TouchableOpacity>
+                    ? <TouchableOpacity onPress={markAllRead}><Text style={styles.markAllText}>{t('notifications.markAllRead')}</Text></TouchableOpacity>
                     : <View style={{ width: 80 }} />
                 }
             </View>
@@ -176,7 +179,7 @@ export default function NotificationsScreen({ navigation }) {
                 : <FlatList
                     data={notifications}
                     keyExtractor={item => String(item.id)}
-                    renderItem={({ item }) => <NotifCard item={item} onMarkRead={markRead} />}
+                    renderItem={({ item }) => <NotifCard item={item} onMarkRead={markRead} t={t} />}
                     contentContainerStyle={styles.list}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
@@ -189,8 +192,8 @@ export default function NotificationsScreen({ navigation }) {
                     ListEmptyComponent={
                         <View style={styles.empty}>
                             <Bell size={48} color={COLORS.textMuted} strokeWidth={1.5} />
-                            <Text style={styles.emptyTitle}>No notifications</Text>
-                            <Text style={styles.emptyText}>You're all caught up!</Text>
+                            <Text style={styles.emptyTitle}>{t('notifications.empty')}</Text>
+                            <Text style={styles.emptyText}>{t('notifications.allCaughtUp')}</Text>
                         </View>
                     }
                 />

@@ -55,6 +55,7 @@
     "alreadyHaveAccount": "Vous avez déjà un compte ?",
     "signIn": "Se connecter",
     "signUp": "S'inscrire",
+    "signingUp": "Inscription...",
     "resetPassword": "Réinitialiser le mot de passe",
     "sendResetLink": "Envoyer le lien",
     "backToLogin": "Retour à la connexion",
@@ -62,7 +63,24 @@
     "loginSuccess": "Bon retour !",
     "registerSuccess": "Compte créé avec succès !",
     "loginError": "Email ou mot de passe invalide",
-    "registerError": "Échec de la création du compte"
+    "registerError": "Échec de la création du compte",
+    "createAccount": "Créer un compte",
+    "signUpToGetStarted": "Inscrivez-vous pour commencer",
+    "agreeToTerms": "J'accepte les",
+    "termsAndConditions": "Conditions générales",
+    "orContinueWith": "ou continuer avec",
+    "continueWithGoogle": "Continuer avec Google",
+    "openingGoogle": "Ouverture de Google...",
+    "accountCreatedMessage": "Compte créé ! Veuillez vous connecter.",
+    "googleSignInFailed": "Échec de la connexion Google. Veuillez réessayer.",
+    "errors": {
+      "fullNameRequired": "Le nom complet est requis.",
+      "invalidEmail": "Entrez un email valide.",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas.",
+      "mustAgreeToTerms": "Vous devez accepter les Conditions générales.",
+      "registrationFailed": "Échec de l'inscription. Veuillez réessayer."
+    }
   },
   "home": {
     "title": "Accueil",
@@ -73,6 +91,27 @@
     "topDeals": "Meilleures offres",
     "viewAll": "Tout voir",
     "seeMore": "Voir plus"
+  },
+  "search": {
+    "title": "Rechercher",
+    "placeholder": "Rechercher téléphones, ordinateurs...",
+    "sortBy": "Trier par",
+    "priceRange": "Gamme de prix",
+    "relevance": "Pertinence",
+    "priceLowToHigh": "Prix : Bas→Élevé",
+    "priceHighToLow": "Prix : Élevé→Bas",
+    "topRated": "Meilleures notes",
+    "allPrices": "Tous les prix",
+    "under50k": "Moins de 50K",
+    "range50kTo200k": "50K - 200K",
+    "over200k": "Plus de 200K",
+    "itemsFound": "{{count}} article trouvé pour votre recherche",
+    "itemsFound_plural": "{{count}} articles trouvés pour votre recherche",
+    "noResults": "Aucun résultat pour \"{{query}}\"",
+    "noResultsDescription": "Nous n'avons pas trouvé d'articles correspondant à votre recherche. Essayez de vérifier l'orthographe ou d'utiliser des termes plus larges comme \"Galaxy\" ou \"Mac\".",
+    "clearAllFilters": "Effacer tous les filtres",
+    "recentSearches": "Recherches récentes",
+    "trendingTags": "Tags tendance"
   },
   "categories": {
     "electronics": "Électronique",
@@ -102,7 +141,27 @@
     "selectVariant": "Sélectionner une variante",
     "soldBy": "Vendu par",
     "deliveryInfo": "Informations de livraison",
-    "returnPolicy": "Politique de retour"
+    "returnPolicy": "Politique de retour",
+    "writeReview": "Évaluez Votre Commande",
+    "reviewSubtitle": "Aidez les autres à prendre des décisions éclairées en partageant votre expérience",
+    "thankYouPurchase": "Merci pour Votre Achat !",
+    "feedbackAppreciation": "Vos commentaires honnêtes aident notre communauté à faire de meilleurs choix. Nous apprécions vraiment que vous preniez le temps de partager votre expérience !",
+    "yourRating": "Votre Évaluation",
+    "yourReview": "Votre Avis (Optionnel)",
+    "reviewPlaceholder": "Partagez vos impressions sur ce produit...",
+    "charCount": "{{count}}/500",
+    "submitReviews": "Soumettre les Avis",
+    "loadingProducts": "Chargement des produits...",
+    "rateAtLeastOne": "Veuillez évaluer au moins un produit avant de soumettre.",
+    "confirmSubmitTitle": "Soumettre Vos Avis ?",
+    "confirmSubmitMessage": "Merci de partager vos précieux commentaires ! Vos avis aideront d'autres clients à prendre des décisions éclairées. Prêt à soumettre ?",
+    "noNewReviews": "Aucun nouvel avis à soumettre.",
+    "reviewsSubmitted": "Succès ! {{count}} avis soumis. Merci pour vos commentaires !",
+    "alreadyReviewed": "Vous avez déjà évalué un ou plusieurs de ces produits. Chaque produit ne peut être évalué qu'une seule fois.",
+    "reviewSubmitError": "Erreur : Échec de la soumission des avis. Veuillez réessayer.",
+    "reviewLoadError": "Erreur : Échec du chargement des produits",
+    "reviewFooterNote": "Vos avis aident notre communauté à prendre de meilleures décisions d'achat",
+    "qty": "Qté : {{quantity}}"
   },
   "cart": {
     "title": "Panier",
@@ -134,10 +193,15 @@
     "mobilePayment": "Paiement mobile",
     "cardPayment": "Carte de crédit/débit",
     "cashOnDelivery": "Paiement à la livraison",
-    "orderPlaced": "Commande passée avec succès !",
+    "orderPlaced": "Commande passée !",
     "orderNumber": "Numéro de commande",
     "viewOrder": "Voir la commande",
-    "paymentFailed": "Échec du paiement. Veuillez réessayer."
+    "paymentFailed": "Échec du paiement. Veuillez réessayer.",
+    "thankYouMessage": "Merci d'avoir fait vos achats chez Gisenyi Gadgets. Votre commande a été confirmée et est en cours de traitement.",
+    "orderID": "ID de commande",
+    "estimatedDelivery": "Livraison estimée",
+    "totalPaid": "Total payé",
+    "whatHappensNext": "Que se passe-t-il ensuite ?"
   },
   "orders": {
     "title": "Mes commandes",
@@ -148,13 +212,26 @@
     "shipped": "Expédiée",
     "delivered": "Livrée",
     "cancelled": "Annulée",
+    "confirmed": "Confirmée",
+    "refunded": "Remboursée",
     "orderNumber": "Commande n°{{number}}",
     "orderedOn": "Commandé le",
     "trackOrder": "Suivre la commande",
     "cancelOrder": "Annuler la commande",
     "viewDetails": "Voir les détails",
     "reorder": "Commander à nouveau",
-    "downloadInvoice": "Télécharger la facture"
+    "downloadInvoice": "Télécharger la facture",
+    "orderPlaced": "Commande passée",
+    "outForDelivery": "En cours de livraison",
+    "placedOn": "Passée le",
+    "orderCancelled": "Cette commande a été annulée",
+    "total": "Total",
+    "payment": "Paiement",
+    "items": "Articles",
+    "completed": "Terminé",
+    "backToOrders": "Retour aux commandes",
+    "orderConfirmed": "Commande confirmée",
+    "beingPacked": "En cours d'emballage"
   },
   "wishlist": {
     "title": "Liste de souhaits",
@@ -181,7 +258,39 @@
     "version": "Version",
     "totalOrders": "Total des commandes",
     "totalSpent": "Total dépensé",
-    "memberSince": "Membre depuis"
+    "memberSince": "Membre depuis",
+    "tapToChange": "Appuyez pour changer",
+    "address": "Adresse",
+    "addressPlaceholder": "KG 15 Ave",
+    "cityPlaceholder": "Gisenyi",
+    "saveChanges": "Enregistrer les modifications",
+    "profileUpdated": "Votre profil a été mis à jour !",
+    "updateFailed": "Échec de la mise à jour",
+    "fullNameRequired": "Le nom complet est requis.",
+    "avatarUploadFailed": "Échec du téléchargement de la photo de profil.",
+    "cameraPermissionRequired": "Désolé, nous avons besoin des autorisations de la galerie pour mettre à jour votre photo de profil.",
+    "contactUs": "Contactez-nous pour obtenir de l'aide!",
+    "faqComingSoon": "FAQ à venir."
+  },
+  "chat": {
+    "title": "Support Gadgets",
+    "online": "En ligne",
+    "today": "Aujourd'hui",
+    "inputPlaceholder": "Tapez un message...",
+    "sendButton": "Envoyer",
+    "support": "Support",
+    "you": "Vous",
+    "image": "Image",
+    "replyingTo": "Répondre à {{name}}",
+    "replyingToSupport": "Répondre au support",
+    "replyingToYourself": "Répondre à vous-même",
+    "reply": "Répondre",
+    "sendFailed": "Échec de l'envoi. Veuillez réessayer.",
+    "imageSendFailed": "Échec de l'envoi de l'image. Veuillez réessayer.",
+    "photoPermissionRequired": "Autoriser l'accès aux photos pour envoyer des images.",
+    "callSupport": "Appeler le support",
+    "callSupportSubtitle": "Service client Gisenyi Gadgets",
+    "callNow": "Appeler maintenant"
   },
   "settings": {
     "title": "Paramètres",
@@ -210,7 +319,35 @@
   "notifications": {
     "title": "Notifications",
     "empty": "Aucune notification",
+    "allCaughtUp": "Vous êtes à jour!",
     "markAllRead": "Tout marquer comme lu",
+    "unread": "{count} non lue",
+    "justNow": "À l'instant",
+    "minutesAgo": "Il y a {minutes}m",
+    "hoursAgo": "Il y a {hours}h",
+    "daysAgo": "Il y a {days}j",
+    "type": {
+      "order": "Commande",
+      "promo": "Promo",
+      "review": "Avis",
+      "delivery": "Livraison",
+      "general": "Général",
+      "system": "Système"
+    },
+    "demo": {
+      "welcome": {
+        "title": "Bienvenue chez Gisenyi Gadgets!",
+        "body": "Commencez vos achats et vos mises à jour de commande apparaîtront ici. Vous pouvez suivre toutes vos commandes depuis l'onglet Commandes."
+      },
+      "flashSale": {
+        "title": "🔥 Vente Flash — 40% DE RÉDUCTION",
+        "body": "Offres à durée limitée sur les AirPods Pro et les casques Sony! Utilisez le code FLASH40 à la caisse. Offre valable jusqu'à minuit."
+      },
+      "newArrivals": {
+        "title": "Nouveaux Arrivages",
+        "body": "Découvrez les derniers MacBook Pro M4, Galaxy S25 et plus encore. Parcourez la collection complète dans l'onglet Recherche."
+      }
+    },
     "orderShipped": "Votre commande a été expédiée",
     "orderDelivered": "Votre commande a été livrée",
     "newOffer": "Nouvelle offre disponible",
@@ -224,5 +361,16 @@
     "permissionDenied": "Permission refusée.",
     "notFound": "Article non trouvé.",
     "unknown": "Une erreur s'est produite. Réessayez."
+  },
+  "licenses": {
+    "title": "Licences Open Source",
+    "introTitle": "Construit avec l'Open Source",
+    "introText": "Gisenyi Gadgets est construit à l'aide de bibliothèques open source incroyables maintenues par des développeurs du monde entier. Nous sommes reconnaissants à ces communautés pour leurs contributions.",
+    "thirdPartyLibraries": "Bibliothèques Tierces",
+    "version": "v{{version}}",
+    "by": "par {{author}}",
+    "mitLicenseTitle": "Résumé de la Licence MIT",
+    "mitLicenseText": "La licence MIT est une licence open source permissive qui permet la réutilisation avec très peu de restrictions. Elle autorise l'utilisation, la modification et la distribution du logiciel à toute fin, y compris commerciale.",
+    "fullLicenseNote": "Les textes complets des licences sont disponibles dans le dépôt de chaque bibliothèque."
   }
 }

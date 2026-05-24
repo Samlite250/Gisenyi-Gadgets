@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, BookOpen } from 'lucide-react-native';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 const LICENSES = [
@@ -85,6 +86,8 @@ const LICENSES = [
 ];
 
 export default function LicensesScreen({ navigation }) {
+  const { t } = useLanguage();
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
@@ -92,7 +95,7 @@ export default function LicensesScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Open Source Licenses</Text>
+        <Text style={styles.headerTitle}>{t('licenses.title')}</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -105,15 +108,14 @@ export default function LicensesScreen({ navigation }) {
           <View style={styles.introIconBox}>
             <BookOpen size={28} color={COLORS.primaryBlue} />
           </View>
-          <Text style={styles.introTitle}>Built with Open Source</Text>
+          <Text style={styles.introTitle}>{t('licenses.introTitle')}</Text>
           <Text style={styles.introText}>
-            Gisenyi Gadgets is built using amazing open source libraries maintained by developers worldwide.
-            We're grateful to these communities for their contributions.
+            {t('licenses.introText')}
           </Text>
         </View>
 
         {/* License cards */}
-        <Text style={styles.sectionTitle}>Third-Party Libraries</Text>
+        <Text style={styles.sectionTitle}>{t('licenses.thirdPartyLibraries')}</Text>
         {LICENSES.map((lib, index) => (
           <View key={index} style={styles.licenseCard}>
             <View style={styles.licenseHeader}>
@@ -122,8 +124,8 @@ export default function LicensesScreen({ navigation }) {
                 <Text style={styles.licenseType}>{lib.license}</Text>
               </View>
             </View>
-            <Text style={styles.licenseVersion}>v{lib.version}</Text>
-            <Text style={styles.licenseAuthor}>by {lib.author}</Text>
+            <Text style={styles.licenseVersion}>{t('licenses.version', { version: lib.version })}</Text>
+            <Text style={styles.licenseAuthor}>{t('licenses.by', { author: lib.author })}</Text>
             <View style={styles.divider} />
             <Text style={styles.licensePurpose}>{lib.purpose}</Text>
           </View>
@@ -131,13 +133,12 @@ export default function LicensesScreen({ navigation }) {
 
         {/* Footer */}
         <View style={styles.footerCard}>
-          <Text style={styles.footerTitle}>MIT License Summary</Text>
+          <Text style={styles.footerTitle}>{t('licenses.mitLicenseTitle')}</Text>
           <Text style={styles.footerText}>
-            The MIT License is a permissive open source license that allows for reuse with very few restrictions.
-            It permits use, modification, and distribution of the software for any purpose, including commercial use.
+            {t('licenses.mitLicenseText')}
           </Text>
           <Text style={styles.footerNote}>
-            Full license texts are available in each library's repository.
+            {t('licenses.fullLicenseNote')}
           </Text>
         </View>
 

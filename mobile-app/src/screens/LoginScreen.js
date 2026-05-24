@@ -24,7 +24,7 @@ export default function LoginScreen({ navigation, route }) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
-      setError('Please fill in all fields.');
+      setError(t('errors.invalidInput'));
       return;
     }
     setLoading(true);
@@ -33,7 +33,7 @@ export default function LoginScreen({ navigation, route }) {
     try {
       await signIn({ email: email.trim().toLowerCase(), password });
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      setError(err.message || t('auth.loginError'));
     } finally {
       setLoading(false);
     }
@@ -46,14 +46,14 @@ export default function LoginScreen({ navigation, route }) {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.logoWrap}>
-              <Image 
-                source={require('../../assets/logo.png')} 
-                style={{ width: 100, height: 100 }} 
+              <Image
+                source={require('../../assets/logo.png')}
+                style={{ width: 100, height: 100 }}
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.title}>Welcome Back!</Text>
-            <Text style={styles.subtitle}>Login to continue</Text>
+            <Text style={styles.title}>{t('auth.loginSuccess')}</Text>
+            <Text style={styles.subtitle}>{t('auth.signIn')}</Text>
           </View>
 
           {successMessage ? (
@@ -67,11 +67,11 @@ export default function LoginScreen({ navigation, route }) {
           <BlurView intensity={70} tint="light" style={styles.formCard}>
             <View style={styles.form}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>{t('auth.email')}</Text>
                 <View style={[styles.inputWrap, focusedField === 'email' && styles.inputWrapFocused]}>
                   <TextInput
                     style={styles.input}
-                    placeholder="samuel@example.com"
+                    placeholder={t('auth.email')}
                     placeholderTextColor={COLORS.textMuted}
                     value={email}
                     onChangeText={(t) => { setEmail(t); setError(''); }}
@@ -84,11 +84,11 @@ export default function LoginScreen({ navigation, route }) {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}>Password</Text>
+                <Text style={styles.label}>{t('auth.password')}</Text>
                 <View style={[styles.inputWrap, focusedField === 'password' && styles.inputWrapFocused]}>
                   <TextInput
                     style={styles.input}
-                    placeholder="••••••••"
+                    placeholder={t('auth.password')}
                     placeholderTextColor={COLORS.textMuted}
                     value={password}
                     onChangeText={(t) => { setPassword(t); setError(''); }}
@@ -103,20 +103,20 @@ export default function LoginScreen({ navigation, route }) {
               </View>
 
               <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
-                <Text style={styles.forgotText}>Forgot Password?</Text>
+                <Text style={styles.forgotText}>{t('auth.forgotPassword')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={[styles.loginBtn, loading && styles.btnDisabled]}
                 onPress={handleLogin} disabled={loading}
               >
-                <Text style={styles.loginBtnText}>{loading ? 'Logging in...' : 'Login'}</Text>
+                <Text style={styles.loginBtnText}>{loading ? t('common.loading') : t('auth.login')}</Text>
               </TouchableOpacity>
 
               <View style={styles.footer}>
-                <Text style={styles.footerText}>Don't have an account? </Text>
+                <Text style={styles.footerText}>{t('auth.dontHaveAccount')} </Text>
                 <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                  <Text style={styles.registerText}>Sign up</Text>
+                  <Text style={styles.registerText}>{t('auth.signUp')}</Text>
                 </TouchableOpacity>
               </View>
             </View>

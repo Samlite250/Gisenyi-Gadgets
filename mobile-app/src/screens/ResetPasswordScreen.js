@@ -14,8 +14,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ResetPasswordScreen({ navigation }) {
+  const { t } = useLanguage();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,15 +28,15 @@ export default function ResetPasswordScreen({ navigation }) {
 
   const handleResetPassword = async () => {
     if (!password.trim()) {
-      setError('Please enter a new password.');
+      setError(t('auth.enterPassword'));
       return;
     }
     if (password.length < 8) {
-      setError('Password must be at least 8 characters long.');
+      setError(t('auth.passwordMinLength'));
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -46,17 +48,17 @@ export default function ResetPasswordScreen({ navigation }) {
       if (error) throw error;
 
       Alert.alert(
-        'Success',
-        'Your password has been reset successfully!',
+        t('auth.success'),
+        t('auth.passwordResetSuccess'),
         [
           {
-            text: 'Go to Login',
+            text: t('auth.goToLogin'),
             onPress: () => navigation.navigate('Login'),
           },
         ]
       );
     } catch (err) {
-      setError(err.message || 'Failed to reset password. Please try again.');
+      setError(err.message || t('auth.resetPasswordError'));
     } finally {
       setLoading(false);
     }
@@ -78,9 +80,9 @@ export default function ResetPasswordScreen({ navigation }) {
             <View style={styles.iconWrap}>
               <Lock size={40} color={COLORS.primaryBlue} />
             </View>
-            <Text style={styles.title}>Reset Password</Text>
+            <Text style={styles.title}>{t('auth.resetPassword')}</Text>
             <Text style={styles.subtitle}>
-              Enter your new password below. Make sure it's strong and secure.
+              {t('auth.resetPasswordSubtitle')}
             </Text>
           </View>
 
@@ -93,12 +95,12 @@ export default function ResetPasswordScreen({ navigation }) {
             ) : null}
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>New Password</Text>
+              <Text style={styles.inputLabel}>{t('auth.newPassword')}</Text>
               <View style={[styles.inputContainer, focusedField === 'password' && styles.inputContainerFocused]}>
                 <Lock size={18} color={COLORS.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter new password"
+                  placeholder={t('auth.enterNewPassword')}
                   placeholderTextColor={COLORS.textMuted}
                   value={password}
                   onChangeText={(text) => { setPassword(text); setError(''); }}
@@ -117,16 +119,16 @@ export default function ResetPasswordScreen({ navigation }) {
                   )}
                 </TouchableOpacity>
               </View>
-              <Text style={styles.hint}>Minimum 8 characters</Text>
+              <Text style={styles.hint}>{t('auth.minimumCharacters')}</Text>
             </View>
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <Text style={styles.inputLabel}>{t('auth.confirmPassword')}</Text>
               <View style={[styles.inputContainer, focusedField === 'confirmPassword' && styles.inputContainerFocused]}>
                 <Lock size={18} color={COLORS.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Confirm new password"
+                  placeholder={t('auth.confirmNewPassword')}
                   placeholderTextColor={COLORS.textMuted}
                   value={confirmPassword}
                   onChangeText={(text) => { setConfirmPassword(text); setError(''); }}
@@ -155,7 +157,7 @@ export default function ResetPasswordScreen({ navigation }) {
               activeOpacity={0.85}
             >
               <Text style={styles.submitBtnText}>
-                {loading ? 'Resetting...' : 'Reset Password'}
+                {loading ? t('auth.resetting') : t('auth.resetPassword')}
               </Text>
             </TouchableOpacity>
           </View>

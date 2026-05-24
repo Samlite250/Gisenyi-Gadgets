@@ -13,10 +13,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, ArrowLeft, Send } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function ForgotPasswordScreen({ navigation }) {
   const { resetPassword } = useAuth();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -25,12 +27,12 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   const handleResetPassword = async () => {
     if (!email.trim()) {
-      setError('Please enter your email address.');
+      setError(t('auth.emailRequired'));
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address.');
+      setError(t('auth.invalidEmail'));
       return;
     }
 
@@ -41,7 +43,7 @@ export default function ForgotPasswordScreen({ navigation }) {
       await resetPassword(email.trim().toLowerCase());
       setSent(true);
     } catch (err) {
-      setError(err.message || 'Failed to send reset email. Please try again.');
+      setError(err.message || t('auth.resetPasswordError'));
     } finally {
       setLoading(false);
     }
@@ -54,20 +56,20 @@ export default function ForgotPasswordScreen({ navigation }) {
           <View style={styles.successIconWrap}>
             <Send size={48} color={COLORS.primaryGreen} />
           </View>
-          <Text style={styles.successTitle}>Check Your Email</Text>
+          <Text style={styles.successTitle}>{t('auth.checkYourEmail')}</Text>
           <Text style={styles.successSubtitle}>
-            We've sent a password reset link to{'\n'}
+            {t('auth.resetLinkSent')}{'\n'}
             <Text style={styles.emailHighlight}>{email}</Text>
           </Text>
           <Text style={styles.successHint}>
-            Didn't receive the email? Check your spam folder or try again.
+            {t('auth.resetLinkHint')}
           </Text>
 
           <TouchableOpacity
             style={styles.resendBtn}
             onPress={() => { setSent(false); }}
           >
-            <Text style={styles.resendBtnText}>Try Again</Text>
+            <Text style={styles.resendBtnText}>{t('auth.tryAgain')}</Text>
           </TouchableOpacity>
 
         </View>
@@ -99,9 +101,9 @@ export default function ForgotPasswordScreen({ navigation }) {
             <View style={styles.iconWrap}>
               <Mail size={40} color={COLORS.primaryBlue} />
             </View>
-            <Text style={styles.title}>Forgot Password?</Text>
+            <Text style={styles.title}>{t('auth.forgotPassword')}</Text>
             <Text style={styles.subtitle}>
-              No worries! Enter your email address and we'll send you a link to reset your password.
+              {t('auth.forgotPasswordInstructions')}
             </Text>
           </View>
 
@@ -114,12 +116,12 @@ export default function ForgotPasswordScreen({ navigation }) {
             ) : null}
 
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Email Address</Text>
+              <Text style={styles.inputLabel}>{t('auth.email')}</Text>
               <View style={[styles.inputContainer, focusedField === 'email' && styles.inputContainerFocused]}>
                 <Mail size={18} color={COLORS.textSecondary} style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="you@example.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   placeholderTextColor={COLORS.textMuted}
                   value={email}
                   onChangeText={(text) => { setEmail(text); setError(''); }}
@@ -141,7 +143,7 @@ export default function ForgotPasswordScreen({ navigation }) {
               activeOpacity={0.85}
             >
               <Text style={styles.submitBtnText}>
-                {loading ? 'Sending...' : 'Send Reset Link'}
+                {loading ? t('auth.sending') : t('auth.sendResetLink')}
               </Text>
             </TouchableOpacity>
 

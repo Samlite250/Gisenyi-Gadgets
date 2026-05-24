@@ -4,14 +4,7 @@ import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, CircleCheckBig, Circle, Clock, Package, Truck, MapPin } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
-
-const ALL_STEPS = [
-  { key: 'placed', label: 'Order Placed', icon: Package },
-  { key: 'processing', label: 'Processing', icon: Clock },
-  { key: 'shipped', label: 'Shipped', icon: Truck },
-  { key: 'delivered', label: 'Out for Delivery', icon: MapPin },
-  { key: 'done', label: 'Delivered', icon: CircleCheckBig },
-];
+import { useLanguage } from '../context/LanguageContext';
 
 const STATUS_STEP_MAP = {
   pending: 1,
@@ -22,11 +15,20 @@ const STATUS_STEP_MAP = {
   cancelled: 0,
 };
 
-const fmt = (iso) =>
-  iso ? new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Pending';
-
 export default function OrderTrackingScreen({ route, navigation }) {
+  const { t } = useLanguage();
   const [order, setOrder] = useState(route?.params?.order || {});
+
+  const ALL_STEPS = [
+    { key: 'placed', label: t('orders.orderPlaced'), icon: Package },
+    { key: 'processing', label: t('orders.processing'), icon: Clock },
+    { key: 'shipped', label: t('orders.shipped'), icon: Truck },
+    { key: 'delivered', label: t('orders.outForDelivery'), icon: MapPin },
+    { key: 'done', label: t('orders.delivered'), icon: CircleCheckBig },
+  ];
+
+  const fmt = (iso) =>
+    iso ? new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : t('orders.pending');
 
   useEffect(() => {
     if (!order.id) return;
@@ -57,7 +59,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color="#1E293B" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>ORDER TRACKING</Text>
+        <Text style={styles.headerTitle}>{t('orders.trackOrder').toUpperCase()}</Text>
         <View style={{ width: 44 }} />
       </BlurView>
 
@@ -65,10 +67,10 @@ export default function OrderTrackingScreen({ route, navigation }) {
 
         <View style={styles.orderInfo}>
           <Text style={styles.orderId}>{order.order_number || '#GGS000000'}</Text>
-          <Text style={styles.orderDate}>Placed on {fmt(order.created_at)}</Text>
+          <Text style={styles.orderDate}>{t('orders.placedOn')} {fmt(order.created_at)}</Text>
           {isCancelled && (
             <View style={styles.cancelledBadge}>
-              <Text style={styles.cancelledText}>This order was cancelled</Text>
+              <Text style={styles.cancelledText}>{t('orders.orderCancelled')}</Text>
             </View>
           )}
         </View>
@@ -76,17 +78,17 @@ export default function OrderTrackingScreen({ route, navigation }) {
         {/* Summary row Glass Card */}
         <BlurView intensity={60} tint="light" style={styles.summaryCard}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Total</Text>
+            <Text style={styles.summaryLabel}>{t('orders.total')}</Text>
             <Text style={styles.summaryValue}>RWF {Number(order.total || 0).toLocaleString()}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Payment</Text>
+            <Text style={styles.summaryLabel}>{t('orders.payment')}</Text>
             <Text style={styles.summaryValue}>{order.payment_method?.toUpperCase() || 'MTN'}</Text>
           </View>
           <View style={styles.summaryDivider} />
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Items</Text>
+            <Text style={styles.summaryLabel}>{t('orders.items')}</Text>
             <Text style={styles.summaryValue}>{order.order_items?.length || '—'}</Text>
           </View>
         </BlurView>
@@ -119,7 +121,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
                     {step.label}{active ? ' ●' : ''}
                   </Text>
                   <Text style={styles.statusTime}>
-                    {done ? (index === 0 ? fmt(order.created_at) : 'Completed') : 'Pending'}
+                    {done ? (index === 0 ? fmt(order.created_at) : t('orders.completed')) : t('orders.pending')}
                   </Text>
                 </View>
               </View>
@@ -131,7 +133,7 @@ export default function OrderTrackingScreen({ route, navigation }) {
           style={styles.viewDetailsBtn}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.viewDetailsBtnText}>Back to Orders</Text>
+          <Text style={styles.viewDetailsBtnText}>{t('orders.backToOrders')}</Text>
         </TouchableOpacity>
 
       </ScrollView>

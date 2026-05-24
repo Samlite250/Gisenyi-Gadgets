@@ -12,10 +12,12 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 
 export default function ChatSupportScreen({ navigation }) {
   const { profile } = useAuth();
+  const { t } = useLanguage();
   const insets = useSafeAreaInsets();
 
   const [messages, setMessages]       = useState([]);
@@ -96,7 +98,7 @@ export default function ChatSupportScreen({ navigation }) {
     });
 
     if (error && isMounted.current) {
-      setSendError('Failed to send. Please try again.');
+      setSendError(t('chat.sendFailed'));
       setInput(tempInput);
       setTimeout(() => { if (isMounted.current) setSendError(null); }, 3000);
     }
@@ -108,7 +110,7 @@ export default function ChatSupportScreen({ navigation }) {
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      setSendError('Allow photo access to send images.');
+      setSendError(t('chat.photoPermissionRequired'));
       setTimeout(() => { if (isMounted.current) setSendError(null); }, 3000);
       return;
     }
@@ -163,7 +165,7 @@ export default function ChatSupportScreen({ navigation }) {
       setReplyTo(null);
     } catch (err) {
       if (isMounted.current) {
-        setSendError('Failed to send image. Please try again.');
+        setSendError(t('chat.imageSendFailed'));
         setTimeout(() => { if (isMounted.current) setSendError(null); }, 3500);
       }
     } finally {
@@ -216,8 +218,8 @@ export default function ChatSupportScreen({ navigation }) {
             <View style={styles.onlineDot} />
           </View>
           <View>
-            <Text style={styles.headerName}>Gadgets Support</Text>
-            <Text style={styles.headerStatus}>● Online</Text>
+            <Text style={styles.headerName}>{t('chat.title')}</Text>
+            <Text style={styles.headerStatus}>● {t('chat.online')}</Text>
           </View>
         </View>
 
@@ -244,7 +246,7 @@ export default function ChatSupportScreen({ navigation }) {
       >
         <View style={styles.dateDividerWrap}>
           <View style={styles.dateDividerLine} />
-          <Text style={styles.dateDivider}>Today</Text>
+          <Text style={styles.dateDivider}>{t('chat.today')}</Text>
           <View style={styles.dateDividerLine} />
         </View>
 
@@ -276,10 +278,10 @@ export default function ChatSupportScreen({ navigation }) {
                     {quotedMsg && (
                       <View style={[styles.quote, isUser ? styles.userQuote : styles.supportQuote]}>
                         <Text style={[styles.quoteName, isUser && { color: 'rgba(255,255,255,0.9)' }]}>
-                          {quotedMsg.is_admin ? 'Support' : 'You'}
+                          {quotedMsg.is_admin ? t('chat.support') : t('chat.you')}
                         </Text>
                         <Text style={[styles.quoteText, isUser && { color: 'rgba(255,255,255,0.7)' }]} numberOfLines={1}>
-                          {quotedMsg.content || '📷 Image'}
+                          {quotedMsg.content || `📷 ${t('chat.image')}`}
                         </Text>
                       </View>
                     )}
@@ -320,7 +322,7 @@ export default function ChatSupportScreen({ navigation }) {
                   {/* Reply & react actions */}
                   <View style={styles.messageActions}>
                     <TouchableOpacity onPress={() => setReplyTo(m)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Text style={styles.actionLink}>Reply</Text>
+                      <Text style={styles.actionLink}>{t('chat.reply')}</Text>
                     </TouchableOpacity>
                     {m.is_admin && (
                       <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -344,9 +346,11 @@ export default function ChatSupportScreen({ navigation }) {
         <View style={styles.replyPreview}>
           <View style={styles.replyBar} />
           <View style={{ flex: 1 }}>
-            <Text style={styles.replyTitle}>Replying to {replyTo.is_admin ? 'Support' : 'yourself'}</Text>
+            <Text style={styles.replyTitle}>
+              {replyTo.is_admin ? t('chat.replyingToSupport') : t('chat.replyingToYourself')}
+            </Text>
             <Text style={styles.replyText} numberOfLines={1}>
-              {replyTo.image_url ? '📷 Image' : replyTo.content}
+              {replyTo.image_url ? `📷 ${t('chat.image')}` : replyTo.content}
             </Text>
           </View>
           <TouchableOpacity onPress={() => setReplyTo(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -378,7 +382,7 @@ export default function ChatSupportScreen({ navigation }) {
 
         <TextInput
           style={styles.textInput}
-          placeholder="Type a message..."
+          placeholder={t('chat.inputPlaceholder')}
           placeholderTextColor={COLORS.textMuted}
           value={input}
           onChangeText={setInput}
@@ -403,8 +407,8 @@ export default function ChatSupportScreen({ navigation }) {
               <View style={styles.phoneModalIcon}>
                 <PhoneCall size={26} color={COLORS.primaryBlue} />
               </View>
-              <Text style={styles.phoneModalTitle}>Call Support</Text>
-              <Text style={styles.phoneModalSub}>Gisenyi Gadgets Customer Support</Text>
+              <Text style={styles.phoneModalTitle}>{t('chat.callSupport')}</Text>
+              <Text style={styles.phoneModalSub}>{t('chat.callSupportSubtitle')}</Text>
             </View>
 
             <View style={styles.phoneNumberRow}>
@@ -414,11 +418,11 @@ export default function ChatSupportScreen({ navigation }) {
 
             <TouchableOpacity style={styles.dialBtn} onPress={dialNumber}>
               <PhoneCall size={18} color="#fff" />
-              <Text style={styles.dialBtnText}>Call Now</Text>
+              <Text style={styles.dialBtnText}>{t('chat.callNow')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowPhoneModal(false)}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={styles.cancelBtnText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </Pressable>
         </Pressable>

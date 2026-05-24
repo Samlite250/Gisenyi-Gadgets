@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Star, ArrowLeft, CheckCircle2, Sparkles } from 'lucide-react-native';
 import { supabase } from '../services/supabase';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES } from '../constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -14,6 +15,7 @@ const { width } = Dimensions.get('window');
 export default function OrderReviewScreen({ route, navigation }) {
   const { orderId } = route.params;
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [products, setProducts] = useState([]);
@@ -60,7 +62,7 @@ export default function OrderReviewScreen({ route, navigation }) {
       setReviews(initialReviews);
     } catch (err) {
       console.error('Failed to fetch order products:', err);
-      window.alert('Error: Failed to load products');
+      window.alert(t('product.reviewLoadError'));
       navigation.goBack();
     } finally {
       setLoading(false);
@@ -86,13 +88,13 @@ export default function OrderReviewScreen({ route, navigation }) {
     const hasAnyRating = Object.values(reviews).some(r => r.rating > 0);
 
     if (!hasAnyRating) {
-      window.alert('Please rate at least one product before submitting.');
+      window.alert(t('product.rateAtLeastOne'));
       return;
     }
 
     // Confirm submission with appreciative message
     const confirmed = window.confirm(
-      'Submit Your Reviews?\n\nThank you for sharing your valuable feedback! Your reviews will help other customers make informed decisions. Ready to submit?'
+      `${t('product.confirmSubmitTitle')}\n\n${t('product.confirmSubmitMessage')}`
     );
 
     if (!confirmed) return;
@@ -110,7 +112,7 @@ export default function OrderReviewScreen({ route, navigation }) {
         }));
 
       if (reviewsToInsert.length === 0) {
-        window.alert('No new reviews to submit.');
+        window.alert(t('product.noNewReviews'));
         setSubmitting(false);
         return;
       }
@@ -123,18 +125,18 @@ export default function OrderReviewScreen({ route, navigation }) {
       if (error) {
         // Check if it's a duplicate key error (unique constraint violation)
         if (error.code === '23505' || error.message?.includes('duplicate') || error.message?.includes('unique')) {
-          window.alert('You have already reviewed one or more of these products. Each product can only be reviewed once.');
+          window.alert(t('product.alreadyReviewed'));
           navigation.goBack();
           return;
         }
         throw error;
       }
 
-      window.alert(`Success! ${reviewsToInsert.length} review(s) submitted. Thank you for your feedback!`);
+      window.alert(t('product.reviewsSubmitted', { count: reviewsToInsert.length }));
       navigation.goBack();
     } catch (err) {
       console.error('Failed to submit reviews:', err);
-      window.alert('Error: Failed to submit reviews. Please try again.');
+      window.alert(t('product.reviewSubmitError'));
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +147,7 @@ export default function OrderReviewScreen({ route, navigation }) {
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primaryBlue} />
-          <Text style={styles.loadingText}>Loading products...</Text>
+          <Text style={styles.loadingText}>{t('product.loadingProducts')}</Text>
         </View>
       </SafeAreaView>
     );
@@ -158,23 +160,23 @@ export default function OrderReviewScreen({ route, navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <ArrowLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Review Your Order</Text>
+        <Text style={styles.headerTitle}>{t('product.writeReview')}</Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <Text style={styles.subtitle}>
-            Help others make informed decisions by sharing your experience
+            {t('product.reviewSubtitle')}
           </Text>
 
           {/* Appreciation Message */}
           <View style={styles.appreciationBox}>
             <Sparkles size={24} color="#3B82F6" style={styles.appreciationIcon} />
             <View style={styles.appreciationTextContainer}>
-              <Text style={styles.appreciationTitle}>Thank You for Your Purchase!</Text>
+              <Text style={styles.appreciationTitle}>{t('product.thankYouPurchase')}</Text>
               <Text style={styles.appreciationText}>
-                Your honest feedback helps our community make better choices. We truly appreciate you taking the time to share your experience!
+                {t('product.feedbackAppreciation')}
               </Text>
             </View>
           </View>
@@ -197,14 +199,14 @@ export default function OrderReviewScreen({ route, navigation }) {
                     {product?.brand && (
                       <Text style={styles.productBrand}>{product.brand}</Text>
                     )}
-                    <Text style={styles.productQty}>Qty: {item.quantity}</Text>
+                    <Text style={styles.productQty}>{t('product.qty', { quantity: item.quantity })}</Text>
                   </View>
                 </View>
 
 
                 {/* Rating Stars */}
                 <View style={styles.ratingSection}>
-                  <Text style={styles.ratingLabel}>Your Rating</Text>
+                  <Text style={styles.ratingLabel}>{t('product.yourRating')}</Text>
                   <View style={styles.starsContainer}>
                     {[1, 2, 3, 4, 5].map((star) => (
                       <TouchableOpacity
@@ -225,10 +227,10 @@ export default function OrderReviewScreen({ route, navigation }) {
 
                 {/* Comment Input */}
                 <View style={styles.commentSection}>
-                  <Text style={styles.commentLabel}>Your Review (Optional)</Text>
+                  <Text style={styles.commentLabel}>{t('product.yourReview')}</Text>
                   <TextInput
                     style={styles.commentInput}
-                    placeholder="Share your thoughts about this product..."
+                    placeholder={t('product.reviewPlaceholder')}
                     placeholderTextColor="#9CA3AF"
                     multiline
                     numberOfLines={4}
@@ -236,7 +238,7 @@ export default function OrderReviewScreen({ route, navigation }) {
                     value={review.comment}
                     onChangeText={(text) => updateComment(item.product_id, text)}
                   />
-                  <Text style={styles.charCount}>{review.comment.length}/500</Text>
+                  <Text style={styles.charCount}>{t('product.charCount', { count: review.comment.length })}</Text>
                 </View>
 
                 {index < products.length - 1 && <View style={styles.divider} />}
@@ -256,13 +258,13 @@ export default function OrderReviewScreen({ route, navigation }) {
             ) : (
               <>
                 <CheckCircle2 size={20} color="#fff" />
-                <Text style={styles.submitButtonText}>Submit Reviews</Text>
+                <Text style={styles.submitButtonText}>{t('product.submitReviews')}</Text>
               </>
             )}
           </TouchableOpacity>
 
           <Text style={styles.footerNote}>
-            Your reviews help our community make better purchasing decisions
+            {t('product.reviewFooterNote')}
           </Text>
         </View>
       </ScrollView>

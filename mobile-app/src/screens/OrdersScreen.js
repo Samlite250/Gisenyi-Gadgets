@@ -8,24 +8,33 @@ import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin, CircleCheckBig } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { orderLogger } from '../utils/logger';
 
-const STATUS_CONFIG = {
-  pending: { label: 'Pending', color: '#F59E0B', bg: '#FEF3C7', icon: Clock },
-  confirmed: { label: 'Confirmed', color: '#4285F4', bg: '#E0E7FF', icon: Package },
-  processing: { label: 'Processing', color: '#0EA5E9', bg: '#E0F2FE', icon: ShoppingBag },
-  shipped: { label: 'Shipped', color: '#0284C7', bg: '#E0F2FE', icon: Truck },
-  delivered: { label: 'Delivered', color: '#34A853', bg: '#DCFCE7', icon: MapPin },
-  cancelled: { label: 'Cancelled', color: '#EA4335', bg: '#FEE2E2', icon: null },
-  refunded: { label: 'Refunded', color: '#5F6368', bg: '#F3F4F6', icon: null },
-};
-
-const FILTERS = ['All', 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
-
 export default function OrdersScreen({ navigation }) {
   const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const STATUS_CONFIG = {
+    pending: { label: t('orders.pending'), color: '#F59E0B', bg: '#FEF3C7', icon: Clock },
+    confirmed: { label: t('orders.confirmed'), color: '#4285F4', bg: '#E0E7FF', icon: Package },
+    processing: { label: t('orders.processing'), color: '#0EA5E9', bg: '#E0F2FE', icon: ShoppingBag },
+    shipped: { label: t('orders.shipped'), color: '#0284C7', bg: '#E0F2FE', icon: Truck },
+    delivered: { label: t('orders.delivered'), color: '#34A853', bg: '#DCFCE7', icon: MapPin },
+    cancelled: { label: t('orders.cancelled'), color: '#EA4335', bg: '#FEE2E2', icon: null },
+    refunded: { label: t('orders.refunded'), color: '#5F6368', bg: '#F3F4F6', icon: null },
+  };
+
+  const FILTERS = [
+    t('orders.all'),
+    t('orders.pending'),
+    t('orders.processing'),
+    t('orders.shipped'),
+    t('orders.delivered'),
+    t('orders.cancelled')
+  ];
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,8 +49,19 @@ export default function OrdersScreen({ navigation }) {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (activeFilter !== 'All') {
-        query = query.eq('status', activeFilter.toLowerCase());
+      if (activeFilter !== t('orders.all')) {
+        // Map translated filter back to status value
+        const statusMap = {
+          [t('orders.pending')]: 'pending',
+          [t('orders.processing')]: 'processing',
+          [t('orders.shipped')]: 'shipped',
+          [t('orders.delivered')]: 'delivered',
+          [t('orders.cancelled')]: 'cancelled',
+        };
+        const statusValue = statusMap[activeFilter];
+        if (statusValue) {
+          query = query.eq('status', statusValue);
+        }
       }
 
       const { data, error } = await query;
@@ -122,7 +142,7 @@ export default function OrdersScreen({ navigation }) {
 
     // Use window.confirm for web compatibility
     const confirmed = window.confirm(
-      'Confirm Order Receipt\n\nHave you received all items in this order? This will allow you to leave reviews for the products.'
+      t('orders.confirmReceiptPrompt')
     );
 
     if (!confirmed) {
@@ -152,7 +172,7 @@ export default function OrdersScreen({ navigation }) {
       navigation.navigate('OrderReview', { orderId });
     } catch (err) {
       console.error('Catch error:', err);
-      window.alert('Error: Failed to confirm receipt. Please try again.');
+      window.alert(t('orders.confirmReceiptError'));
     }
   };
 
@@ -204,20 +224,20 @@ export default function OrdersScreen({ navigation }) {
               </View>
             ))}
             {itemCount > 2 && (
-              <Text style={styles.moreItems}>+{itemCount - 2} more item{itemCount - 2 !== 1 ? 's' : ''}</Text>
+              <Text style={styles.moreItems}>{t('orders.moreItems', { count: itemCount - 2 })}</Text>
             )}
           </View>
 
           <View style={styles.priceWrap}>
-            <Text style={styles.totalLabel}>Total Amount</Text>
+            <Text style={styles.totalLabel}>{t('orders.totalAmount')}</Text>
             <Text style={styles.orderTotal}>{fmt(item.total)}</Text>
           </View>
         </View>
 
         <View style={styles.orderFooter}>
-          <Text style={styles.itemCountText}>{itemCount} item{itemCount !== 1 ? 's' : ''}</Text>
+          <Text style={styles.itemCountText}>{t('orders.itemCount', { count: itemCount })}</Text>
           <View style={styles.trackBtn}>
-            <Text style={styles.trackBtnText}>Track Order</Text>
+            <Text style={styles.trackBtnText}>{t('orders.trackOrder')}</Text>
             <ChevronRight size={16} color={COLORS.primaryBlue} />
           </View>
         </View>
@@ -235,7 +255,7 @@ export default function OrdersScreen({ navigation }) {
             pointerEvents="auto"
           >
             <CircleCheckBig size={16} color="#fff" />
-            <Text style={styles.confirmReceiptText}>Confirm Receipt & Review</Text>
+            <Text style={styles.confirmReceiptText}>{t('orders.confirmReceipt')}</Text>
           </TouchableOpacity>
         )}
 
@@ -245,14 +265,14 @@ export default function OrdersScreen({ navigation }) {
             // All products reviewed - show badge only
             <View style={styles.reviewedBadge}>
               <CircleCheckBig size={14} color="#0EA5E9" />
-              <Text style={styles.reviewedText}>All Products Reviewed</Text>
+              <Text style={styles.reviewedText}>{t('orders.allReviewed')}</Text>
             </View>
           ) : (
             // Not all reviewed - show review button
             <View style={styles.confirmedContainer}>
               <View style={styles.confirmedBadge}>
                 <CircleCheckBig size={14} color="#34A853" />
-                <Text style={styles.confirmedText}>Receipt Confirmed</Text>
+                <Text style={styles.confirmedText}>{t('orders.receiptConfirmed')}</Text>
               </View>
               <TouchableOpacity
                 style={styles.reviewBtn}
@@ -263,7 +283,7 @@ export default function OrdersScreen({ navigation }) {
                 activeOpacity={0.8}
                 pointerEvents="auto"
               >
-                <Text style={styles.reviewBtnText}>Leave Review</Text>
+                <Text style={styles.reviewBtnText}>{t('orders.leaveReview')}</Text>
               </TouchableOpacity>
             </View>
           )
@@ -273,9 +293,18 @@ export default function OrdersScreen({ navigation }) {
   };
 
 
-  const filteredOrders = activeFilter === 'All'
+  const filteredOrders = activeFilter === t('orders.all')
     ? orders
-    : orders.filter((o) => o.status?.toLowerCase() === activeFilter.toLowerCase());
+    : orders.filter((o) => {
+        const statusMap = {
+          [t('orders.pending')]: 'pending',
+          [t('orders.processing')]: 'processing',
+          [t('orders.shipped')]: 'shipped',
+          [t('orders.delivered')]: 'delivered',
+          [t('orders.cancelled')]: 'cancelled',
+        };
+        return o.status?.toLowerCase() === statusMap[activeFilter];
+      });
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -283,9 +312,12 @@ export default function OrdersScreen({ navigation }) {
       {/* Glass Header */}
       <BlurView intensity={70} tint="light" style={styles.header}>
         <View>
-          <Text style={styles.headerTitle}>My Orders</Text>
+          <Text style={styles.headerTitle}>{t('orders.title')}</Text>
           <Text style={styles.headerCount}>
-            You have <Text style={{ fontWeight: '700' }}>{filteredOrders.length}</Text> {activeFilter === 'All' ? 'total' : activeFilter.toLowerCase()} order{filteredOrders.length !== 1 ? 's' : ''}.
+            {t('orders.orderCount', {
+              count: filteredOrders.length,
+              filter: activeFilter === t('orders.all') ? t('orders.total') : activeFilter.toLowerCase()
+            })}
           </Text>
         </View>
       </BlurView>
@@ -326,20 +358,20 @@ export default function OrdersScreen({ navigation }) {
             <View style={styles.emptyIconBg}>
               <Package size={56} color={COLORS.textMuted} strokeWidth={1.5} />
             </View>
-            <Text style={styles.emptyTitle}>No orders found</Text>
+            <Text style={styles.emptyTitle}>{t('orders.empty')}</Text>
             <Text style={styles.emptySub}>
-              {activeFilter !== 'All'
-                ? `You don't have any orders marked as ${activeFilter.toLowerCase()}.`
-                : 'Looks like you haven\'t started shopping with us yet!'}
+              {activeFilter !== t('orders.all')
+                ? t('orders.emptyFiltered', { filter: activeFilter.toLowerCase() })
+                : t('orders.emptyAll')}
             </Text>
-            {activeFilter === 'All' ? (
+            {activeFilter === t('orders.all') ? (
               <TouchableOpacity style={styles.shopBtn} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
-                <Text style={styles.shopBtnText}>Start Shopping Now</Text>
+                <Text style={styles.shopBtnText}>{t('orders.startShopping')}</Text>
                 <ChevronRight size={18} color="#fff" />
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity style={styles.clearBtn} onPress={() => setActiveFilter('All')} activeOpacity={0.8}>
-                <Text style={styles.clearBtnText}>View All Orders</Text>
+              <TouchableOpacity style={styles.clearBtn} onPress={() => setActiveFilter(t('orders.all'))} activeOpacity={0.8}>
+                <Text style={styles.clearBtnText}>{t('orders.viewAll')}</Text>
               </TouchableOpacity>
             )}
           </View>

@@ -12,6 +12,7 @@ import {
   ChevronRight, ShoppingBag
 } from 'lucide-react-native';
 import { useWishlist } from '../context/WishlistContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import SkeletonLoader from '../components/SkeletonLoader';
@@ -21,6 +22,7 @@ const TRENDING_TAGS = ['iPhone 15', 'Samsung S24', 'AirPods', 'MacBook M3', 'Gam
 
 export default function SearchScreen({ navigation, route }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
+  const { t } = useLanguage();
 
   // States
   const [query, setQuery] = useState(route.params?.query || '');
@@ -174,7 +176,7 @@ export default function SearchScreen({ navigation, route }) {
           <TextInput
             ref={searchInputRef}
             style={styles.input}
-            placeholder="Search phones, laptops..."
+            placeholder={t('search.placeholder')}
             placeholderTextColor={COLORS.textMuted}
             value={query}
             onChangeText={setQuery}
@@ -198,28 +200,38 @@ export default function SearchScreen({ navigation, route }) {
       {/* Advanced Filters / Sort */}
       {showFilters && (
         <View style={styles.filterBar}>
-          <Text style={styles.filterSectionTitle}>Sort By</Text>
+          <Text style={styles.filterSectionTitle}>{t('search.sortBy')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {['Relevance', 'Price: Low→High', 'Price: High→Low', 'Top Rated'].map((sort) => (
+            {[
+              { key: 'Relevance', label: t('search.relevance') },
+              { key: 'Price: Low→High', label: t('search.priceLowToHigh') },
+              { key: 'Price: High→Low', label: t('search.priceHighToLow') },
+              { key: 'Top Rated', label: t('search.topRated') }
+            ].map((sort) => (
               <TouchableOpacity
-                key={sort}
-                style={[styles.sortChip, sortBy === sort && styles.sortChipActive]}
-                onPress={() => setSortBy(sort)}
+                key={sort.key}
+                style={[styles.sortChip, sortBy === sort.key && styles.sortChipActive]}
+                onPress={() => setSortBy(sort.key)}
               >
-                <Text style={[styles.sortText, sortBy === sort && styles.sortTextActive]}>{sort}</Text>
+                <Text style={[styles.sortText, sortBy === sort.key && styles.sortTextActive]}>{sort.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          <Text style={styles.filterSectionTitle}>Price Range</Text>
+          <Text style={styles.filterSectionTitle}>{t('search.priceRange')}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
-            {['All Prices', 'Under 50K', '50K - 200K', 'Over 200K'].map((pr) => (
+            {[
+              { key: 'All Prices', label: t('search.allPrices') },
+              { key: 'Under 50K', label: t('search.under50k') },
+              { key: '50K - 200K', label: t('search.range50kTo200k') },
+              { key: 'Over 200K', label: t('search.over200k') }
+            ].map((pr) => (
               <TouchableOpacity
-                key={pr}
-                style={[styles.sortChip, priceRange === pr && styles.sortChipActive]}
-                onPress={() => setPriceRange(pr)}
+                key={pr.key}
+                style={[styles.sortChip, priceRange === pr.key && styles.sortChipActive]}
+                onPress={() => setPriceRange(pr.key)}
               >
-                <Text style={[styles.sortText, priceRange === pr && styles.sortTextActive]}>{pr}</Text>
+                <Text style={[styles.sortText, priceRange === pr.key && styles.sortTextActive]}>{pr.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -249,7 +261,7 @@ export default function SearchScreen({ navigation, route }) {
           showsVerticalScrollIndicator={false}
           style={{ opacity: fadeAnim }}
           ListHeaderComponent={
-            <Text style={styles.resultCount}>{results.length} items found for your search</Text>
+            <Text style={styles.resultCount}>{t('search.itemsFound', { count: results.length })}</Text>
           }
         />
       ) : query.trim().length > 0 ? (
@@ -258,12 +270,12 @@ export default function SearchScreen({ navigation, route }) {
             source={{ uri: 'https://cdn-icons-png.flaticon.com/512/6134/6134065.png' }}
             style={styles.emptyImg}
           />
-          <Text style={styles.emptyTitle}>No results for "{query}"</Text>
+          <Text style={styles.emptyTitle}>{t('search.noResults', { query })}</Text>
           <Text style={styles.emptySub}>
-            We couldn't find items matching your search. Try checking the spelling or using broader terms like "Galaxy" or "Mac".
+            {t('search.noResultsDescription')}
           </Text>
           <TouchableOpacity style={styles.clearFiltersBtn} onPress={clearFilters}>
-            <Text style={styles.clearFiltersText}>Clear All Filters</Text>
+            <Text style={styles.clearFiltersText}>{t('search.clearAllFilters')}</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -271,7 +283,7 @@ export default function SearchScreen({ navigation, route }) {
           {/* Recent Searches */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recent Searches</Text>
+              <Text style={styles.sectionTitle}>{t('search.recentSearches')}</Text>
               <History size={16} color={COLORS.textMuted} />
             </View>
             <View style={styles.tagCloud}>
@@ -286,13 +298,13 @@ export default function SearchScreen({ navigation, route }) {
           {/* Trending Now */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Trending Tags</Text>
+              <Text style={styles.sectionTitle}>{t('search.trendingTags')}</Text>
               <TrendingUp size={16} color={COLORS.primaryGreen} />
             </View>
             <View style={styles.trendingList}>
-              {TRENDING_TAGS.map((t, i) => (
-                <TouchableOpacity key={i} style={styles.trendingItem} onPress={() => setQuery(t)}>
-                  <Text style={styles.trendingText}># {t}</Text>
+              {TRENDING_TAGS.map((tag, i) => (
+                <TouchableOpacity key={i} style={styles.trendingItem} onPress={() => setQuery(tag)}>
+                  <Text style={styles.trendingText}># {tag}</Text>
                   <ChevronRight size={16} color={COLORS.textMuted} />
                 </TouchableOpacity>
               ))}

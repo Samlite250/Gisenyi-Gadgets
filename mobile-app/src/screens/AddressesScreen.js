@@ -6,10 +6,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, MapPin, Save } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 
 export default function AddressesScreen({ navigation }) {
     const { profile, updateProfile } = useAuth();
+    const { t } = useLanguage();
     const [saving, setSaving] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -30,7 +32,7 @@ export default function AddressesScreen({ navigation }) {
 
     const handleSave = async () => {
         if (!formData.address.trim()) {
-            Alert.alert('Required', 'Please enter your street address.');
+            Alert.alert(t('common.required'), t('checkout.enterStreetAddress'));
             return;
         }
 
@@ -41,10 +43,10 @@ export default function AddressesScreen({ navigation }) {
                 city: formData.city,
                 country: formData.country,
             });
-            Alert.alert('Success', 'Delivery address updated successfully!');
+            Alert.alert(t('common.success'), t('checkout.addressUpdatedSuccess'));
             navigation.goBack();
         } catch (err) {
-            Alert.alert('Update Failed', err.message);
+            Alert.alert(t('common.updateFailed'), err.message);
         } finally {
             setSaving(false);
         }
@@ -56,7 +58,7 @@ export default function AddressesScreen({ navigation }) {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
                     <ChevronLeft size={24} color={COLORS.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Delivery Address</Text>
+                <Text style={styles.headerTitle}>{t('checkout.deliveryAddress')}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -64,16 +66,16 @@ export default function AddressesScreen({ navigation }) {
                 <View style={styles.infoCard}>
                     <MapPin size={24} color={COLORS.primaryBlue} />
                     <Text style={styles.infoText}>
-                        Your primary address is used for all deliveries. Please ensure it's accurate to avoid delays.
+                        {t('checkout.addressInfoText')}
                     </Text>
                 </View>
 
                 <View style={styles.form}>
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Street Address</Text>
+                        <Text style={styles.label}>{t('checkout.street')}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. KG 15 Ave, House 24"
+                            placeholder={t('checkout.streetPlaceholder')}
                             value={formData.address}
                             onChangeText={(txt) => setFormData(p => ({ ...p, address: txt }))}
                             placeholderTextColor={COLORS.textMuted}
@@ -81,10 +83,10 @@ export default function AddressesScreen({ navigation }) {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>City</Text>
+                        <Text style={styles.label}>{t('checkout.city')}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. Gisenyi"
+                            placeholder={t('checkout.cityPlaceholder')}
                             value={formData.city}
                             onChangeText={(txt) => setFormData(p => ({ ...p, city: txt }))}
                             placeholderTextColor={COLORS.textMuted}
@@ -92,10 +94,10 @@ export default function AddressesScreen({ navigation }) {
                     </View>
 
                     <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Country</Text>
+                        <Text style={styles.label}>{t('checkout.country')}</Text>
                         <TextInput
                             style={styles.input}
-                            placeholder="e.g. Rwanda"
+                            placeholder={t('checkout.countryPlaceholder')}
                             value={formData.country}
                             onChangeText={(txt) => setFormData(p => ({ ...p, country: txt }))}
                             placeholderTextColor={COLORS.textMuted}
@@ -114,7 +116,7 @@ export default function AddressesScreen({ navigation }) {
                     ) : (
                         <>
                             <Save size={20} color="#fff" />
-                            <Text style={styles.saveBtnText}>Save Address</Text>
+                            <Text style={styles.saveBtnText}>{t('checkout.saveAddress')}</Text>
                         </>
                     )}
                 </TouchableOpacity>

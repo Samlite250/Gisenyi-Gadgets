@@ -58,18 +58,18 @@ export default function RegisterScreen({ navigation }) {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError(err.message || 'Google sign-in failed. Please try again.');
+      setError(err.message || t('auth.googleSignInFailed'));
     } finally {
       setGoogleLoading(false);
     }
   };
 
   const validate = () => {
-    if (!form.fullName.trim()) return 'Full name is required.';
-    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return 'Enter a valid email.';
-    if (form.password.length < 6) return 'Password must be at least 6 characters.';
-    if (form.password !== form.confirmPassword) return 'Passwords do not match.';
-    if (!agreed) return 'You must agree to the Terms & Conditions.';
+    if (!form.fullName.trim()) return t('auth.errors.fullNameRequired');
+    if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return t('auth.errors.invalidEmail');
+    if (form.password.length < 6) return t('auth.errors.passwordTooShort');
+    if (form.password !== form.confirmPassword) return t('auth.errors.passwordsDoNotMatch');
+    if (!agreed) return t('auth.errors.mustAgreeToTerms');
     return null;
   };
 
@@ -85,9 +85,9 @@ export default function RegisterScreen({ navigation }) {
         fullName: form.fullName.trim(),
       });
 
-      navigation.replace('Login', { message: 'Account created! Please sign in.' });
+      navigation.replace('Login', { message: t('auth.accountCreatedMessage') });
     } catch (e) {
-      setError(e.message || 'Registration failed. Please try again.');
+      setError(e.message || t('auth.errors.registrationFailed'));
     } finally {
       setLoading(false);
     }
@@ -106,8 +106,8 @@ export default function RegisterScreen({ navigation }) {
                 resizeMode="contain"
               />
             </View>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Sign up to get started</Text>
+            <Text style={styles.title}>{t('auth.createAccount')}</Text>
+            <Text style={styles.subtitle}>{t('auth.signUpToGetStarted')}</Text>
           </View>
 
           {error ? (
@@ -117,41 +117,41 @@ export default function RegisterScreen({ navigation }) {
           {/* Glass Form Card */}
           <BlurView intensity={70} tint="light" style={styles.formCard}>
             <View style={styles.form}>
-            <Field 
-              icon={User} 
-              value={form.fullName} 
-              onChangeText={set('fullName')} 
-              placeholder="Full Name" 
+            <Field
+              icon={User}
+              value={form.fullName}
+              onChangeText={set('fullName')}
+              placeholder={t('auth.fullName')}
               isFocused={focusedField === 'fullName'}
               onFocus={() => setFocusedField('fullName')}
               onBlur={() => setFocusedField(null)}
             />
-            <Field 
-              icon={Mail} 
-              value={form.email} 
-              onChangeText={set('email')} 
-              placeholder="Email" 
-              keyType="email-address" 
+            <Field
+              icon={Mail}
+              value={form.email}
+              onChangeText={set('email')}
+              placeholder={t('auth.email')}
+              keyType="email-address"
               isFocused={focusedField === 'email'}
               onFocus={() => setFocusedField('email')}
               onBlur={() => setFocusedField(null)}
             />
-            <Field 
-              icon={Lock} 
-              value={form.password} 
-              onChangeText={set('password')} 
-              placeholder="Password" 
-              secureEntry 
+            <Field
+              icon={Lock}
+              value={form.password}
+              onChangeText={set('password')}
+              placeholder={t('auth.password')}
+              secureEntry
               isFocused={focusedField === 'password'}
               onFocus={() => setFocusedField('password')}
               onBlur={() => setFocusedField(null)}
             />
-            <Field 
-              icon={Lock} 
-              value={form.confirmPassword} 
-              onChangeText={set('confirmPassword')} 
-              placeholder="Confirm Password" 
-              secureEntry 
+            <Field
+              icon={Lock}
+              value={form.confirmPassword}
+              onChangeText={set('confirmPassword')}
+              placeholder={t('auth.confirmPassword')}
+              secureEntry
               isFocused={focusedField === 'confirmPassword'}
               onFocus={() => setFocusedField('confirmPassword')}
               onBlur={() => setFocusedField(null)}
@@ -163,7 +163,7 @@ export default function RegisterScreen({ navigation }) {
                 {agreed && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
               </View>
               <Text style={styles.checkboxText}>
-                I agree to the <Text style={styles.linkText}>Terms & Conditions</Text>
+                {t('auth.agreeToTerms')} <Text style={styles.linkText}>{t('auth.termsAndConditions')}</Text>
               </Text>
             </TouchableOpacity>
 
@@ -171,12 +171,12 @@ export default function RegisterScreen({ navigation }) {
               style={[styles.registerBtn, loading && { opacity: 0.6 }]}
               onPress={handleRegister} disabled={loading} activeOpacity={0.85}
             >
-              <Text style={styles.registerBtnText}>{loading ? 'Signing Up...' : 'Sign Up'}</Text>
+              <Text style={styles.registerBtnText}>{loading ? t('auth.signingUp') : t('auth.signUp')}</Text>
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
+              <Text style={styles.dividerText}>{t('auth.orContinueWith')}</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -188,14 +188,14 @@ export default function RegisterScreen({ navigation }) {
             >
               <GoogleIcon size={20} />
               <Text style={styles.googleBtnText}>
-                {googleLoading ? 'Opening Google...' : 'Continue with Google'}
+                {googleLoading ? t('auth.openingGoogle') : t('auth.continueWithGoogle')}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
+              <Text style={styles.footerText}>{t('auth.alreadyHaveAccount')} </Text>
               <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginLink}>Login</Text>
+                <Text style={styles.loginLink}>{t('auth.signIn')}</Text>
               </TouchableOpacity>
             </View>
             </View>

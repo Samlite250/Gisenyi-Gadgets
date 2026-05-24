@@ -55,6 +55,7 @@
     "alreadyHaveAccount": "Already have an account?",
     "signIn": "Sign In",
     "signUp": "Sign Up",
+    "signingUp": "Signing Up...",
     "resetPassword": "Reset Password",
     "sendResetLink": "Send Reset Link",
     "backToLogin": "Back to Login",
@@ -62,7 +63,24 @@
     "loginSuccess": "Welcome back!",
     "registerSuccess": "Account created successfully!",
     "loginError": "Invalid email or password",
-    "registerError": "Failed to create account"
+    "registerError": "Failed to create account",
+    "createAccount": "Create Account",
+    "signUpToGetStarted": "Sign up to get started",
+    "agreeToTerms": "I agree to the",
+    "termsAndConditions": "Terms & Conditions",
+    "orContinueWith": "or continue with",
+    "continueWithGoogle": "Continue with Google",
+    "openingGoogle": "Opening Google...",
+    "accountCreatedMessage": "Account created! Please sign in.",
+    "googleSignInFailed": "Google sign-in failed. Please try again.",
+    "errors": {
+      "fullNameRequired": "Full name is required.",
+      "invalidEmail": "Enter a valid email.",
+      "passwordTooShort": "Password must be at least 6 characters.",
+      "passwordsDoNotMatch": "Passwords do not match.",
+      "mustAgreeToTerms": "You must agree to the Terms & Conditions.",
+      "registrationFailed": "Registration failed. Please try again."
+    }
   },
   "home": {
     "title": "Home",
@@ -73,6 +91,27 @@
     "topDeals": "Top Deals",
     "viewAll": "View All",
     "seeMore": "See More"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search phones, laptops...",
+    "sortBy": "Sort By",
+    "priceRange": "Price Range",
+    "relevance": "Relevance",
+    "priceLowToHigh": "Price: Low→High",
+    "priceHighToLow": "Price: High→Low",
+    "topRated": "Top Rated",
+    "allPrices": "All Prices",
+    "under50k": "Under 50K",
+    "range50kTo200k": "50K - 200K",
+    "over200k": "Over 200K",
+    "itemsFound": "{{count}} items found for your search",
+    "itemsFound_plural": "{{count}} items found for your search",
+    "noResults": "No results for \"{{query}}\"",
+    "noResultsDescription": "We couldn't find items matching your search. Try checking the spelling or using broader terms like \"Galaxy\" or \"Mac\".",
+    "clearAllFilters": "Clear All Filters",
+    "recentSearches": "Recent Searches",
+    "trendingTags": "Trending Tags"
   },
   "categories": {
     "electronics": "Electronics",
@@ -102,7 +141,27 @@
     "selectVariant": "Select Variant",
     "soldBy": "Sold by",
     "deliveryInfo": "Delivery Information",
-    "returnPolicy": "Return Policy"
+    "returnPolicy": "Return Policy",
+    "writeReview": "Review Your Order",
+    "reviewSubtitle": "Help others make informed decisions by sharing your experience",
+    "thankYouPurchase": "Thank You for Your Purchase!",
+    "feedbackAppreciation": "Your honest feedback helps our community make better choices. We truly appreciate you taking the time to share your experience!",
+    "yourRating": "Your Rating",
+    "yourReview": "Your Review (Optional)",
+    "reviewPlaceholder": "Share your thoughts about this product...",
+    "charCount": "{{count}}/500",
+    "submitReviews": "Submit Reviews",
+    "loadingProducts": "Loading products...",
+    "rateAtLeastOne": "Please rate at least one product before submitting.",
+    "confirmSubmitTitle": "Submit Your Reviews?",
+    "confirmSubmitMessage": "Thank you for sharing your valuable feedback! Your reviews will help other customers make informed decisions. Ready to submit?",
+    "noNewReviews": "No new reviews to submit.",
+    "reviewsSubmitted": "Success! {{count}} review(s) submitted. Thank you for your feedback!",
+    "alreadyReviewed": "You have already reviewed one or more of these products. Each product can only be reviewed once.",
+    "reviewSubmitError": "Error: Failed to submit reviews. Please try again.",
+    "reviewLoadError": "Error: Failed to load products",
+    "reviewFooterNote": "Your reviews help our community make better purchasing decisions",
+    "qty": "Qty: {{quantity}}"
   },
   "cart": {
     "title": "Shopping Cart",
@@ -134,10 +193,15 @@
     "mobilePayment": "Mobile Money",
     "cardPayment": "Credit/Debit Card",
     "cashOnDelivery": "Cash on Delivery",
-    "orderPlaced": "Order Placed Successfully!",
+    "orderPlaced": "Order Placed!",
     "orderNumber": "Order Number",
     "viewOrder": "View Order",
-    "paymentFailed": "Payment Failed. Please try again."
+    "paymentFailed": "Payment Failed. Please try again.",
+    "thankYouMessage": "Thank you for shopping with Gisenyi Gadgets. Your order has been confirmed and is being processed.",
+    "orderID": "Order ID",
+    "estimatedDelivery": "Estimated Delivery",
+    "totalPaid": "Total Paid",
+    "whatHappensNext": "What happens next?"
   },
   "orders": {
     "title": "My Orders",
@@ -148,13 +212,26 @@
     "shipped": "Shipped",
     "delivered": "Delivered",
     "cancelled": "Cancelled",
+    "confirmed": "Confirmed",
+    "refunded": "Refunded",
     "orderNumber": "Order #{{number}}",
     "orderedOn": "Ordered on",
     "trackOrder": "Track Order",
     "cancelOrder": "Cancel Order",
     "viewDetails": "View Details",
     "reorder": "Reorder",
-    "downloadInvoice": "Download Invoice"
+    "downloadInvoice": "Download Invoice",
+    "orderPlaced": "Order Placed",
+    "outForDelivery": "Out for Delivery",
+    "placedOn": "Placed on",
+    "orderCancelled": "This order was cancelled",
+    "total": "Total",
+    "payment": "Payment",
+    "items": "Items",
+    "completed": "Completed",
+    "backToOrders": "Back to Orders",
+    "orderConfirmed": "Order Confirmed",
+    "beingPacked": "Being Packed"
   },
   "wishlist": {
     "title": "Wishlist",
@@ -181,7 +258,39 @@
     "version": "Version",
     "totalOrders": "Total Orders",
     "totalSpent": "Total Spent",
-    "memberSince": "Member Since"
+    "memberSince": "Member Since",
+    "tapToChange": "Tap to change",
+    "address": "Address",
+    "addressPlaceholder": "KG 15 Ave",
+    "cityPlaceholder": "Gisenyi",
+    "saveChanges": "Save Changes",
+    "profileUpdated": "Your profile has been updated!",
+    "updateFailed": "Update Failed",
+    "fullNameRequired": "Full name is required.",
+    "avatarUploadFailed": "Failed to upload profile picture.",
+    "cameraPermissionRequired": "Sorry, we need camera roll permissions to update your profile picture.",
+    "contactUs": "Contact us for assistance!",
+    "faqComingSoon": "FAQ coming soon."
+  },
+  "chat": {
+    "title": "Gadgets Support",
+    "online": "Online",
+    "today": "Today",
+    "inputPlaceholder": "Type a message...",
+    "sendButton": "Send",
+    "support": "Support",
+    "you": "You",
+    "image": "Image",
+    "replyingTo": "Replying to {{name}}",
+    "replyingToSupport": "Replying to Support",
+    "replyingToYourself": "Replying to yourself",
+    "reply": "Reply",
+    "sendFailed": "Failed to send. Please try again.",
+    "imageSendFailed": "Failed to send image. Please try again.",
+    "photoPermissionRequired": "Allow photo access to send images.",
+    "callSupport": "Call Support",
+    "callSupportSubtitle": "Gisenyi Gadgets Customer Support",
+    "callNow": "Call Now"
   },
   "settings": {
     "title": "Settings",
@@ -209,8 +318,36 @@
   },
   "notifications": {
     "title": "Notifications",
-    "empty": "No notifications yet",
-    "markAllRead": "Mark All as Read",
+    "empty": "No notifications",
+    "allCaughtUp": "You're all caught up!",
+    "markAllRead": "Mark all read",
+    "unread": "{count} unread",
+    "justNow": "Just now",
+    "minutesAgo": "{minutes}m ago",
+    "hoursAgo": "{hours}h ago",
+    "daysAgo": "{days}d ago",
+    "type": {
+      "order": "Order",
+      "promo": "Promo",
+      "review": "Review",
+      "delivery": "Delivery",
+      "general": "General",
+      "system": "System"
+    },
+    "demo": {
+      "welcome": {
+        "title": "Welcome to Gisenyi Gadgets!",
+        "body": "Start shopping and your order updates will appear here. You can track all your orders from the Orders tab."
+      },
+      "flashSale": {
+        "title": "🔥 Flash Sale — 40% OFF",
+        "body": "Limited time deals on AirPods Pro and Sony headphones! Use code FLASH40 at checkout. Offer valid until midnight."
+      },
+      "newArrivals": {
+        "title": "New Arrivals Just Dropped",
+        "body": "Check out the latest MacBook Pro M4, Galaxy S25 and more. Browse the full collection in the Search tab."
+      }
+    },
     "orderShipped": "Your order has been shipped",
     "orderDelivered": "Your order has been delivered",
     "newOffer": "New offer available",
@@ -224,5 +361,16 @@
     "permissionDenied": "Permission denied.",
     "notFound": "Item not found.",
     "unknown": "Something went wrong. Please try again."
+  },
+  "licenses": {
+    "title": "Open Source Licenses",
+    "introTitle": "Built with Open Source",
+    "introText": "Gisenyi Gadgets is built using amazing open source libraries maintained by developers worldwide. We're grateful to these communities for their contributions.",
+    "thirdPartyLibraries": "Third-Party Libraries",
+    "version": "v{{version}}",
+    "by": "by {{author}}",
+    "mitLicenseTitle": "MIT License Summary",
+    "mitLicenseText": "The MIT License is a permissive open source license that allows for reuse with very few restrictions. It permits use, modification, and distribution of the software for any purpose, including commercial use.",
+    "fullLicenseNote": "Full license texts are available in each library's repository."
   }
 }

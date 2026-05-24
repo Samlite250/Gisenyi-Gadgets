@@ -12,9 +12,11 @@ import { CircleCheckBig, Package, Home, ListOrdered, Truck } from 'lucide-react-
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { BlurView } from '../components/BlurView';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function OrderSuccessScreen({ navigation, route }) {
   const { clearCart } = useCart();
+  const { t } = useLanguage();
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -73,9 +75,9 @@ export default function OrderSuccessScreen({ navigation, route }) {
 
         {/* Text */}
         <Animated.View style={[styles.textBlock, { opacity: fadeAnim }]}>
-          <Text style={styles.title}>Order Placed!</Text>
+          <Text style={styles.title}>{t('checkout.orderPlaced')}</Text>
           <Text style={styles.subtitle}>
-            Thank you for shopping with Gisenyi Gadgets. Your order has been confirmed and is being processed.
+            {t('checkout.thankYouMessage')}
           </Text>
         </Animated.View>
 
@@ -83,19 +85,19 @@ export default function OrderSuccessScreen({ navigation, route }) {
         <Animated.View style={[{ width: '100%', opacity: fadeAnim }]}>
           <BlurView intensity={70} tint="light" style={styles.orderCard}>
             <View style={styles.orderRow}>
-              <Text style={styles.orderLabel}>Order ID</Text>
+              <Text style={styles.orderLabel}>{t('checkout.orderID')}</Text>
               <Text style={styles.orderValue}>{orderId}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.orderRow}>
-              <Text style={styles.orderLabel}>Estimated Delivery</Text>
+              <Text style={styles.orderLabel}>{t('checkout.estimatedDelivery')}</Text>
               <Text style={styles.orderValue}>{estimatedDelivery}</Text>
             </View>
             {total > 0 && (
               <>
                 <View style={styles.divider} />
                 <View style={styles.orderRow}>
-                  <Text style={styles.orderLabel}>Total Paid</Text>
+                  <Text style={styles.orderLabel}>{t('checkout.totalPaid')}</Text>
                   <Text style={[styles.orderValue, { color: COLORS.primaryGreen }]}>
                     RWF {total.toLocaleString()}
                   </Text>
@@ -108,12 +110,12 @@ export default function OrderSuccessScreen({ navigation, route }) {
         {/* Steps Glass Card */}
         <Animated.View style={[{ width: '100%', opacity: fadeAnim }]}>
           <BlurView intensity={60} tint="light" style={styles.stepsCard}>
-            <Text style={styles.stepsTitle}>What happens next?</Text>
+            <Text style={styles.stepsTitle}>{t('checkout.whatHappensNext')}</Text>
             {[
-              { icon: CircleCheckBig, label: 'Order Confirmed', done: true, color: COLORS.primaryGreen },
-              { icon: Package, label: 'Being Packed', done: false, color: COLORS.textSecondary },
-              { icon: Truck, label: 'Out for Delivery', done: false, color: COLORS.textSecondary },
-              { icon: Home, label: 'Delivered', done: false, color: COLORS.textSecondary },
+              { icon: CircleCheckBig, label: t('orders.orderConfirmed'), done: true, color: COLORS.primaryGreen },
+              { icon: Package, label: t('orders.beingPacked'), done: false, color: COLORS.textSecondary },
+              { icon: Truck, label: t('orders.outForDelivery'), done: false, color: COLORS.textSecondary },
+              { icon: Home, label: t('orders.delivered'), done: false, color: COLORS.textSecondary },
             ].map((step, i) => (
               <View key={i} style={styles.stepRow}>
                 <step.icon size={20} color={step.color} />
@@ -122,7 +124,7 @@ export default function OrderSuccessScreen({ navigation, route }) {
                 </Text>
                 {step.done && (
                   <View style={styles.stepBadge}>
-                    <Text style={styles.stepBadgeText}>Done</Text>
+                    <Text style={styles.stepBadgeText}>{t('common.done')}</Text>
                   </View>
                 )}
               </View>
@@ -138,7 +140,7 @@ export default function OrderSuccessScreen({ navigation, route }) {
             activeOpacity={0.85}
           >
             <ListOrdered size={20} color={COLORS.textPrimary} />
-            <Text style={styles.trackBtnText}>Track My Order</Text>
+            <Text style={styles.trackBtnText}>{t('orders.trackOrder')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -147,7 +149,7 @@ export default function OrderSuccessScreen({ navigation, route }) {
             activeOpacity={0.85}
           >
             <Home size={20} color={COLORS.primaryBlue} />
-            <Text style={styles.homeBtnText}>Continue Shopping</Text>
+            <Text style={styles.homeBtnText}>{t('cart.continueShopping')}</Text>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>

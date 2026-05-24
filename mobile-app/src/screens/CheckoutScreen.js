@@ -110,6 +110,14 @@ export default function CheckoutScreen({ navigation }) {
     manual_enabled: true,
     cash_enabled: true,
   });
+  const [settings, setSettings] = useState({
+    mtnAccountName: 'Gisenyi Gadgets',
+    mtnNumber: '',
+    airtelAccountName: 'Gisenyi Gadgets',
+    airtelNumber: '',
+    mtnInstructions: '',
+    airtelInstructions: '',
+  });
 
   // Automatic-mode Paypack modal
   const [pendingOrderId, setPendingOrderId]       = useState(null);
@@ -130,7 +138,7 @@ export default function CheckoutScreen({ navigation }) {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  // Fetch payment settings from admin
+  // Fetch payment method visibility settings
   React.useEffect(() => {
     supabase
       .from('settings')
@@ -139,7 +147,25 @@ export default function CheckoutScreen({ navigation }) {
       .single()
       .then(({ data }) => {
         if (data?.value) {
-          setPaymentSettings(data.value);
+          // Handle both JSON string and object
+          const value = typeof data.value === 'string'
+            ? JSON.parse(data.value)
+            : data.value;
+          setPaymentSettings(value);
+        }
+      });
+  }, []);
+
+  // Fetch platform settings (MTN/Airtel account info)
+  React.useEffect(() => {
+    supabase
+      .from('platform_settings')
+      .select('*')
+      .then(({ data }) => {
+        if (data) {
+          const s = {};
+          data.forEach(r => { s[r.key] = r.value; });
+          setSettings(s);
         }
       });
   }, []);

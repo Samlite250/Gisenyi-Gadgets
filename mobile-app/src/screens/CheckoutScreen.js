@@ -312,6 +312,9 @@ export default function CheckoutScreen({ navigation }) {
     }
   };
 
+  // ─── Payment methods with translations ────────────────────────────────────
+  const PAYMENT_METHODS = getPaymentMethods(t);
+
   // ─── Derived values for the active MoMo provider ─────────────────────────
   const activeMomo = PAYMENT_METHODS.find(m => m.id === selectedPayment);
   const momoAcctName   = selectedPayment === 'mtn'
@@ -325,7 +328,6 @@ export default function CheckoutScreen({ navigation }) {
     : settings.airtelInstructions;
 
   const isManualMomo = MOMO_PROVIDERS.includes(selectedPayment) && paymentMode === 'manual';
-  const PAYMENT_METHODS = getPaymentMethods(t);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

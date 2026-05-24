@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard, Mail, Phone, MessageSquare, Send } from 'lucide-react';
+import { Save, Globe, Bell, Shield, Package, MessageCircle, CreditCard, Mail, Phone, MessageSquare, Send, Zap, Upload, Banknote } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import Loader from '../components/Loader';
 import toast from 'react-hot-toast';
@@ -73,9 +73,17 @@ export default function SettingsPage() {
     maintenanceMode: false,
   });
 
+  // Payment method toggles (separate from platform_settings)
+  const [paymentSettings, setPaymentSettings] = useState({
+    automatic_enabled: false,
+    manual_enabled: true,
+    cash_enabled: true,
+  });
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        // Fetch platform settings
         const { data, error } = await supabase.from('platform_settings').select('*');
         if (!error && data) {
           const newForm = { ...form };
@@ -85,6 +93,17 @@ export default function SettingsPage() {
             }
           });
           setForm(newForm);
+        }
+
+        // Fetch payment method settings
+        const { data: paymentData } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'payment_methods')
+          .single();
+
+        if (paymentData?.value) {
+          setPaymentSettings(paymentData.value);
         }
       } catch (err) {
         // // console.warn('Settings fetch error:', err.message);
@@ -143,6 +162,26 @@ export default function SettingsPage() {
       toast.error('Failed to update password: ' + err.message);
     } finally {
       setChangingPw(false);
+    }
+  };
+
+  const handlePaymentToggle = async (key) => {
+    const newSettings = { ...paymentSettings, [key]: !paymentSettings[key] };
+    setPaymentSettings(newSettings);
+
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .update({ value: newSettings })
+        .eq('key', 'payment_methods');
+
+      if (error) throw error;
+
+      toast.success('Payment settings updated!');
+    } catch (err) {
+      toast.error('Failed to save payment settings');
+      // Revert on error
+      setPaymentSettings(paymentSettings);
     }
   };
 
@@ -413,6 +452,156 @@ export default function SettingsPage() {
 
               {activeTab === 'payments' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  {/* Payment Method Visibility Controls */}
+                  <section style={{
+                    background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
+                    borderRadius: 16,
+                    padding: 24,
+                    border: '1.5px solid #3B82F6'
+                  }}>
+                    <h4 style={{
+                      fontSize: 14,
+                      fontWeight: 800,
+                      color: '#1E40AF',
+                      textTransform: 'uppercase',
+                      letterSpacing: 1,
+                      marginBottom: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      <CreditCard size={18} /> Payment Method Visibility
+                    </h4>
+                    <p style={{ fontSize: 13, color: '#3B82F6', marginBottom: 20, lineHeight: 1.6 }}>
+                      Control which payment methods customers see in the mobile app. Use this to hide automatic payments until Paypack integration is ready.
+                    </p>
+
+                    <div style={{ display: 'grid', gap: 16 }}>
+                      {/* Automatic Payment Toggle */}
+                      <div style={{
+                        background: '#fff',
+                        borderRadius: 12,
+                        padding: 20,
+                        border: '1.5px solid #BFDBFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16
+                      }}>
+                        <div style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 12,
+                          background: '#FFF7ED',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <Zap size={24} color="#EA580C" />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 15, color: '#0F172A', marginBottom: 4 }}>
+                            Automatic Payment (Paypack)
+                          </div>
+                          <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>
+                            Instant MTN MoMo and Airtel Money via Paypack integration. Enable when configured.
+                          </div>
+                        </div>
+                        <Toggle
+                          label=""
+                          checked={paymentSettings.automatic_enabled}
+                          onChange={() => handlePaymentToggle('automatic_enabled')}
+                        />
+                      </div>
+
+                      {/* Manual Payment Toggle */}
+                      <div style={{
+                        background: '#fff',
+                        borderRadius: 12,
+                        padding: 20,
+                        border: '1.5px solid #BFDBFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16
+                      }}>
+                        <div style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 12,
+                          background: '#EFF6FF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <Upload size={24} color="#2563EB" />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 15, color: '#0F172A', marginBottom: 4 }}>
+                            Manual Payment (Screenshot Upload)
+                          </div>
+                          <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>
+                            Customers upload payment screenshots for manual verification. Recommended.
+                          </div>
+                        </div>
+                        <Toggle
+                          label=""
+                          checked={paymentSettings.manual_enabled}
+                          onChange={() => handlePaymentToggle('manual_enabled')}
+                        />
+                      </div>
+
+                      {/* Cash on Delivery Toggle */}
+                      <div style={{
+                        background: '#fff',
+                        borderRadius: 12,
+                        padding: 20,
+                        border: '1.5px solid #BFDBFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 16
+                      }}>
+                        <div style={{
+                          width: 48,
+                          height: 48,
+                          borderRadius: 12,
+                          background: '#F0FDF4',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <Banknote size={24} color="#16A34A" />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 15, color: '#0F172A', marginBottom: 4 }}>
+                            Cash on Delivery
+                          </div>
+                          <div style={{ fontSize: 13, color: '#64748B', lineHeight: 1.5 }}>
+                            Customers pay with cash when order is delivered. No upfront payment required.
+                          </div>
+                        </div>
+                        <Toggle
+                          label=""
+                          checked={paymentSettings.cash_enabled}
+                          onChange={() => handlePaymentToggle('cash_enabled')}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{
+                      marginTop: 16,
+                      padding: 12,
+                      background: 'rgba(59, 130, 246, 0.08)',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: '#1E40AF',
+                      lineHeight: 1.6
+                    }}>
+                      <strong>💡 Note:</strong> Changes take effect immediately for all users. At least one payment method must remain enabled.
+                    </div>
+                  </section>
+
                   {/* Mobile Money Accounts */}
                   <section>
                     <h4 style={{ fontSize: 13, fontWeight: 800, color: 'var(--primary-blue)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 8 }}>

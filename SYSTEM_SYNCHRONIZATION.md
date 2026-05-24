@@ -92,7 +92,38 @@ These migrations fix critical bugs and synchronize the database with code expect
 4. Verify: Check output shows updated order counts by payment_type
 ```
 
-### Step 3 (Optional): Clean Up Test Orders
+### Step 3: Payment Method Control (Recommended)
+
+**File:** `supabase/migrations/009_payment_settings.sql`
+
+**What it does:**
+- Creates settings table for system configuration
+- Adds payment method visibility controls
+- Allows admins to hide/show automatic payments
+- Enables launching with manual payments only
+
+**Why recommended:**
+- **Launch Strategy**: Hide automatic payments until Paypack is ready
+- **Flexibility**: Keep manual and cash payments enabled
+- **Admin Control**: Toggle payment methods without code changes
+- **User Experience**: Only show working payment options
+
+**How to run:**
+```
+1. Go to Supabase Dashboard → SQL Editor
+2. Copy contents of 009_payment_settings.sql
+3. Paste and click "Run"
+4. Verify: Admin Dashboard → Settings → Payments tab shows toggles
+```
+
+**Default Configuration:**
+- Automatic Payment: **Disabled** (enable when Paypack is ready)
+- Manual Payment: **Enabled** (screenshot upload)
+- Cash on Delivery: **Enabled**
+
+See `PAYMENT_METHOD_CONTROL.md` for complete documentation.
+
+### Step 4 (Optional): Clean Up Test Orders
 
 **File:** `delete_automatic_orders_corrected.sql` (BEFORE migration 008)
 **OR**

@@ -105,7 +105,11 @@ export default function CheckoutScreen({ navigation }) {
   const [selectedPayment, setSelectedPayment] = useState('mtn');
   const [paymentMode, setPaymentMode]         = useState('automatic'); // 'automatic' | 'manual'
   const [placing, setPlacing]                 = useState(false);
-  const [settings, setSettings]               = useState({});
+  const [paymentSettings, setPaymentSettings] = useState({
+    automatic_enabled: false, // Default to false until Paypack is ready
+    manual_enabled: true,
+    cash_enabled: true,
+  });
 
   // Automatic-mode Paypack modal
   const [pendingOrderId, setPendingOrderId]       = useState(null);
@@ -126,14 +130,26 @@ export default function CheckoutScreen({ navigation }) {
     setTimeout(() => setCopied(null), 2000);
   };
 
+  // Fetch payment settings from admin
   React.useEffect(() => {
-    supabase.from('platform_settings').select('*').then(({ data }) => {
-      if (!data) return;
-      const s = {};
-      data.forEach(r => { s[r.key] = r.value; });
-      setSettings(s);
-    });
+    supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'payment_methods')
+      .single()
+      .then(({ data }) => {
+        if (data?.value) {
+          setPaymentSettings(data.value);
+        }
+      });
   }, []);
+
+  // Auto-select manual mode if automatic payment is disabled
+  React.useEffect(() => {
+    if (!paymentSettings.automatic_enabled && paymentMode === 'automatic') {
+      setPaymentMode('manual');
+    }
+  }, [paymentSettings.automatic_enabled]);
 
   // Clear manual form when user switches method or mode
   React.useEffect(() => {
@@ -362,7 +378,11 @@ export default function CheckoutScreen({ navigation }) {
         {/* ── Payment Method ── */}
         <Text style={styles.sectionTitle}>{t('checkout.paymentMethod')}</Text>
         <View style={styles.payList}>
-          {PAYMENT_METHODS.map((m) => {
+          {PAYMENT_METHODS.filter((m) => {
+            // Hide cash on delivery if disabled by admin
+            if (m.id === 'cash' && !paymentSettings.cash_enabled) return false;
+            return true;
+          }).map((m) => {
             const isActive = selectedPayment === m.id;
             const isMomo   = MOMO_PROVIDERS.includes(m.id);
 
@@ -396,9 +416,9 @@ export default function CheckoutScreen({ navigation }) {
                         {/* Mode toggle */}
                         <View style={styles.modeRow}>
                           {[
-                            { key: 'automatic', label: t('checkout.automatic'), Icon: Zap },
-                            { key: 'manual',    label: t('checkout.manual'),    Icon: Upload },
-                          ].map(({ key, label, Icon }) => (
+                            { key: 'automatic', label: t('checkout.automatic'), Icon: Zap, enabled: paymentSettings.automatic_enabled },
+                            { key: 'manual',    label: t('checkout.manual'),    Icon: Upload, enabled: paymentSettings.manual_enabled },
+                          ].filter(mode => mode.enabled).map(({ key, label, Icon }) => (
                             <TouchableOpacity
                               key={key}
                               style={[styles.modeBtn, paymentMode === key && { backgroundColor: m.color, borderColor: m.color }]}

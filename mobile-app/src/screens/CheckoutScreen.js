@@ -12,17 +12,18 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { orderLogger } from '../utils/logger';
 import PaymentModal from '../components/PaymentModal';
 
-const PAYMENT_METHODS = [
-  { id: 'mtn',    name: 'MTN MoMo',         icon: Smartphone, color: '#FBC400', bg: '#FFFBEB', border: '#FDE68A',  description: 'Pay via MTN Mobile Money' },
-  { id: 'airtel', name: 'Airtel Money',      icon: Smartphone, color: '#E8002D', bg: '#FFF1F2', border: '#FECDD3',  description: 'Pay via Airtel Money' },
-  { id: 'bank',   name: 'Bank Transfer',     icon: Landmark,   color: '#0EA5E9', bg: '#F0F9FF', border: '#BFDBFE',  description: 'Direct bank transfer — use order # as ref.' },
-  { id: 'crypto', name: 'Crypto',            icon: Bitcoin,    color: '#F7931A', bg: '#FFF7ED', border: '#FED7AA',  description: 'Pay with USDT, BTC, etc.' },
-  { id: 'cash',   name: 'Cash on Delivery',  icon: Banknote,   color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',  description: 'Pay when your order arrives.' },
+const getPaymentMethods = (t) => [
+  { id: 'mtn',    name: t('checkout.mtnMomo'),         icon: Smartphone, color: '#FBC400', bg: '#FFFBEB', border: '#FDE68A',  description: t('checkout.payViaMtn') },
+  { id: 'airtel', name: t('checkout.airtelMoney'),     icon: Smartphone, color: '#E8002D', bg: '#FFF1F2', border: '#FECDD3',  description: t('checkout.payViaAirtel') },
+  { id: 'bank',   name: t('checkout.bankTransfer'),    icon: Landmark,   color: '#0EA5E9', bg: '#F0F9FF', border: '#BFDBFE',  description: t('checkout.bankTransferDesc') },
+  { id: 'crypto', name: t('checkout.crypto'),          icon: Bitcoin,    color: '#F7931A', bg: '#FFF7ED', border: '#FED7AA',  description: t('checkout.cryptoDesc') },
+  { id: 'cash',   name: t('checkout.cashOnDelivery'),  icon: Banknote,   color: '#16A34A', bg: '#F0FDF4', border: '#BBF7D0',  description: t('checkout.cashOnDeliveryDesc') },
 ];
 
 const MOMO_PROVIDERS = ['mtn', 'airtel'];
@@ -43,7 +44,7 @@ const rcStyles = StyleSheet.create({
 });
 
 // ─── Recipient card ───────────────────────────────────────────────────────────
-function RecipientCard({ color, bg, border, name, number, amount, onCopyNumber, onCopyAmount, copyKey, copied, copiedAmount }) {
+function RecipientCard({ color, bg, border, name, number, amount, onCopyNumber, onCopyAmount, copyKey, copied, copiedAmount, t }) {
   const numCopied = copied === copyKey;
   return (
     <View style={[rcStyles.card, { borderColor: border }]}>
@@ -56,7 +57,7 @@ function RecipientCard({ color, bg, border, name, number, amount, onCopyNumber, 
 
         {/* Info column */}
         <View style={rcStyles.info}>
-          <Text style={rcStyles.sendLabel}>Send to</Text>
+          <Text style={rcStyles.sendLabel}>{t('checkout.sendTo')}</Text>
           <Text style={rcStyles.recipientName}>{name}</Text>
 
           {/* Phone number row */}
@@ -99,6 +100,7 @@ function RecipientCard({ color, bg, border, name, number, amount, onCopyNumber, 
 export default function CheckoutScreen({ navigation }) {
   const { user, profile } = useAuth();
   const { cartItems, subtotal, shippingFee, total, promoDiscount, activePromo, clearCart } = useCart();
+  const { t } = useLanguage();
 
   const [selectedPayment, setSelectedPayment] = useState('mtn');
   const [paymentMode, setPaymentMode]         = useState('automatic'); // 'automatic' | 'manual'
@@ -143,11 +145,11 @@ export default function CheckoutScreen({ navigation }) {
 
   const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
 
-  const displayName    = profile?.full_name || user?.user_metadata?.full_name || 'Customer';
+  const displayName    = profile?.full_name || user?.user_metadata?.full_name || t('checkout.customer');
   const displayPhone   = profile?.phone || '—';
   const displayAddress = profile?.address
     ? `${profile.address}, ${profile.city || 'Gisenyi'}`
-    : 'No address set — please update your profile.';
+    : t('checkout.noAddressSet');
 
   const toDbPayment = (id) => {
     if (id === 'cash') return 'cash';
@@ -238,15 +240,15 @@ export default function CheckoutScreen({ navigation }) {
   // ─── Main CTA handler ─────────────────────────────────────────────────────
   const handlePlaceOrder = async () => {
     if (!cartItems.length) {
-      Alert.alert('Empty Cart', 'Add items to your cart first.');
+      Alert.alert(t('checkout.emptyCart'), t('checkout.addItemsFirst'));
       return;
     }
 
     // Validate manual form before touching the DB
     if (MOMO_PROVIDERS.includes(selectedPayment) && paymentMode === 'manual') {
-      if (!payerName.trim())                                     { setFormError('Enter the name on your MoMo account.'); return; }
-      if (payerPhone.replace(/\D/g, '').length < 9)              { setFormError('Enter the phone number you paid from.'); return; }
-      if (!screenshot)                                           { setFormError('Upload your payment confirmation screenshot.'); return; }
+      if (!payerName.trim())                                     { setFormError(t('checkout.enterMomoName')); return; }
+      if (payerPhone.replace(/\D/g, '').length < 9)              { setFormError(t('checkout.enterPayerPhone')); return; }
+      if (!screenshot)                                           { setFormError(t('checkout.uploadScreenshot')); return; }
     }
 
     setPlacing(true);
@@ -278,7 +280,7 @@ export default function CheckoutScreen({ navigation }) {
       }
     } catch (err) {
       orderLogger.error('Order placement failed', err);
-      Alert.alert('Error', err.message || 'Failed to place order. Please try again.');
+      Alert.alert(t('checkout.error'), err.message || t('checkout.orderFailed'));
     } finally {
       setPlacing(false);
     }
@@ -296,7 +298,7 @@ export default function CheckoutScreen({ navigation }) {
   const pickScreenshot = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Allow access to your photo library.');
+      Alert.alert(t('checkout.permissionNeeded'), t('checkout.allowPhotoAccess'));
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -323,6 +325,7 @@ export default function CheckoutScreen({ navigation }) {
     : settings.airtelInstructions;
 
   const isManualMomo = MOMO_PROVIDERS.includes(selectedPayment) && paymentMode === 'manual';
+  const PAYMENT_METHODS = getPaymentMethods(t);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -332,7 +335,7 @@ export default function CheckoutScreen({ navigation }) {
         <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
           <ChevronLeft size={24} color={COLORS.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Checkout</Text>
+        <Text style={styles.headerTitle}>{t('checkout.title')}</Text>
         <View style={{ width: 44 }} />
       </View>
 
@@ -343,19 +346,19 @@ export default function CheckoutScreen({ navigation }) {
       >
 
         {/* ── Delivery Address ── */}
-        <Text style={styles.sectionTitle}>Delivery Address</Text>
+        <Text style={styles.sectionTitle}>{t('checkout.deliveryAddress')}</Text>
         <View style={styles.card}>
           <View style={styles.cardRow}>
             <MapPin size={18} color={COLORS.primaryBlue} />
             <Text style={styles.cardName}>{displayName}</Text>
-            <TouchableOpacity><Text style={styles.changeText}>Change</Text></TouchableOpacity>
+            <TouchableOpacity><Text style={styles.changeText}>{t('checkout.change')}</Text></TouchableOpacity>
           </View>
           <Text style={styles.cardSub}>{displayAddress}</Text>
           <Text style={styles.cardSub}>{displayPhone}</Text>
         </View>
 
         {/* ── Payment Method ── */}
-        <Text style={styles.sectionTitle}>Payment Method</Text>
+        <Text style={styles.sectionTitle}>{t('checkout.paymentMethod')}</Text>
         <View style={styles.payList}>
           {PAYMENT_METHODS.map((m) => {
             const isActive = selectedPayment === m.id;
@@ -391,8 +394,8 @@ export default function CheckoutScreen({ navigation }) {
                         {/* Mode toggle */}
                         <View style={styles.modeRow}>
                           {[
-                            { key: 'automatic', label: 'Automatic', Icon: Zap },
-                            { key: 'manual',    label: 'Manual',    Icon: Upload },
+                            { key: 'automatic', label: t('checkout.automatic'), Icon: Zap },
+                            { key: 'manual',    label: t('checkout.manual'),    Icon: Upload },
                           ].map(({ key, label, Icon }) => (
                             <TouchableOpacity
                               key={key}
@@ -416,10 +419,11 @@ export default function CheckoutScreen({ navigation }) {
                               name={momoAcctName} number={momoAcctNumber}
                               copyKey="auto-number" copied={copied}
                               onCopyNumber={() => copyToClipboard(momoAcctNumber, 'auto-number')}
+                              t={t}
                             />
                             <View style={[styles.infoBox, { backgroundColor: m.bg, borderColor: m.border }]}>
                               <Text style={styles.infoBoxText}>
-                                Tap <Text style={{ fontWeight: '800' }}>Place Order</Text> below — you'll get a push notification on your {m.name} number to approve the payment.
+                                {t('checkout.automaticPaymentInfo', { paymentMethod: m.name })}
                               </Text>
                             </View>
                           </View>
@@ -434,7 +438,7 @@ export default function CheckoutScreen({ navigation }) {
                               <View style={[styles.stepBadge, { backgroundColor: m.color }]}>
                                 <Text style={styles.stepBadgeText}>1</Text>
                               </View>
-                              <Text style={styles.stepTitle}>Make the payment</Text>
+                              <Text style={styles.stepTitle}>{t('checkout.makePayment')}</Text>
                             </View>
                             <RecipientCard
                               color={m.color} bg={m.bg} border={m.border}
@@ -444,6 +448,7 @@ export default function CheckoutScreen({ navigation }) {
                               onCopyNumber={() => copyToClipboard(momoAcctNumber, 'manual-number')}
                               onCopyAmount={() => copyToClipboard(total, 'amount')}
                               copiedAmount={copied === 'amount'}
+                              t={t}
                             />
                             {momoInstructions ? (
                               <View style={[styles.stepsBox, { borderLeftColor: m.color }]}>
@@ -460,17 +465,17 @@ export default function CheckoutScreen({ navigation }) {
                               <View style={[styles.stepBadge, { backgroundColor: m.color }]}>
                                 <Text style={styles.stepBadgeText}>2</Text>
                               </View>
-                              <Text style={styles.stepTitle}>Confirm your payment</Text>
+                              <Text style={styles.stepTitle}>{t('checkout.confirmPayment')}</Text>
                             </View>
 
                             <View style={[styles.inputRow, formError && !payerName.trim() && styles.inputError]}>
                               <User size={15} color={COLORS.textMuted} />
                               <TextInput
                                 style={styles.input}
-                                placeholder="Name on your MoMo account"
+                                placeholder={t('checkout.momoAccountName')}
                                 placeholderTextColor="#9AA0A6"
                                 value={payerName}
-                                onChangeText={t => { setPayerName(t); setFormError(''); }}
+                                onChangeText={text => { setPayerName(text); setFormError(''); }}
                               />
                             </View>
 
@@ -481,7 +486,7 @@ export default function CheckoutScreen({ navigation }) {
                                 placeholder={m.id === 'mtn' ? '78XXXXXXX' : '73XXXXXXX'}
                                 placeholderTextColor="#9AA0A6"
                                 value={payerPhone}
-                                onChangeText={t => { setPayerPhone(t); setFormError(''); }}
+                                onChangeText={text => { setPayerPhone(text); setFormError(''); }}
                                 keyboardType="phone-pad"
                                 maxLength={13}
                               />
@@ -500,7 +505,7 @@ export default function CheckoutScreen({ navigation }) {
                                 <>
                                   <Image source={{ uri: screenshot.uri }} style={styles.previewImg} />
                                   <View style={styles.overlay}>
-                                    <Text style={styles.overlayText}>Tap to change</Text>
+                                    <Text style={styles.overlayText}>{t('checkout.tapToChange')}</Text>
                                   </View>
                                 </>
                               ) : (
@@ -508,8 +513,8 @@ export default function CheckoutScreen({ navigation }) {
                                   <View style={[styles.uploadCircle, { backgroundColor: m.bg }]}>
                                     <Upload size={20} color={m.color} />
                                   </View>
-                                  <Text style={styles.uploadLabel}>Tap to upload payment screenshot</Text>
-                                  <Text style={styles.uploadSub}>PNG or JPG from your gallery</Text>
+                                  <Text style={styles.uploadLabel}>{t('checkout.uploadPaymentScreenshot')}</Text>
+                                  <Text style={styles.uploadSub}>{t('checkout.pngOrJpg')}</Text>
                                 </>
                               )}
                             </TouchableOpacity>
@@ -523,9 +528,9 @@ export default function CheckoutScreen({ navigation }) {
                     ) : (
                       /* Non-MoMo instructions */
                       <Text style={styles.staticText}>
-                        {m.id === 'bank'   ? (settings.bankInstructions   || 'Bank details not configured yet.')
-                        : m.id === 'crypto' ? (settings.cryptoInstructions || 'Crypto wallet not configured yet.')
-                        : 'Pay the delivery agent upon receiving your order.'}
+                        {m.id === 'bank'   ? (settings.bankInstructions   || t('checkout.bankNotConfigured'))
+                        : m.id === 'crypto' ? (settings.cryptoInstructions || t('checkout.cryptoNotConfigured'))
+                        : t('checkout.payDeliveryAgent')}
                       </Text>
                     )}
                   </View>
@@ -536,7 +541,7 @@ export default function CheckoutScreen({ navigation }) {
         </View>
 
         {/* ── Order Summary ── */}
-        <Text style={styles.sectionTitle}>Order Summary</Text>
+        <Text style={styles.sectionTitle}>{t('checkout.orderSummary')}</Text>
         <View style={styles.card}>
           {cartItems.map((item) => (
             <View key={item.cartItemId} style={styles.summaryRow}>
@@ -548,18 +553,18 @@ export default function CheckoutScreen({ navigation }) {
           ))}
           <View style={styles.divider} />
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
+            <Text style={styles.summaryLabel}>{t('checkout.subtotal')}</Text>
             <Text style={styles.summaryValue}>{fmt(subtotal)}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Shipping</Text>
+            <Text style={styles.summaryLabel}>{t('checkout.shipping')}</Text>
             <Text style={[styles.summaryValue, shippingFee === 0 && { color: '#16A34A' }]}>
-              {shippingFee === 0 ? 'FREE' : fmt(shippingFee)}
+              {shippingFee === 0 ? t('checkout.free') : fmt(shippingFee)}
             </Text>
           </View>
           {promoDiscount > 0 && (
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Discount ({activePromo})</Text>
+              <Text style={styles.summaryLabel}>{t('checkout.discount')} ({activePromo})</Text>
               <Text style={[styles.summaryValue, { color: COLORS.error }]}>−{fmt(promoDiscount)}</Text>
             </View>
           )}
@@ -570,7 +575,7 @@ export default function CheckoutScreen({ navigation }) {
       {/* ── Footer ── */}
       <View style={styles.footer}>
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalLabel}>{t('checkout.total')}</Text>
           <Text style={styles.totalAmount}>{fmt(total)}</Text>
         </View>
         <TouchableOpacity
@@ -584,7 +589,7 @@ export default function CheckoutScreen({ navigation }) {
             : <>
                 <CircleCheckBig size={20} color="#fff" />
                 <Text style={styles.placeBtnText}>
-                  {isManualMomo ? 'Place Order & Submit Proof' : 'Place Order'}
+                  {isManualMomo ? t('checkout.placeOrderAndSubmit') : t('checkout.placeOrder')}
                 </Text>
               </>
           }

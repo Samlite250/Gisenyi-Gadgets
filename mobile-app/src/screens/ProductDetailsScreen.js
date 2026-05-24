@@ -17,6 +17,7 @@ import { FileSystem, Sharing } from '../utils/nativeShare';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { ReviewCard, WriteReviewModal } from '../components/ReviewComponents';
@@ -26,6 +27,7 @@ import { addToRecentlyViewed } from '../utils/recentlyViewed';
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailsScreen({ route, navigation }) {
+  const { t } = useLanguage();
   const [product, setProduct] = useState(route.params?.product || null);
   const [loadingProduct, setLoadingProduct] = useState(!product);
 
@@ -266,14 +268,14 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
   const handleAddToCart = () => {
     addToCart(product, quantity, selectedColor, selectedStorage);
-    Alert.alert('Added to Cart ✓', `${product.name} added to your cart.`, [
-      { text: 'Continue Shopping' },
-      { text: 'View Cart', onPress: () => navigation.navigate('Cart') },
+    Alert.alert(t('product.addedToCart'), `${product.name} ${t('product.addedToCartMessage')}`, [
+      { text: t('product.continueShopping') },
+      { text: t('product.viewCart'), onPress: () => navigation.navigate('Cart') },
     ]);
   };
 
   const handleShare = () => {
-    Alert.alert('Share', `Check out ${product.name} on Gisenyi Gadgets!`);
+    Alert.alert(t('product.share'), `${t('product.shareMessage')} ${product.name} on Gisenyi Gadgets!`);
   };
 
   const handleBuyNow = () => {
@@ -292,12 +294,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
       : 'Ask for price';
 
     const message =
-      `Hello! I'm interested in purchasing this item from Gisenyi Gadgets:\n\n` +
+      `${t('product.whatsappGreeting')}\n\n` +
       `📦 *${product.name}*\n` +
-      `🏷️ Brand: ${product.brand || 'Gisenyi Gadgets'}\n` +
-      `💰 Price: ${price}\n` +
-      `🆔 Ref: #GG-${product.id.toString().slice(0, 6).toUpperCase()}\n\n` +
-      `Is it available? Please confirm and share delivery details.`;
+      `🏷️ ${t('product.brand')}: ${product.brand || 'Gisenyi Gadgets'}\n` +
+      `💰 ${t('product.price')}: ${price}\n` +
+      `🆔 ${t('product.reference')}: #GG-${product.id.toString().slice(0, 6).toUpperCase()}\n\n` +
+      `${t('product.whatsappInquiry')}`;
 
     const imageUrl = images[0];
     const canShare = Platform.OS !== 'web' && Sharing && await Sharing.isAvailableAsync();
@@ -334,7 +336,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         {loadingProduct ? (
           <ActivityIndicator size="large" color={COLORS.primaryBlue} />
         ) : (
-          <Text style={{ color: COLORS.textSecondary }}>Product not found</Text>
+          <Text style={{ color: COLORS.textSecondary }}>{t('product.notFound')}</Text>
         )}
       </SafeAreaView>
     );
@@ -376,7 +378,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                 <Image source={{ uri: img }} style={styles.heroImage} resizeMode="cover" />
                 <View style={styles.zoomHint}>
                   <Maximize2 size={16} color="#fff" />
-                  <Text style={styles.zoomHintText}>Tap to zoom</Text>
+                  <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
                 </View>
               </TouchableOpacity>
             ))}
@@ -441,11 +443,11 @@ export default function ProductDetailsScreen({ route, navigation }) {
           <View style={styles.ratingRow}>
             <Star size={14} color="#FBBC04" fill="#FBBC04" />
             <Text style={styles.ratingText}>
-              {product.rating} ({product.review_count} reviews)
+              {product.rating} ({product.review_count} {t('product.reviews')})
             </Text>
             <View style={styles.stockPill}>
               <Text style={styles.stockText}>
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                {product.stock > 0 ? `${product.stock} ${t('product.inStock')}` : t('product.outOfStock')}
               </Text>
             </View>
           </View>
@@ -454,7 +456,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {recentPurchases > 0 && (
             <View style={styles.recentPurchasesBadge}>
               <Text style={styles.recentPurchasesText}>
-                🔥 {recentPurchases} {recentPurchases === 1 ? 'person' : 'people'} bought this in the last 24 hours
+                🔥 {recentPurchases} {recentPurchases === 1 ? t('product.personBought') : t('product.peopleBought')}
               </Text>
             </View>
           )}
@@ -470,7 +472,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Colors */}
           {product.colors?.length > 0 && (
             <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>Color</Text>
+              <Text style={styles.optionLabel}>{t('product.color')}</Text>
               <View style={styles.optionRow}>
                 {product.colors.map((c) => {
                   const colorMap = { 'Titanium Black': '#222', 'Titanium Gray': '#888', 'Titanium Violet': '#4B0082', 'White': '#FFF', 'Blue': '#00F', 'Natural Titanium': '#A09383' };
@@ -489,7 +491,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Storage Options */}
           {product.storage_options?.length > 0 && (
             <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>Storage</Text>
+              <Text style={styles.optionLabel}>{t('product.storage')}</Text>
               <View style={styles.optionRow}>
                 {product.storage_options.map((s) => (
                   <TouchableOpacity
@@ -506,7 +508,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
           {/* Quantity */}
           <View style={styles.optionSection}>
-            <Text style={styles.optionLabel}>Quantity</Text>
+            <Text style={styles.optionLabel}>{t('product.quantity')}</Text>
             <View style={styles.qtyRow}>
               <TouchableOpacity
                 style={styles.qtyBtn}
@@ -527,10 +529,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Trust Badges */}
           <View style={styles.badgesRow}>
             {[
-              { Icon: ShieldCheck, label: 'Warranty' },
-              { Icon: Truck, label: 'Fast Delivery' },
-              { Icon: RefreshCw, label: 'Easy Returns' },
-              { Icon: Award, label: 'Genuine' },
+              { Icon: ShieldCheck, label: t('product.warranty') },
+              { Icon: Truck, label: t('product.fastDelivery') },
+              { Icon: RefreshCw, label: t('product.easyReturns') },
+              { Icon: Award, label: t('product.genuine') },
             ].map(({ Icon, label }) => (
               <View key={label} style={styles.badge}>
                 <Icon size={18} color={COLORS.primaryBlue} strokeWidth={2} />
@@ -544,7 +546,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
             <View style={styles.descSection}>
               <View style={styles.descHeader}>
                 <View style={styles.descHeaderAccent} />
-                <Text style={styles.descTitle}>About this Product</Text>
+                <Text style={styles.descTitle}>{t('product.aboutProduct')}</Text>
               </View>
               <View>
                 <Text
@@ -563,7 +565,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                     activeOpacity={0.7}
                   >
                     <Text style={styles.readMoreText}>
-                      {descExpanded ? 'Show less' : 'Read more'}
+                      {descExpanded ? t('product.showLess') : t('product.readMore')}
                     </Text>
                     {descExpanded
                       ? <ChevronUp size={14} color={COLORS.primaryBlue} />
@@ -592,7 +594,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
               <View style={styles.specsSection}>
                 <View style={styles.descHeader}>
                   <View style={styles.descHeaderAccent} />
-                  <Text style={styles.descTitle}>Specifications</Text>
+                  <Text style={styles.descTitle}>{t('product.specifications')}</Text>
                 </View>
                 <View style={styles.specsTable}>
                   {specs.map(([label, value], i) => (
@@ -614,7 +616,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                   <Store size={20} color={COLORS.primaryBlue} />
                 </View>
                 <View>
-                  <Text style={styles.sellerLabel}>Sold by</Text>
+                  <Text style={styles.sellerLabel}>{t('product.soldBy')}</Text>
                   <Text style={styles.sellerName}>{supplier?.business_name || 'Gisenyi Gadgets Official'}</Text>
                 </View>
               </View>
@@ -624,7 +626,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                 activeOpacity={0.7}
               >
                 <FontAwesome name="whatsapp" size={18} color="#fff" />
-                <Text style={styles.sellerWhatsappText}>Chat</Text>
+                <Text style={styles.sellerWhatsappText}>{t('product.chat')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -632,10 +634,10 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Reviews Section */}
           <View style={styles.reviewsSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Customer Reviews</Text>
+              <Text style={styles.sectionTitle}>{t('product.customerReviews')}</Text>
               {hasBought && (
                 <TouchableOpacity onPress={() => setShowReviewModal(true)}>
-                  <Text style={styles.seeAll}>✏️ Write a review</Text>
+                  <Text style={styles.seeAll}>✏️ {t('product.writeReview')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -649,7 +651,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                     <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
                   ))}
                 </View>
-                <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} reviews</Text>
+                <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} {t('product.reviews')}</Text>
               </View>
               <View style={styles.ratingBars}>
                 {[5,4,3,2,1].map(r => (
@@ -668,7 +670,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
               <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 16 }} />
             ) : reviews.length === 0 ? (
               <View style={styles.noReviews}>
-                <Text style={styles.noReviewsText}>No reviews yet. Be the first!</Text>
+                <Text style={styles.noReviewsText}>{t('product.noReviews')}</Text>
               </View>
             ) : (
               (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
@@ -679,7 +681,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
             {reviews.length > 3 && (
               <TouchableOpacity style={styles.viewMoreReviews} onPress={() => setShowAllReviews(v => !v)}>
                 <Text style={styles.viewMoreText}>
-                  {showAllReviews ? 'Show Less' : `View All ${reviews.length} Reviews`}
+                  {showAllReviews ? t('product.showLess') : `${t('product.viewAll')} ${reviews.length} ${t('product.reviews')}`}
                 </Text>
               </TouchableOpacity>
             )}
@@ -688,9 +690,9 @@ export default function ProductDetailsScreen({ route, navigation }) {
           {/* Related Products Section */}
           <View style={styles.relatedSection}>
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Related Products</Text>
+              <Text style={styles.sectionTitle}>{t('product.relatedProducts')}</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Search', { category: product.category_id })}>
-                <Text style={styles.seeAll}>See all</Text>
+                <Text style={styles.seeAll}>{t('product.seeAll')}</Text>
               </TouchableOpacity>
             </View>
             {loadingRelated ? (
@@ -708,7 +710,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                     <Text style={styles.relatedPrice}>RWF {Number(p.price).toLocaleString()}</Text>
                   </TouchableOpacity>
                 )) : (
-                  <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>No related products found.</Text>
+                  <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>{t('product.noRelatedProducts')}</Text>
                 )}
               </ScrollView>
             )}
@@ -723,7 +725,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           onPress={handleAddToCart}
           activeOpacity={0.7}
         >
-          <Text style={styles.cartBtnText}>{inCart ? 'In Cart' : 'Add to Cart'}</Text>
+          <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -733,7 +735,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           activeOpacity={0.8}
         >
           <Zap size={18} color="#fff" fill="#fff" />
-          <Text style={styles.buyBtnText}>Buy Now</Text>
+          <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
         </TouchableOpacity>
       </View>
 
@@ -769,7 +771,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </ScrollView>
 
           <View style={styles.zoomFooter}>
-            <Text style={styles.zoomInstruction}>Pinch to zoom • Swipe to navigate</Text>
+            <Text style={styles.zoomInstruction}>{t('product.zoomInstruction')}</Text>
           </View>
         </SafeAreaView>
       </Modal>

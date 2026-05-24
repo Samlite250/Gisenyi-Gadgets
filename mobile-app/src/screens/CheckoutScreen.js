@@ -110,7 +110,8 @@ export default function CheckoutScreen({ navigation }) {
     manual_enabled: true,
     cash_enabled: true,
   });
-  const [settings, setSettings] = useState({
+  // Platform settings (MTN/Airtel account details from admin)
+  const [platformSettings, setPlatformSettings] = useState({
     mtnAccountName: 'Gisenyi Gadgets',
     mtnNumber: '',
     airtelAccountName: 'Gisenyi Gadgets',
@@ -138,7 +139,7 @@ export default function CheckoutScreen({ navigation }) {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  // Fetch payment method visibility settings
+  // Fetch payment method visibility settings (controlled by admin)
   React.useEffect(() => {
     supabase
       .from('settings')
@@ -147,7 +148,8 @@ export default function CheckoutScreen({ navigation }) {
       .single()
       .then(({ data }) => {
         if (data?.value) {
-          // Handle both JSON string and object
+          // Handle both JSONB (object) and TEXT (string) column types
+          // for backwards compatibility during schema migration
           const value = typeof data.value === 'string'
             ? JSON.parse(data.value)
             : data.value;
@@ -165,7 +167,7 @@ export default function CheckoutScreen({ navigation }) {
         if (data) {
           const s = {};
           data.forEach(r => { s[r.key] = r.value; });
-          setSettings(s);
+          setPlatformSettings(s);
         }
       });
   }, []);
@@ -360,14 +362,14 @@ export default function CheckoutScreen({ navigation }) {
   // ─── Derived values for the active MoMo provider ─────────────────────────
   const activeMomo = PAYMENT_METHODS.find(m => m.id === selectedPayment);
   const momoAcctName   = selectedPayment === 'mtn'
-    ? (settings.mtnAccountName   || 'Gisenyi Gadgets')
-    : (settings.airtelAccountName || 'Gisenyi Gadgets');
+    ? (platformSettings.mtnAccountName   || 'Gisenyi Gadgets')
+    : (platformSettings.airtelAccountName || 'Gisenyi Gadgets');
   const momoAcctNumber = selectedPayment === 'mtn'
-    ? (settings.mtnNumber   || '—')
-    : (settings.airtelNumber || '—');
+    ? (platformSettings.mtnNumber   || '—')
+    : (platformSettings.airtelNumber || '—');
   const momoInstructions = selectedPayment === 'mtn'
-    ? settings.mtnInstructions
-    : settings.airtelInstructions;
+    ? platformSettings.mtnInstructions
+    : platformSettings.airtelInstructions;
 
   const isManualMomo = MOMO_PROVIDERS.includes(selectedPayment) && paymentMode === 'manual';
 
@@ -576,8 +578,8 @@ export default function CheckoutScreen({ navigation }) {
                     ) : (
                       /* Non-MoMo instructions */
                       <Text style={styles.staticText}>
-                        {m.id === 'bank'   ? (settings.bankInstructions   || t('checkout.bankNotConfigured'))
-                        : m.id === 'crypto' ? (settings.cryptoInstructions || t('checkout.cryptoNotConfigured'))
+                        {m.id === 'bank'   ? (platformSettings.bankInstructions   || t('checkout.bankNotConfigured'))
+                        : m.id === 'crypto' ? (platformSettings.cryptoInstructions || t('checkout.cryptoNotConfigured'))
                         : t('checkout.payDeliveryAgent')}
                       </Text>
                     )}

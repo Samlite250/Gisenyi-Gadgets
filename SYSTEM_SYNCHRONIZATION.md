@@ -123,6 +123,26 @@ These migrations fix critical bugs and synchronize the database with code expect
 
 See `PAYMENT_METHOD_CONTROL.md` for complete documentation.
 
+### Step 3b: Fix Settings Table (If Needed)
+
+**File:** `supabase/migrations/010_fix_settings_updated_by.sql`
+
+**What it does:**
+- Adds missing `updated_by` column to settings table
+- Fixes "record 'new' has no field 'updated_by'" error
+
+**When to run:**
+- **Only if** you get 400 error when toggling payment settings in admin dashboard
+- **Only if** error message mentions `updated_by` field
+
+**How to run:**
+```
+1. Go to Supabase Dashboard → SQL Editor
+2. Copy contents of 010_fix_settings_updated_by.sql
+3. Paste and click "Run"
+4. Refresh admin dashboard and try toggle again
+```
+
 ### Step 4 (Optional): Clean Up Test Orders
 
 **File:** `delete_automatic_orders_corrected.sql` (BEFORE migration 008)

@@ -1,5 +1,11 @@
 # Delete Incomplete Automatic Orders
 
+## ⚠️ IMPORTANT: Run Migration 008 First!
+
+**This guide assumes you have ALREADY run migration 008** (`supabase/migrations/008_add_payment_fields.sql`).
+
+If you haven't run migration 008 yet, use **`delete_automatic_orders_corrected.sql`** instead, which works with the current schema.
+
 ## What This Does
 
 **Permanently deletes** automatic payment orders that are NOT completed, while **keeping** completed/delivered orders.
@@ -16,6 +22,14 @@
 - ✅ Delivered automatic orders (status = 'delivered')
 - ✅ ALL manual payment orders (MTN MoMo manual, Airtel manual)
 - ✅ ALL cash on delivery orders
+
+## Prerequisites
+
+✅ Migration 008 must be run first (adds `payment_type` field)
+
+If migration 008 is NOT run yet:
+- Use `delete_automatic_orders_corrected.sql` instead
+- It uses `payment_method` field which exists in current schema
 
 ## Quick Instructions
 
@@ -44,16 +58,8 @@ ORDER BY created_at DESC;
 **Copy and paste this SQL:**
 
 ```sql
--- Delete transactions for incomplete automatic orders
-DELETE FROM transactions
-WHERE order_id IN (
-  SELECT id
-  FROM orders
-  WHERE payment_type = 'automatic'
-    AND status NOT IN ('completed', 'delivered')
-);
-
 -- Delete incomplete automatic orders
+-- (No transactions table exists in this schema)
 DELETE FROM orders
 WHERE payment_type = 'automatic'
   AND status NOT IN ('completed', 'delivered');

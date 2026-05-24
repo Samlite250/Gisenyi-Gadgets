@@ -2,6 +2,9 @@
 -- DELETE INCOMPLETE AUTOMATIC PAYMENT ORDERS
 -- Permanently deletes automatic orders EXCEPT completed ones
 -- WARNING: This permanently deletes data!
+--
+-- PREREQUISITE: Migration 008 must be run first!
+-- If migration 008 is NOT run, use delete_automatic_orders_corrected.sql instead
 -- ============================================================
 
 -- Step 1: View what will be KEPT (completed automatic orders)
@@ -53,16 +56,8 @@ WHERE payment_type = 'automatic'
 -- DANGER ZONE: Permanent Deletion Below
 -- ============================================================
 
--- Step 4: Delete transactions for incomplete automatic orders
-DELETE FROM transactions
-WHERE order_id IN (
-  SELECT id
-  FROM orders
-  WHERE payment_type = 'automatic'
-    AND status NOT IN ('completed', 'delivered')
-);
-
--- Step 5: Delete incomplete automatic orders
+-- Step 4: Delete incomplete automatic orders
+-- (No transactions table exists in this schema)
 DELETE FROM orders
 WHERE payment_type = 'automatic'
   AND status NOT IN ('completed', 'delivered');

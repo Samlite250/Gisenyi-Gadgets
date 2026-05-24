@@ -5,10 +5,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 
+// i18n Configuration
+import './src/locales/i18n';
+
 // Context Providers
 import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider } from './src/context/CartContext';
 import { WishlistProvider } from './src/context/WishlistContext';
+import { LanguageProvider } from './src/context/LanguageContext';
 
 // Navigator
 import RootNavigator from './src/navigation/RootNavigator';
@@ -38,16 +42,18 @@ export default function App() {
         <View style={{ position: 'absolute', width: 450, height: 450, borderRadius: 225, backgroundColor: '#6366F1', top: '25%', right: -150, opacity: 0.1 }} />
         <View style={{ position: 'absolute', width: 400, height: 400, borderRadius: 200, backgroundColor: '#EC4899', top: '55%', left: -150, opacity: 0.08 }} />
 
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <NavigationContainer linking={linking}>
-                <StatusBar style="dark" backgroundColor="transparent" translucent />
-                <RootNavigator />
-              </NavigationContainer>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <CartProvider>
+              <WishlistProvider>
+                <NavigationContainer linking={linking}>
+                  <StatusBar style="dark" backgroundColor="transparent" translucent />
+                  <RootNavigator />
+                </NavigationContainer>
+              </WishlistProvider>
+            </CartProvider>
+          </AuthProvider>
+        </LanguageProvider>
       </View>
     </SafeAreaProvider>
   );

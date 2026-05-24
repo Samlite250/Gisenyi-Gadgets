@@ -5,13 +5,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChevronLeft, ChevronRight, Bell, Shield, Info, Trash2, Lock, RefreshCw } from 'lucide-react-native';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import Constants from 'expo-constants';
+import LanguageSelector from '../components/LanguageSelector';
 
 const NOTIF_STORAGE_KEY = '@GisenyiGadgets_notifications';
 
 export default function SettingsScreen({ navigation }) {
   const { user, signOut } = useAuth();
+  const { t } = useLanguage();
   const [notifications, setNotifications] = useState({
     push: true,
     email: false,
@@ -189,6 +192,12 @@ export default function SettingsScreen({ navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        {/* Language Section with Beautiful Selector */}
+        <Text style={styles.sectionTitle}>{t('settings.language')}</Text>
+        <View style={styles.sectionCard}>
+          <LanguageSelector />
+        </View>
+
         <Text style={styles.sectionTitle}>Notifications</Text>
         <View style={styles.sectionCard}>
           <SettingRow icon={Bell} title="Push Notifications" isSwitch value={notifications.push} onValueChange={() => toggleSwitch('push')} />

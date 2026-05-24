@@ -14,21 +14,21 @@ Multi-language support has been added to the app with English, French, and Kinya
 
 ### Fully Integrated ✅
 1. **SettingsScreen** - Complete with language selector
-2. **HomeScreen** - Partially integrated (search, categories, featured products)
-3. **CartScreen** - Partially integrated (empty state, summary, checkout)
-4. **WishlistScreen** - Hook added (needs text replacement)
+2. **HomeScreen** - Search, categories, featured products fully translated
+3. **CartScreen** - Empty state, summary, checkout button fully translated
+4. **ProductDetailsScreen** - Complete (product info, reviews, specifications, related products, actions)
+5. **CheckoutScreen** - Complete (delivery address, payment methods, order summary, payment flows)
+6. **ProfileScreen** - Complete (menu items, logout confirmation)
 
 ### Hook Added, Needs Text Replacement 🟡
-5. **LoginScreen** - Hook added, needs placeholder and button text updates
+7. **LoginScreen** - Hook added, needs placeholder and button text updates
+8. **WishlistScreen** - Hook added, needs text replacement
+9. **RegisterScreen** - Hook added, needs text replacement
 
 ### Not Yet Integrated ❌
-6. RegisterScreen
-7. ForgotPasswordScreen
-8. ResetPasswordScreen
-9. ProfileScreen
-10. EditProfileScreen
-11. ProductDetailsScreen
-12. CheckoutScreen
+10. ForgotPasswordScreen
+11. ResetPasswordScreen
+12. EditProfileScreen
 13. OrdersScreen
 14. OrderSuccessScreen
 15. OrderTrackingScreen
@@ -77,11 +77,14 @@ export default function MyScreen({ navigation }) {
 - `t('common.search')` - "Search"
 
 ## Priority Screens to Update Next
-1. ProductDetailsScreen (high user interaction)
-2. CheckoutScreen (critical flow)
-3. OrdersScreen (common use)
-4. RegisterScreen (onboarding)
-5. ProfileScreen (user settings)
+1. ✅ ~~ProductDetailsScreen~~ - COMPLETED
+2. ✅ ~~CheckoutScreen~~ - COMPLETED  
+3. ✅ ~~ProfileScreen~~ - COMPLETED
+4. LoginScreen - Complete text replacement (onboarding)
+5. RegisterScreen - Complete text replacement (onboarding)
+6. OrdersScreen - Order history and tracking
+7. SearchScreen - Search functionality
+8. NotificationsScreen - User notifications
 
 ## Translation Keys Structure
 All translation keys are organized by feature in the JSON files:

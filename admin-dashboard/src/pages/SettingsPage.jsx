@@ -170,16 +170,21 @@ export default function SettingsPage() {
     setPaymentSettings(newSettings);
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('settings')
-        .update({ value: newSettings })
-        .eq('key', 'payment_methods');
+        .update({ value: JSON.stringify(newSettings) })
+        .eq('key', 'payment_methods')
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Settings update error:', error);
+        throw error;
+      }
 
       toast.success('Payment settings updated!');
     } catch (err) {
-      toast.error('Failed to save payment settings');
+      console.error('Failed to save payment settings:', err);
+      toast.error('Failed to save: ' + (err.message || 'Unknown error'));
       // Revert on error
       setPaymentSettings(paymentSettings);
     }

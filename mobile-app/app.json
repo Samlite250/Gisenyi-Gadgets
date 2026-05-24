@@ -24,7 +24,10 @@
         "backgroundColor": "#0F172A"
       },
       "package": "com.gisenyigadgets.app",
-      "versionCode": 2
+      "versionCode": 2,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -39,6 +42,11 @@
         }
       ],
       "expo-sharing"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c52c15a1-0fb3-4684-b4b3-d65eb3dca103"
+      }
+    }
   }
 }

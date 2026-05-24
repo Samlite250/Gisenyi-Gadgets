@@ -11,28 +11,31 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import FloatingSupport from '../components/FloatingSupport';
 
-const MENU_ITEMS = [
-  { id: 'orders', title: 'My Orders', icon: Package, color: '#4285F4', route: 'Orders' },
-  { id: 'wishlist', title: 'Wishlist', icon: Heart, color: '#EA4335', route: 'Wishlist' },
-  { id: 'addresses', title: 'Addresses', icon: MapPin, color: '#34A853', route: 'Addresses' },
-  { id: 'payment', title: 'Payment Methods', icon: CreditCard, color: '#FBBC04', route: 'PaymentMethods' },
-  { id: 'notifications', title: 'Notifications', icon: Bell, color: '#6366F1', route: 'Notifications' },
-  { id: 'settings', title: 'Settings', icon: Settings, color: '#0EA5E9', route: 'Settings' },
-  { id: 'help', title: 'Help & Support', icon: HelpCircle, color: '#F97316', route: 'ChatSupport' },
+// Menu items will be translated dynamically in the component
+const getMenuItems = (t) => [
+  { id: 'orders', title: t('orders.title'), icon: Package, color: '#4285F4', route: 'Orders' },
+  { id: 'wishlist', title: t('wishlist.title'), icon: Heart, color: '#EA4335', route: 'Wishlist' },
+  { id: 'addresses', title: t('profile.addresses'), icon: MapPin, color: '#34A853', route: 'Addresses' },
+  { id: 'payment', title: t('profile.paymentMethods'), icon: CreditCard, color: '#FBBC04', route: 'PaymentMethods' },
+  { id: 'notifications', title: t('notifications.title'), icon: Bell, color: '#6366F1', route: 'Notifications' },
+  { id: 'settings', title: t('settings.title'), icon: Settings, color: '#0EA5E9', route: 'Settings' },
+  { id: 'help', title: t('profile.help'), icon: HelpCircle, color: '#F97316', route: 'ChatSupport' },
 ];
 
 export default function ProfileScreen({ navigation }) {
   const { user, profile, signOut } = useAuth();
   const { wishlistItems } = useWishlist();
   const { totalItems } = useCart();
+  const { t } = useLanguage();
   const [loggingOut, setLoggingOut] = useState(false);
   const [orderCount, setOrderCount] = useState(null);
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Guest User';
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || t('common.guest', 'Guest User');
   const displayEmail = user?.email || '';
   const avatarUrl = profile?.avatar_url;
 
@@ -72,9 +75,9 @@ export default function ProfileScreen({ navigation }) {
         performLogout();
       }
     } else {
-      Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: performLogout },
+      Alert.alert(t('auth.logout'), t('common.confirmLogout', 'Are you sure you want to sign out?'), [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('auth.logout'), style: 'destructive', onPress: performLogout },
       ]);
     }
   };
@@ -128,7 +131,7 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Menu Items */}
         <View style={styles.menu}>
-          {MENU_ITEMS.map((item) => (
+          {getMenuItems(t).map((item) => (
             <TouchableOpacity
               key={item.id}
               style={styles.menuItem}
@@ -149,7 +152,7 @@ export default function ProfileScreen({ navigation }) {
               <View style={[styles.menuIconBox, { backgroundColor: COLORS.error + '15' }]}>
                 <LogOut size={18} color={COLORS.error} />
               </View>
-              <Text style={[styles.menuTitle, { color: COLORS.error }]}>Sign Out</Text>
+              <Text style={[styles.menuTitle, { color: COLORS.error }]}>{t('auth.logout')}</Text>
             </View>
             <ChevronRight size={18} color={COLORS.error} />
           </TouchableOpacity>

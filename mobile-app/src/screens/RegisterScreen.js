@@ -8,6 +8,7 @@ import { BlurView } from '../components/BlurView';
 import { Mail, Lock, User, Check } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { COLORS } from '../constants/theme';
 
 const GoogleIcon = ({ size = 20 }) => (
@@ -41,6 +42,7 @@ const Field = ({ icon: Icon, value, onChangeText, onFocus, onBlur, isFocused, pl
 
 export default function RegisterScreen({ navigation }) {
   const { signUp, signInWithGoogle } = useAuth();
+  const { t } = useLanguage();
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);

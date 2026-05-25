@@ -70,6 +70,16 @@ export const SIZES = {
 };
 
 export const SHADOWS = {
+  light: Platform.select({
+    web: { boxShadow: '0px 1px 2px rgba(0,0,0,0.08)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+  }),
   sm: Platform.select({
     web: { boxShadow: '0px 2px 4px rgba(0,0,0,0.15)' },
     default: {
@@ -98,6 +108,16 @@ export const SHADOWS = {
       shadowOpacity: 0.25,
       shadowRadius: 16,
       elevation: 10,
+    },
+  }),
+  large: Platform.select({
+    web: { boxShadow: '0px 12px 24px rgba(0,0,0,0.30)' },
+    default: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.3,
+      shadowRadius: 24,
+      elevation: 12,
     },
   }),
 };

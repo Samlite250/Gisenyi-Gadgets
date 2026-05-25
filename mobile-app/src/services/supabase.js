@@ -24,6 +24,8 @@ export const supabase = createClient(
       // On native: handled manually via deep-link in AuthContext
       detectSessionInUrl: Platform.OS === 'web',
       storage: Platform.OS !== 'web' ? AsyncStorage : undefined,
+      // Suppress noisy token refresh errors - handled by AuthContext
+      debug: false,
     },
     global: {
       headers: { 'x-client-info': 'gisenyi-gadgets-mobile' },

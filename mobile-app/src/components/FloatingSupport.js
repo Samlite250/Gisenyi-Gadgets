@@ -79,11 +79,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primaryBlue,
     justifyContent: 'center',
     alignItems: 'center',
-    ...SHADOWS.md,
-    elevation: 8,
     ...Platform.select({
-      default: { shadowColor: COLORS.primaryBlue },
-      web: { boxShadow: `0px 4px 12px rgba(66, 133, 244, 0.4)` }
+      web: { boxShadow: `0px 4px 12px rgba(66, 133, 244, 0.4)` },
+      default: {
+        shadowColor: COLORS.primaryBlue,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.4,
+        shadowRadius: 12,
+        elevation: 8,
+      },
     }),
   },
   badge: {

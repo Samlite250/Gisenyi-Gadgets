@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useRef } from 'r
 import { Platform } from 'react-native';
 import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../services/supabase';
 import { authLogger } from '../utils/logger';
 
@@ -18,6 +19,22 @@ export function AuthProvider({ children }) {
 
   // Use scope:'local' so we don't hit the server with an already-dead token
   const clearStaleSession = async () => {
+    try {
+      // Force clear AsyncStorage keys
+      const keys = await AsyncStorage.getAllKeys();
+      const supabaseKeys = keys.filter(key =>
+        key.includes('supabase.auth.token') ||
+        key.includes('sb-') ||
+        key.startsWith('supabase-auth-token')
+      );
+      if (supabaseKeys.length > 0) {
+        await AsyncStorage.multiRemove(supabaseKeys);
+        authLogger.info('Cleared stale session keys from AsyncStorage');
+      }
+    } catch (err) {
+      authLogger.warn('Failed to clear AsyncStorage keys:', err.message);
+    }
+
     await supabase.auth.signOut({ scope: 'local' });
     setSession(null);
     setUser(null);
@@ -27,6 +44,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data: { session }, error }) => {
       if (error) {
+        authLogger.warn('Session retrieval error, clearing local session:', error.message);
         await clearStaleSession();
       } else if (session) {
         // Session already contains user - no need to call getUser()
@@ -34,6 +52,11 @@ export function AuthProvider({ children }) {
         setUser(session.user);
         fetchProfile(session.user.id);
       }
+      setLoading(false);
+    }).catch(async (err) => {
+      // Catch any unexpected errors during session initialization
+      authLogger.error('Failed to initialize session:', err.message);
+      await clearStaleSession();
       setLoading(false);
     });
 
@@ -56,7 +79,8 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        if (event === 'SIGNED_OUT') {
+        // Handle auth errors (invalid/expired tokens)
+        if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
           setSession(null);
           setUser(null);
           setProfile(null);

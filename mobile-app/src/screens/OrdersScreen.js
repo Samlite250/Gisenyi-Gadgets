@@ -246,13 +246,12 @@ export default function OrdersScreen({ navigation }) {
         {/* Confirm Receipt Button for Delivered Orders */}
         {isDelivered && !isConfirmed && (
           <TouchableOpacity
-            style={styles.confirmReceiptBtn}
+            style={[styles.confirmReceiptBtn, { pointerEvents: 'auto' }]}
             onPress={(e) => {
               e?.stopPropagation?.();
               handleConfirmReceipt(item.id);
             }}
             activeOpacity={0.8}
-            pointerEvents="auto"
           >
             <CircleCheckBig size={16} color="#fff" />
             <Text style={styles.confirmReceiptText}>{t('orders.confirmReceipt')}</Text>
@@ -275,13 +274,12 @@ export default function OrdersScreen({ navigation }) {
                 <Text style={styles.confirmedText}>{t('orders.receiptConfirmed')}</Text>
               </View>
               <TouchableOpacity
-                style={styles.reviewBtn}
+                style={[styles.reviewBtn, { pointerEvents: 'auto' }]}
                 onPress={(e) => {
                   e?.stopPropagation?.();
                   navigation.navigate('OrderReview', { orderId: item.id });
                 }}
                 activeOpacity={0.8}
-                pointerEvents="auto"
               >
                 <Text style={styles.reviewBtnText}>{t('orders.leaveReview')}</Text>
               </TouchableOpacity>

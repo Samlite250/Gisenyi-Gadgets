@@ -1,0 +1,45 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    - cron: '0 8 */3 * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          PINGED=false
+
+          if [ -n "$SUPABASE_URL" ] && [ -n "$SUPABASE_ANON_KEY" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+              -H "apikey: $SUPABASE_ANON_KEY" \
+              -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+              "$SUPABASE_URL/rest/v1/")
+            echo "REST ping -> HTTP $STATUS"
+            PINGED=true
+          fi
+
+          if [ -n "$DATABASE_URL" ]; then
+            sudo apt-get install -y -q postgresql-client 2>/dev/null
+            psql "$DATABASE_URL" -c "SELECT 1;" -q && echo "DB ping OK" && PINGED=true || echo "DB ping failed"
+          fi
+
+          if [ -n "$SUPABASE_URL" ] && [ "$PINGED" = "false" ]; then
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SUPABASE_URL")
+            echo "HTTPS ping -> HTTP $STATUS"
+            PINGED=true
+          fi
+
+          if [ "$PINGED" = "false" ]; then
+            echo "No Supabase secrets set - add SUPABASE_URL + SUPABASE_ANON_KEY or DATABASE_URL"
+            exit 0
+          fi
+
+          echo "Keep-alive ping complete."

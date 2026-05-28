@@ -21,25 +21,25 @@ jobs:
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
               -H "apikey: $SUPABASE_ANON_KEY" \
               -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
-              "$SUPABASE_URL/rest/v1/")
+              "$SUPABASE_URL/rest/v1/") || STATUS="000"
             echo "REST ping -> HTTP $STATUS"
             PINGED=true
           fi
 
-          if [ -n "$DATABASE_URL" ]; then
+          if [ -n "$DATABASE_URL" ] && [ "$PINGED" = "false" ]; then
             sudo apt-get install -y -q postgresql-client 2>/dev/null
-            psql "$DATABASE_URL" -c "SELECT 1;" -q && echo "DB ping OK" && PINGED=true || echo "DB ping failed"
+            psql "$DATABASE_URL" -c "SELECT 1;" -q 2>/dev/null && echo "DB ping OK" || echo "DB ping skipped (project may be paused)"
+            PINGED=true
           fi
 
           if [ -n "$SUPABASE_URL" ] && [ "$PINGED" = "false" ]; then
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SUPABASE_URL")
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$SUPABASE_URL") || STATUS="000"
             echo "HTTPS ping -> HTTP $STATUS"
             PINGED=true
           fi
 
           if [ "$PINGED" = "false" ]; then
-            echo "No Supabase secrets set - add SUPABASE_URL + SUPABASE_ANON_KEY or DATABASE_URL"
-            exit 0
+            echo "No Supabase secrets configured - skipping."
           fi
 
-          echo "Keep-alive ping complete."
+          echo "Keep-alive done."

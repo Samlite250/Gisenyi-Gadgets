@@ -1,0 +1,37 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs every 3 days at 08:00 UTC (Mon, Thu)
+    - cron: '0 8 */3 * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase to prevent pausing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          echo "Pinging Supabase project: cysejrutcrfvopqjqknv"
+          
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X GET "https://cysejrutcrfvopqjqknv.supabase.co/rest/v1/" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}")
+          
+          echo "HTTP Response: $RESPONSE"
+          
+          if [ "$RESPONSE" -ge 200 ] && [ "$RESPONSE" -lt 500 ]; then
+            echo "✅ Supabase is alive! Status: $RESPONSE"
+          else
+            echo "⚠️ Unexpected response: $RESPONSE"
+            exit 1
+          fi
+
+      - name: Log success
+        run: |
+          echo "✅ Keep-alive ping completed at $(date -u)"
+          echo "Project: Gisenyi Gadgets"
+          echo "Supabase URL: https://cysejrutcrfvopqjqknv.supabase.co"

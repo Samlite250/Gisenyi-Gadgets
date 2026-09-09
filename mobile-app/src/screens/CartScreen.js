@@ -6,10 +6,13 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Minus, Plus, Trash2, ShoppingBag, Ticket, CircleCheckBig } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import WebLayoutWrapper from '../components/WebLayoutWrapper';
 
 export default function CartScreen({ navigation }) {
+  const { user } = useAuth();
   const {
     cartItems, updateQuantity, removeFromCart,
     subtotal, shippingFee, total,
@@ -20,6 +23,17 @@ export default function CartScreen({ navigation }) {
   const [promoMsg, setPromoMsg] = React.useState(null);
   const [applyingPromo, setApplyingPromo] = React.useState(false);
   const isMounted = useRef(true);
+
+  const handleCheckout = () => {
+    if (!user) {
+      navigation.navigate('Login', {
+        returnTo: 'Checkout',
+        message: 'Please sign in or create an account to complete your purchase.',
+      });
+      return;
+    }
+    navigation.navigate('Checkout');
+  };
 
   useEffect(() => {
     return () => { isMounted.current = false; };
@@ -100,94 +114,96 @@ export default function CartScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Cart</Text>
+    <WebLayoutWrapper navigation={navigation}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My Cart</Text>
+          {cartItems.length > 0 && (
+            <View style={styles.headerBadge}>
+              <Text style={styles.headerCount}>{cartItems.length}</Text>
+            </View>
+          )}
+        </View>
+
+        <FlatList
+          data={cartItems}
+          keyExtractor={(item) => item.cartItemId}
+          renderItem={renderItem}
+          contentContainerStyle={cartItems.length === 0 ? { flex: 1 } : styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={<EmptyCart />}
+        />
+
         {cartItems.length > 0 && (
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerCount}>{cartItems.length}</Text>
+          <View style={styles.footer}>
+            {/* Promotion Code Section */}
+            <View style={styles.promoContainer}>
+              <View style={[styles.promoSection, activePromo && styles.promoSectionActive]}>
+                <View style={styles.promoInputWrapper}>
+                  <Ticket size={20} color={activePromo ? COLORS.primaryGreen : COLORS.textMuted} />
+                  <TextInput
+                    style={styles.promoInput}
+                    placeholder={activePromo ? `Code ${activePromo} Active` : "Promo Code"}
+                    placeholderTextColor={COLORS.textMuted}
+                    value={promoInput}
+                    onChangeText={setPromoInput}
+                    autoCapitalize="characters"
+                    editable={!activePromo}
+                  />
+                </View>
+                <TouchableOpacity
+                  style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
+                  onPress={handleApplyPromo}
+                  disabled={!!activePromo || applyingPromo}
+                >
+                  {activePromo
+                    ? <CircleCheckBig size={18} color="#fff" />
+                    : applyingPromo
+                      ? <ActivityIndicator size="small" color="#fff" />
+                      : <Text style={styles.promoBtnText}>Apply</Text>}
+                </TouchableOpacity>
+              </View>
+              {promoMsg && (
+                <Text style={[styles.promoMsg, promoMsg.success ? styles.promoMsgSuccess : styles.promoMsgError]}>
+                  {promoMsg.message}
+                </Text>
+              )}
+            </View>
+
+            <View style={styles.summaryRows}>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
+                <Text style={styles.summaryValue}>{fmt(subtotal)}</Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>{t('cart.shipping')}</Text>
+                <Text style={[styles.summaryValue, shippingFee === 0 && { color: COLORS.primaryGreen }]}>
+                  {shippingFee === 0 ? t('common.free', 'FREE') : fmt(shippingFee)}
+                </Text>
+              </View>
+              {promoDiscount > 0 && (
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>{t('common.discount', 'Discount')} ({activePromo})</Text>
+                  <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
+                </View>
+              )}
+              <View style={styles.divider} />
+              <View style={styles.summaryRow}>
+                <Text style={styles.totalLabel}>{t('cart.total')}</Text>
+                <Text style={styles.totalAmount}>{fmt(total)}</Text>
+              </View>
+            </View>
+            <TouchableOpacity
+              style={styles.checkoutBtn}
+              onPress={handleCheckout}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
+            </TouchableOpacity>
           </View>
         )}
-      </View>
-
-      <FlatList
-        data={cartItems}
-        keyExtractor={(item) => item.cartItemId}
-        renderItem={renderItem}
-        contentContainerStyle={cartItems.length === 0 ? { flex: 1 } : styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<EmptyCart />}
-      />
-
-      {cartItems.length > 0 && (
-        <View style={styles.footer}>
-          {/* Promotion Code Section */}
-          <View style={styles.promoContainer}>
-            <View style={[styles.promoSection, activePromo && styles.promoSectionActive]}>
-              <View style={styles.promoInputWrapper}>
-                <Ticket size={20} color={activePromo ? COLORS.primaryGreen : COLORS.textMuted} />
-                <TextInput 
-                  style={styles.promoInput} 
-                  placeholder={activePromo ? `Code ${activePromo} Active` : "Promo Code"} 
-                  placeholderTextColor={COLORS.textMuted}
-                  value={promoInput}
-                  onChangeText={setPromoInput}
-                  autoCapitalize="characters"
-                  editable={!activePromo}
-                />
-              </View>
-              <TouchableOpacity
-                style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
-                onPress={handleApplyPromo}
-                disabled={!!activePromo || applyingPromo}
-              >
-                {activePromo
-                  ? <CircleCheckBig size={18} color="#fff" />
-                  : applyingPromo
-                    ? <ActivityIndicator size="small" color="#fff" />
-                    : <Text style={styles.promoBtnText}>Apply</Text>}
-              </TouchableOpacity>
-            </View>
-            {promoMsg && (
-              <Text style={[styles.promoMsg, promoMsg.success ? styles.promoMsgSuccess : styles.promoMsgError]}>
-                {promoMsg.message}
-              </Text>
-            )}
-          </View>
-
-          <View style={styles.summaryRows}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
-              <Text style={styles.summaryValue}>{fmt(subtotal)}</Text>
-            </View>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>{t('cart.shipping')}</Text>
-              <Text style={[styles.summaryValue, shippingFee === 0 && { color: COLORS.primaryGreen }]}>
-                {shippingFee === 0 ? t('common.free', 'FREE') : fmt(shippingFee)}
-              </Text>
-            </View>
-            {promoDiscount > 0 && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('common.discount', 'Discount')} ({activePromo})</Text>
-                <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
-              </View>
-            )}
-            <View style={styles.divider} />
-            <View style={styles.summaryRow}>
-              <Text style={styles.totalLabel}>{t('cart.total')}</Text>
-              <Text style={styles.totalAmount}>{fmt(total)}</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.checkoutBtn}
-            onPress={() => navigation.navigate('Checkout')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
+      </SafeAreaView>
+    </WebLayoutWrapper>
   );
 }
 
@@ -266,8 +282,8 @@ const styles = StyleSheet.create({
   shopBtnText: { color: '#fff', fontWeight: '700' },
   promoContainer: { marginBottom: 20 },
   promoSection: {
-    flexDirection: 'row', 
-    gap: 12, 
+    flexDirection: 'row',
+    gap: 12,
     backgroundColor: '#F8FAFC',
     borderRadius: 16,
     padding: 6,

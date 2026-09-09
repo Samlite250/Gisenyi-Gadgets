@@ -89,30 +89,39 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.headerBanner}>
           {/* Avatar */}
           <View style={styles.avatarWrap}>
-            {avatarUrl
+            {user && avatarUrl
               ? <Image source={{ uri: avatarUrl }} style={styles.avatar} />
               : <View style={[styles.avatar, styles.avatarInitials]}>
-                <Text style={styles.initialsText}>{getInitials(displayName)}</Text>
+                <Text style={styles.initialsText}>{user ? getInitials(displayName) : '👋'}</Text>
               </View>
             }
           </View>
           <View style={styles.userNameWrap}>
-            <Text style={styles.name}>{displayName}</Text>
-            <Text style={styles.email}>{displayEmail}</Text>
+            <Text style={styles.name}>{user ? displayName : 'Welcome to Gisenyi Gadgets!'}</Text>
+            <Text style={styles.email}>{user ? displayEmail : 'Sign in to access your orders & profile'}</Text>
           </View>
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Edit3 size={16} color="#fff" />
-          </TouchableOpacity>
+          {user ? (
+            <TouchableOpacity
+              style={styles.editBtn}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Edit3 size={16} color="#fff" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.editBtn, { width: 'auto', paddingHorizontal: 12, borderRadius: 18 }]}
+              onPress={() => navigation.navigate('Login', { returnTo: 'Profile' })}
+            >
+              <Text style={{ color: '#fff', fontSize: 13, fontWeight: '700' }}>Sign In</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Stats Row */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Package size={18} color={COLORS.primaryBlue} />
-            <Text style={styles.statVal}>{orderCount === null ? '…' : orderCount}</Text>
+            <Text style={styles.statVal}>{orderCount === null ? (user ? '…' : '0') : orderCount}</Text>
             <Text style={styles.statLabel}>Orders</Text>
           </View>
           <View style={styles.statDivider} />
@@ -135,7 +144,14 @@ export default function ProfileScreen({ navigation }) {
             <TouchableOpacity
               key={item.id}
               style={styles.menuItem}
-              onPress={() => item.route && navigation.navigate(item.route)}
+              onPress={() => {
+                const protectedRoutes = ['orders', 'addresses', 'payment', 'notifications'];
+                if (!user && protectedRoutes.includes(item.id)) {
+                  navigation.navigate('Login', { returnTo: item.route, message: 'Please sign in to access your account features.' });
+                } else if (item.route) {
+                  navigation.navigate(item.route);
+                }
+              }}
             >
               <View style={styles.menuLeft}>
                 <View style={[styles.menuIconBox, { backgroundColor: item.color + '15' }]}>
@@ -147,15 +163,27 @@ export default function ProfileScreen({ navigation }) {
             </TouchableOpacity>
           ))}
 
-          <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-            <View style={styles.menuLeft}>
-              <View style={[styles.menuIconBox, { backgroundColor: COLORS.error + '15' }]}>
-                <LogOut size={18} color={COLORS.error} />
+          {user ? (
+            <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
+              <View style={styles.menuLeft}>
+                <View style={[styles.menuIconBox, { backgroundColor: COLORS.error + '15' }]}>
+                  <LogOut size={18} color={COLORS.error} />
+                </View>
+                <Text style={[styles.menuTitle, { color: COLORS.error }]}>{t('auth.logout')}</Text>
               </View>
-              <Text style={[styles.menuTitle, { color: COLORS.error }]}>{t('auth.logout')}</Text>
-            </View>
-            <ChevronRight size={18} color={COLORS.error} />
-          </TouchableOpacity>
+              <ChevronRight size={18} color={COLORS.error} />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Login', { returnTo: 'Profile' })}>
+              <View style={styles.menuLeft}>
+                <View style={[styles.menuIconBox, { backgroundColor: COLORS.primaryBlue + '15' }]}>
+                  <LogOut size={18} color={COLORS.primaryBlue} />
+                </View>
+                <Text style={[styles.menuTitle, { color: COLORS.primaryBlue }]}>{t('auth.signIn')}</Text>
+              </View>
+              <ChevronRight size={18} color={COLORS.primaryBlue} />
+            </TouchableOpacity>
+          )}
         </View>
         <View style={{ height: 40 }} />
       </ScrollView>

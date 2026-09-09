@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, Platform, StyleSheet } from 'react-native';
+import { View, Text, Platform, StyleSheet, useWindowDimensions } from 'react-native';
 import { Home, Search, ShoppingCart, ListOrdered, User } from 'lucide-react-native';
 
 // Auth
@@ -55,7 +55,7 @@ const COLORS = {
 
 // ─── Cart Badge ───────────────────────────────────────────────
 function CartTabIcon({ color }) {
-  const { totalItems } = useCart();
+  const { totalItems = 0 } = useCart() || {};
   return (
     <View>
       <ShoppingCart size={24} color={color} />
@@ -87,23 +87,26 @@ function CartTabIcon({ color }) {
 
 // ─── Bottom Tab Navigator ─────────────────────────────────────
 function MainTabs() {
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
+
   return (
     <Tab.Navigator
+      sceneContainerStyle={{ width: '100%' }}
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#F3F4F6',
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 12,
-          paddingTop: 10,
+          height: Platform.OS === 'web' ? 65 : (Platform.OS === 'ios' ? 88 : 70),
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          paddingTop: 8,
           elevation: 8,
+          display: isDesktop ? 'none' : 'flex',
           ...Platform.select({
             web: {
-              boxShadow: '0 -2px 12px rgba(0,0,0,0.08)',
-              position: 'sticky',
-              bottom: 0,
+              boxShadow: '0 -4px 20px rgba(0,0,0,0.12)',
             }
           }),
         },
@@ -117,6 +120,7 @@ function MainTabs() {
         tabBarIconStyle: {
           marginBottom: -2,
         },
+        sceneContainerStyle: { width: '100%' },
       }}
     >
       <Tab.Screen
@@ -164,7 +168,7 @@ function AuthStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#FFFFFF' },
+        contentStyle: { backgroundColor: '#FFFFFF', width: '100%' },
         animation: 'slide_from_right',
       }}
     >
@@ -176,13 +180,13 @@ function AuthStack() {
   );
 }
 
-// ─── App Stack (authenticated) ────────────────────────────────
+// ─── App Stack (Unified Guest & Authenticated) ────────────────
 function AppStack() {
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#F8FAFC' },
+        contentStyle: { backgroundColor: '#F8FAFC', width: '100%' },
         animation: 'slide_from_right',
       }}
     >
@@ -201,25 +205,27 @@ function AppStack() {
       <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} />
       <Stack.Screen name="ChatSupport" component={ChatSupportScreen} />
       <Stack.Screen name="Licenses" component={LicensesScreen} />
+
+      {/* Auth screens accessible to guests when checking out or signing in */}
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
     </Stack.Navigator>
   );
 }
 
 // ─── Root Navigator ───────────────────────────────────────────
 export default function RootNavigator() {
-  const { isAuthenticated, loading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(true);
 
   if (showSplash) {
     return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, contentStyle: { width: '100%' } }}>
         <Stack.Screen name="Splash">
           {(props) => (
             <SplashScreen
@@ -232,20 +238,5 @@ export default function RootNavigator() {
     );
   }
 
-  if (!isAuthenticated && showOnboarding) {
-    return (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Onboarding">
-          {(props) => (
-            <OnboardingScreen
-              {...props}
-              onFinish={() => setShowOnboarding(false)}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
-    );
-  }
-
-  return isAuthenticated ? <AppStack /> : <AuthStack />;
+  return <AppStack />;
 }

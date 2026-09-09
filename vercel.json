@@ -1,8 +1,18 @@
 {
-  "buildCommand": "cd admin-dashboard && npm install && npm run build",
-  "outputDirectory": "admin-dashboard/dist",
-  "installCommand": "cd admin-dashboard && npm install",
+  "buildCommand": "node scripts/build-all.js",
+  "outputDirectory": "dist",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/admin/(.*)",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }

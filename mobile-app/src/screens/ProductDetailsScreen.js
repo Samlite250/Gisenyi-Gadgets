@@ -21,6 +21,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { ReviewCard, WriteReviewModal } from '../components/ReviewComponents';
+import WebLayoutWrapper from '../components/WebLayoutWrapper';
 import { productLogger } from '../utils/logger';
 import { addToRecentlyViewed } from '../utils/recentlyViewed';
 
@@ -58,7 +59,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
     const fetchFullProduct = async () => {
       const pId = route.params?.product?.id || route.params?.productId;
       if (!pId) return;
-      
+
       try {
         const { data, error } = await supabase.from('products').select('*, categories(name)').eq('id', pId).single();
         if (!error && data) {
@@ -94,7 +95,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         .select('*')
         .eq('product_id', product.id)
         .order('created_at', { ascending: false });
-      
+
       if (!error && data) {
         // Fetch profile names manually for each review to avoid join issues
         const reviewsWithNames = await Promise.all(data.map(async (r) => {
@@ -146,7 +147,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         if (data && data.length > 0) {
           const parsed = data.map(p => {
             let imgs = [];
-            try { imgs = typeof p.images === 'string' ? JSON.parse(p.images) : (Array.isArray(p.images) ? p.images : []); } catch(e) {}
+            try { imgs = typeof p.images === 'string' ? JSON.parse(p.images) : (Array.isArray(p.images) ? p.images : []); } catch (e) { }
             const validImg = imgs.filter(i => typeof i === 'string' && i.startsWith('http'));
             return { ...p, images: validImg.length > 0 ? validImg : ['https://images.unsplash.com/photo-1526406915894-7bcd65f60845?q=80&w=600'] };
           });
@@ -280,6 +281,13 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
   const handleBuyNow = () => {
     addToCart(product, quantity, selectedColor, selectedStorage);
+    if (!user) {
+      navigation.navigate('Login', {
+        returnTo: 'Checkout',
+        message: 'Please sign in or create an account to complete your purchase.',
+      });
+      return;
+    }
     navigation.navigate('Checkout');
   };
 
@@ -343,448 +351,450 @@ export default function ProductDetailsScreen({ route, navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.topBar}>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <View style={styles.topBarRight}>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
-            <Share2 size={20} color={COLORS.textPrimary} />
+    <WebLayoutWrapper navigation={navigation}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Header */}
+        <View style={styles.topBar}>
+          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
+            <ChevronLeft size={24} color={COLORS.textPrimary} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
-            <ShoppingCart size={22} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
-        {/* Image Gallery */}
-        <View style={styles.galleryWrap}>
-          <ScrollView
-            ref={scrollRef}
-            horizontal pagingEnabled showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(e) =>
-              setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))
-            }
-          >
-            {images.map((img, i) => (
-              <TouchableOpacity 
-                key={i} 
-                activeOpacity={0.9} 
-                onPress={() => setIsZoomVisible(true)}
-              >
-                <Image source={{ uri: img }} style={styles.heroImage} resizeMode="cover" />
-                <View style={styles.zoomHint}>
-                  <Maximize2 size={16} color="#fff" />
-                  <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* Dots overlay */}
-          {images.length > 1 && (
-            <View style={styles.dots}>
-              {images.map((_, i) => (
-                <View key={i} style={[styles.dot, i === activeImage && styles.dotActive]} />
-              ))}
-            </View>
-          )}
-
-          {/* Wishlist + Discount */}
-          <TouchableOpacity
-            style={styles.wishlistBtn}
-            onPress={() => toggleWishlist(product)}
-          >
-            <Heart
-              size={20}
-              color={wishlisted ? COLORS.error : COLORS.textSecondary}
-              fill={wishlisted ? COLORS.error : 'none'}
-            />
-          </TouchableOpacity>
-
-          {discount > 0 && (
-            <View style={styles.discountBadge}>
-              <Text style={styles.discountText}>-{discount}%</Text>
-            </View>
-          )}
+          <View style={styles.topBarRight}>
+            <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
+              <Share2 size={20} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
+              <ShoppingCart size={22} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
-        {/* Thumbnail Navigation Strip */}
-        {images.length > 1 && (
-          <View style={styles.thumbnailContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailScroll}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+          {/* Image Gallery */}
+          <View style={styles.galleryWrap}>
+            <ScrollView
+              ref={scrollRef}
+              horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={(e) =>
+                setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))
+              }
+            >
               {images.map((img, i) => (
                 <TouchableOpacity
                   key={i}
-                  style={[styles.thumbnailWrap, i === activeImage && styles.thumbnailActive]}
-                  onPress={() => {
-                    setActiveImage(i);
-                    scrollRef.current?.scrollTo({ x: i * width, animated: true });
-                  }}
+                  activeOpacity={0.9}
+                  onPress={() => setIsZoomVisible(true)}
                 >
-                  <Image source={{ uri: img }} style={styles.thumbnail} resizeMode="cover" />
+                  <Image source={{ uri: img }} style={styles.heroImage} resizeMode="cover" />
+                  <View style={styles.zoomHint}>
+                    <Maximize2 size={16} color="#fff" />
+                    <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
+                  </View>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-          </View>
-        )}
 
-        {/* Details */}
-        <View style={styles.details}>
-          {!!product.brand && (
-            <Text style={styles.brand}>{product.brand}</Text>
-          )}
-          <Text style={styles.name}>{product.name}</Text>
+            {/* Dots overlay */}
+            {images.length > 1 && (
+              <View style={styles.dots}>
+                {images.map((_, i) => (
+                  <View key={i} style={[styles.dot, i === activeImage && styles.dotActive]} />
+                ))}
+              </View>
+            )}
 
-          {/* Rating */}
-          <View style={styles.ratingRow}>
-            <Star size={14} color="#FBBC04" fill="#FBBC04" />
-            <Text style={styles.ratingText}>
-              {product.rating} ({product.review_count} {t('product.reviews')})
-            </Text>
-            <View style={styles.stockPill}>
-              <Text style={styles.stockText}>
-                {product.stock > 0 ? `${product.stock} ${t('product.inStock')}` : t('product.outOfStock')}
-              </Text>
-            </View>
-          </View>
+            {/* Wishlist + Discount */}
+            <TouchableOpacity
+              style={styles.wishlistBtn}
+              onPress={() => toggleWishlist(product)}
+            >
+              <Heart
+                size={20}
+                color={wishlisted ? COLORS.error : COLORS.textSecondary}
+                fill={wishlisted ? COLORS.error : 'none'}
+              />
+            </TouchableOpacity>
 
-          {/* Recent Purchases Badge */}
-          {recentPurchases > 0 && (
-            <View style={styles.recentPurchasesBadge}>
-              <Text style={styles.recentPurchasesText}>
-                🔥 {recentPurchases} {recentPurchases === 1 ? t('product.personBought') : t('product.peopleBought')}
-              </Text>
-            </View>
-          )}
-
-          {/* Price */}
-          <View style={styles.priceRow}>
-            <Text style={styles.price}>{fmt(product.price)}</Text>
-            {!!product.compare_price && (
-              <Text style={styles.comparePrice}>{fmt(product.compare_price)}</Text>
+            {discount > 0 && (
+              <View style={styles.discountBadge}>
+                <Text style={styles.discountText}>-{discount}%</Text>
+              </View>
             )}
           </View>
 
-          {/* Colors */}
-          {product.colors?.length > 0 && (
-            <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>{t('product.color')}</Text>
-              <View style={styles.optionRow}>
-                {product.colors.map((c) => {
-                  const colorMap = { 'Titanium Black': '#222', 'Titanium Gray': '#888', 'Titanium Violet': '#4B0082', 'White': '#FFF', 'Blue': '#00F', 'Natural Titanium': '#A09383' };
-                  return (
-                    <TouchableOpacity
-                      key={c}
-                      style={[styles.colorDot, { backgroundColor: colorMap[c] || '#000' }, selectedColor === c && styles.colorDotActive]}
-                      onPress={() => setSelectedColor(c)}
-                    />
-                  );
-                })}
-              </View>
-            </View>
-          )}
-
-          {/* Storage Options */}
-          {product.storage_options?.length > 0 && (
-            <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>{t('product.storage')}</Text>
-              <View style={styles.optionRow}>
-                {product.storage_options.map((s) => (
+          {/* Thumbnail Navigation Strip */}
+          {images.length > 1 && (
+            <View style={styles.thumbnailContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailScroll}>
+                {images.map((img, i) => (
                   <TouchableOpacity
-                    key={s}
-                    style={[styles.storagePill, selectedStorage === s && styles.storagePillActive]}
-                    onPress={() => setSelectedStorage(s)}
+                    key={i}
+                    style={[styles.thumbnailWrap, i === activeImage && styles.thumbnailActive]}
+                    onPress={() => {
+                      setActiveImage(i);
+                      scrollRef.current?.scrollTo({ x: i * width, animated: true });
+                    }}
                   >
-                    <Text style={[styles.storagePillText, selectedStorage === s && { color: '#fff' }]}>{s}</Text>
+                    <Image source={{ uri: img }} style={styles.thumbnail} resizeMode="cover" />
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           )}
 
-          {/* Quantity */}
-          <View style={styles.optionSection}>
-            <Text style={styles.optionLabel}>{t('product.quantity')}</Text>
-            <View style={styles.qtyRow}>
-              <TouchableOpacity
-                style={styles.qtyBtn}
-                onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-              >
-                <Minus size={16} color={COLORS.textPrimary} />
-              </TouchableOpacity>
-              <Text style={styles.qtyText}>{quantity}</Text>
-              <TouchableOpacity
-                style={styles.qtyBtn}
-                onPress={() => setQuantity((q) => Math.min(product.stock || 99, q + 1))}
-              >
-                <Plus size={16} color={COLORS.textPrimary} />
-              </TouchableOpacity>
-            </View>
-          </View>
+          {/* Details */}
+          <View style={styles.details}>
+            {!!product.brand && (
+              <Text style={styles.brand}>{product.brand}</Text>
+            )}
+            <Text style={styles.name}>{product.name}</Text>
 
-          {/* Trust Badges */}
-          <View style={styles.badgesRow}>
-            {[
-              { Icon: ShieldCheck, label: t('product.warranty') },
-              { Icon: Truck, label: t('product.fastDelivery') },
-              { Icon: RefreshCw, label: t('product.easyReturns') },
-              { Icon: Award, label: t('product.genuine') },
-            ].map(({ Icon, label }) => (
-              <View key={label} style={styles.badge}>
-                <Icon size={18} color={COLORS.primaryBlue} strokeWidth={2} />
-                <Text style={styles.badgeText}>{label}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Description */}
-          {!!product.description && (
-            <View style={styles.descSection}>
-              <View style={styles.descHeader}>
-                <View style={styles.descHeaderAccent} />
-                <Text style={styles.descTitle}>{t('product.aboutProduct')}</Text>
-              </View>
-              <View>
-                <Text
-                  style={styles.descText}
-                  numberOfLines={descExpanded ? undefined : 4}
-                  onTextLayout={(e) => {
-                    if (!descExpanded) setDescOverflows(e.nativeEvent.lines.length >= 4);
-                  }}
-                >
-                  {product.description}
+            {/* Rating */}
+            <View style={styles.ratingRow}>
+              <Star size={14} color="#FBBC04" fill="#FBBC04" />
+              <Text style={styles.ratingText}>
+                {product.rating} ({product.review_count} {t('product.reviews')})
+              </Text>
+              <View style={styles.stockPill}>
+                <Text style={styles.stockText}>
+                  {product.stock > 0 ? `${product.stock} ${t('product.inStock')}` : t('product.outOfStock')}
                 </Text>
-                {(descOverflows || descExpanded) && (
-                  <TouchableOpacity
-                    style={styles.readMoreBtn}
-                    onPress={() => setDescExpanded(v => !v)}
-                    activeOpacity={0.7}
+              </View>
+            </View>
+
+            {/* Recent Purchases Badge */}
+            {recentPurchases > 0 && (
+              <View style={styles.recentPurchasesBadge}>
+                <Text style={styles.recentPurchasesText}>
+                  🔥 {recentPurchases} {recentPurchases === 1 ? t('product.personBought') : t('product.peopleBought')}
+                </Text>
+              </View>
+            )}
+
+            {/* Price */}
+            <View style={styles.priceRow}>
+              <Text style={styles.price}>{fmt(product.price)}</Text>
+              {!!product.compare_price && (
+                <Text style={styles.comparePrice}>{fmt(product.compare_price)}</Text>
+              )}
+            </View>
+
+            {/* Colors */}
+            {product.colors?.length > 0 && (
+              <View style={styles.optionSection}>
+                <Text style={styles.optionLabel}>{t('product.color')}</Text>
+                <View style={styles.optionRow}>
+                  {product.colors.map((c) => {
+                    const colorMap = { 'Titanium Black': '#222', 'Titanium Gray': '#888', 'Titanium Violet': '#4B0082', 'White': '#FFF', 'Blue': '#00F', 'Natural Titanium': '#A09383' };
+                    return (
+                      <TouchableOpacity
+                        key={c}
+                        style={[styles.colorDot, { backgroundColor: colorMap[c] || '#000' }, selectedColor === c && styles.colorDotActive]}
+                        onPress={() => setSelectedColor(c)}
+                      />
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {/* Storage Options */}
+            {product.storage_options?.length > 0 && (
+              <View style={styles.optionSection}>
+                <Text style={styles.optionLabel}>{t('product.storage')}</Text>
+                <View style={styles.optionRow}>
+                  {product.storage_options.map((s) => (
+                    <TouchableOpacity
+                      key={s}
+                      style={[styles.storagePill, selectedStorage === s && styles.storagePillActive]}
+                      onPress={() => setSelectedStorage(s)}
+                    >
+                      <Text style={[styles.storagePillText, selectedStorage === s && { color: '#fff' }]}>{s}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Quantity */}
+            <View style={styles.optionSection}>
+              <Text style={styles.optionLabel}>{t('product.quantity')}</Text>
+              <View style={styles.qtyRow}>
+                <TouchableOpacity
+                  style={styles.qtyBtn}
+                  onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+                >
+                  <Minus size={16} color={COLORS.textPrimary} />
+                </TouchableOpacity>
+                <Text style={styles.qtyText}>{quantity}</Text>
+                <TouchableOpacity
+                  style={styles.qtyBtn}
+                  onPress={() => setQuantity((q) => Math.min(product.stock || 99, q + 1))}
+                >
+                  <Plus size={16} color={COLORS.textPrimary} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Trust Badges */}
+            <View style={styles.badgesRow}>
+              {[
+                { Icon: ShieldCheck, label: t('product.warranty') },
+                { Icon: Truck, label: t('product.fastDelivery') },
+                { Icon: RefreshCw, label: t('product.easyReturns') },
+                { Icon: Award, label: t('product.genuine') },
+              ].map(({ Icon, label }) => (
+                <View key={label} style={styles.badge}>
+                  <Icon size={18} color={COLORS.primaryBlue} strokeWidth={2} />
+                  <Text style={styles.badgeText}>{label}</Text>
+                </View>
+              ))}
+            </View>
+
+            {/* Description */}
+            {!!product.description && (
+              <View style={styles.descSection}>
+                <View style={styles.descHeader}>
+                  <View style={styles.descHeaderAccent} />
+                  <Text style={styles.descTitle}>{t('product.aboutProduct')}</Text>
+                </View>
+                <View>
+                  <Text
+                    style={styles.descText}
+                    numberOfLines={descExpanded ? undefined : 4}
+                    onTextLayout={(e) => {
+                      if (!descExpanded) setDescOverflows(e.nativeEvent.lines.length >= 4);
+                    }}
                   >
-                    <Text style={styles.readMoreText}>
-                      {descExpanded ? t('product.showLess') : t('product.readMore')}
-                    </Text>
-                    {descExpanded
-                      ? <ChevronUp size={14} color={COLORS.primaryBlue} />
-                      : <ChevronDown size={14} color={COLORS.primaryBlue} />
-                    }
+                    {product.description}
+                  </Text>
+                  {(descOverflows || descExpanded) && (
+                    <TouchableOpacity
+                      style={styles.readMoreBtn}
+                      onPress={() => setDescExpanded(v => !v)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.readMoreText}>
+                        {descExpanded ? t('product.showLess') : t('product.readMore')}
+                      </Text>
+                      {descExpanded
+                        ? <ChevronUp size={14} color={COLORS.primaryBlue} />
+                        : <ChevronDown size={14} color={COLORS.primaryBlue} />
+                      }
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
+
+            {/* Specs Table */}
+            {(() => {
+              const specs = [];
+              if (product.brand) specs.push(['Brand', product.brand]);
+              if (product.model) specs.push(['Model', product.model]);
+              if (product.storage_options?.length) specs.push(['Storage', product.storage_options.join(', ')]);
+              if (product.colors?.length) specs.push(['Colors', product.colors.join(', ')]);
+              if (product.categories?.name) specs.push(['Category', product.categories.name]);
+              if (product.sku) specs.push(['SKU', product.sku]);
+              if (product.weight) specs.push(['Weight', `${product.weight}g`]);
+              if (product.dimensions) specs.push(['Dimensions', product.dimensions]);
+              if (product.warranty) specs.push(['Warranty', product.warranty]);
+              if (specs.length === 0) return null;
+              return (
+                <View style={styles.specsSection}>
+                  <View style={styles.descHeader}>
+                    <View style={styles.descHeaderAccent} />
+                    <Text style={styles.descTitle}>{t('product.specifications')}</Text>
+                  </View>
+                  <View style={styles.specsTable}>
+                    {specs.map(([label, value], i) => (
+                      <View key={label} style={[styles.specRow, i % 2 === 0 && styles.specRowAlt]}>
+                        <Text style={styles.specLabel}>{label}</Text>
+                        <Text style={styles.specValue}>{value}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              );
+            })()}
+
+            {/* Seller Information Section */}
+            <View style={styles.sellerSection}>
+              <View style={styles.sellerCard}>
+                <View style={styles.sellerInfo}>
+                  <View style={styles.sellerAvatar}>
+                    <Store size={20} color={COLORS.primaryBlue} />
+                  </View>
+                  <View>
+                    <Text style={styles.sellerLabel}>{t('product.soldBy')}</Text>
+                    <Text style={styles.sellerName}>{supplier?.business_name || 'Gisenyi Gadgets Official'}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={styles.sellerWhatsappBtn}
+                  onPress={handleWhatsApp}
+                  activeOpacity={0.7}
+                >
+                  <FontAwesome name="whatsapp" size={18} color="#fff" />
+                  <Text style={styles.sellerWhatsappText}>{t('product.chat')}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Reviews Section */}
+            <View style={styles.reviewsSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{t('product.customerReviews')}</Text>
+                {hasBought && (
+                  <TouchableOpacity onPress={() => setShowReviewModal(true)}>
+                    <Text style={styles.seeAll}>✏️ {t('product.writeReview')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
-            </View>
-          )}
 
-          {/* Specs Table */}
-          {(() => {
-            const specs = [];
-            if (product.brand) specs.push(['Brand', product.brand]);
-            if (product.model) specs.push(['Model', product.model]);
-            if (product.storage_options?.length) specs.push(['Storage', product.storage_options.join(', ')]);
-            if (product.colors?.length) specs.push(['Colors', product.colors.join(', ')]);
-            if (product.categories?.name) specs.push(['Category', product.categories.name]);
-            if (product.sku) specs.push(['SKU', product.sku]);
-            if (product.weight) specs.push(['Weight', `${product.weight}g`]);
-            if (product.dimensions) specs.push(['Dimensions', product.dimensions]);
-            if (product.warranty) specs.push(['Warranty', product.warranty]);
-            if (specs.length === 0) return null;
-            return (
-              <View style={styles.specsSection}>
-                <View style={styles.descHeader}>
-                  <View style={styles.descHeaderAccent} />
-                  <Text style={styles.descTitle}>{t('product.specifications')}</Text>
+              {/* Rating Overview */}
+              <View style={styles.ratingOverview}>
+                <View style={styles.avgRatingBox}>
+                  <Text style={styles.avgRatingText}>{product.rating || '4.5'}</Text>
+                  <View style={styles.starsRow}>
+                    {[1, 2, 3, 4, 5].map(s => (
+                      <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
+                    ))}
+                  </View>
+                  <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} {t('product.reviews')}</Text>
                 </View>
-                <View style={styles.specsTable}>
-                  {specs.map(([label, value], i) => (
-                    <View key={label} style={[styles.specRow, i % 2 === 0 && styles.specRowAlt]}>
-                      <Text style={styles.specLabel}>{label}</Text>
-                      <Text style={styles.specValue}>{value}</Text>
+                <View style={styles.ratingBars}>
+                  {[5, 4, 3, 2, 1].map(r => (
+                    <View key={r} style={styles.barRow}>
+                      <Text style={styles.barLabel}>{r} ★</Text>
+                      <View style={styles.barBg}>
+                        <View style={[styles.barFill, { width: `${getRatingPer(r)}%` }]} />
+                      </View>
                     </View>
                   ))}
                 </View>
               </View>
-            );
-          })()}
 
-          {/* Seller Information Section */}
-          <View style={styles.sellerSection}>
-            <View style={styles.sellerCard}>
-              <View style={styles.sellerInfo}>
-                <View style={styles.sellerAvatar}>
-                  <Store size={20} color={COLORS.primaryBlue} />
+              {/* Review List */}
+              {loadingReviews ? (
+                <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 16 }} />
+              ) : reviews.length === 0 ? (
+                <View style={styles.noReviews}>
+                  <Text style={styles.noReviewsText}>{t('product.noReviews')}</Text>
                 </View>
-                <View>
-                  <Text style={styles.sellerLabel}>{t('product.soldBy')}</Text>
-                  <Text style={styles.sellerName}>{supplier?.business_name || 'Gisenyi Gadgets Official'}</Text>
-                </View>
-              </View>
-              <TouchableOpacity 
-                style={styles.sellerWhatsappBtn}
-                onPress={handleWhatsApp}
-                activeOpacity={0.7}
-              >
-                <FontAwesome name="whatsapp" size={18} color="#fff" />
-                <Text style={styles.sellerWhatsappText}>{t('product.chat')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
+              ) : (
+                (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
+                  <ReviewCard key={rev.id} rev={rev} />
+                ))
+              )}
 
-          {/* Reviews Section */}
-          <View style={styles.reviewsSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('product.customerReviews')}</Text>
-              {hasBought && (
-                <TouchableOpacity onPress={() => setShowReviewModal(true)}>
-                  <Text style={styles.seeAll}>✏️ {t('product.writeReview')}</Text>
+              {reviews.length > 3 && (
+                <TouchableOpacity style={styles.viewMoreReviews} onPress={() => setShowAllReviews(v => !v)}>
+                  <Text style={styles.viewMoreText}>
+                    {showAllReviews ? t('product.showLess') : `${t('product.viewAll')} ${reviews.length} ${t('product.reviews')}`}
+                  </Text>
                 </TouchableOpacity>
               )}
             </View>
 
-            {/* Rating Overview */}
-            <View style={styles.ratingOverview}>
-              <View style={styles.avgRatingBox}>
-                <Text style={styles.avgRatingText}>{product.rating || '4.5'}</Text>
-                <View style={styles.starsRow}>
-                  {[1,2,3,4,5].map(s => (
-                    <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
-                  ))}
-                </View>
-                <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} {t('product.reviews')}</Text>
+            {/* Related Products Section */}
+            <View style={styles.relatedSection}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>{t('product.relatedProducts')}</Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Search', { category: product.category_id })}>
+                  <Text style={styles.seeAll}>{t('product.seeAll')}</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.ratingBars}>
-                {[5,4,3,2,1].map(r => (
-                  <View key={r} style={styles.barRow}>
-                    <Text style={styles.barLabel}>{r} ★</Text>
-                    <View style={styles.barBg}>
-                      <View style={[styles.barFill, { width: `${getRatingPer(r)}%` }]} />
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* Review List */}
-            {loadingReviews ? (
-              <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 16 }} />
-            ) : reviews.length === 0 ? (
-              <View style={styles.noReviews}>
-                <Text style={styles.noReviewsText}>{t('product.noReviews')}</Text>
-              </View>
-            ) : (
-              (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
-                <ReviewCard key={rev.id} rev={rev} />
-              ))
-            )}
-
-            {reviews.length > 3 && (
-              <TouchableOpacity style={styles.viewMoreReviews} onPress={() => setShowAllReviews(v => !v)}>
-                <Text style={styles.viewMoreText}>
-                  {showAllReviews ? t('product.showLess') : `${t('product.viewAll')} ${reviews.length} ${t('product.reviews')}`}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* Related Products Section */}
-          <View style={styles.relatedSection}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('product.relatedProducts')}</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Search', { category: product.category_id })}>
-                <Text style={styles.seeAll}>{t('product.seeAll')}</Text>
-              </TouchableOpacity>
-            </View>
-            {loadingRelated ? (
-              <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 20 }} />
-            ) : (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
-                {relatedProducts.length > 0 ? relatedProducts.map((p) => (
-                  <TouchableOpacity 
-                    key={p.id} 
-                    style={styles.relatedCard}
-                    onPress={() => navigation.push('ProductDetails', { product: p })}
-                  >
-                    <Image source={{ uri: p.images[0] }} style={styles.relatedImage} />
-                    <Text style={styles.relatedName} numberOfLines={1}>{p.name}</Text>
-                    <Text style={styles.relatedPrice}>RWF {Number(p.price).toLocaleString()}</Text>
-                  </TouchableOpacity>
-                )) : (
-                  <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>{t('product.noRelatedProducts')}</Text>
-                )}
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Action Footer */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
-          onPress={handleAddToCart}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.buyBtn}
-          onPress={handleBuyNow}
-          disabled={product.stock === 0}
-          activeOpacity={0.8}
-        >
-          <Zap size={18} color="#fff" fill="#fff" />
-          <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Full Screen Zoom Modal */}
-      <Modal visible={isZoomVisible} transparent={false} animationType="fade" onRequestClose={() => setIsZoomVisible(false)}>
-        <SafeAreaView style={styles.zoomModal}>
-          <View style={styles.zoomHeader}>
-            <TouchableOpacity style={styles.zoomClose} onPress={() => setIsZoomVisible(false)}>
-              <X size={24} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.zoomCount}>{activeImage + 1} / {images.length}</Text>
-          </View>
-          
-          <ScrollView 
-            horizontal pagingEnabled showsHorizontalScrollIndicator={false}
-            contentOffset={{ x: activeImage * width, y: 0 }}
-            onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))}
-            style={styles.zoomScroll}
-          >
-            {images.map((img, i) => (
-              <View key={i} style={{ width, height: '100%', justifyContent: 'center' }}>
-                <ScrollView 
-                  maximumZoomScale={3} 
-                  minimumZoomScale={1} 
-                  showsHorizontalScrollIndicator={false} 
-                  showsVerticalScrollIndicator={false}
-                  contentContainerStyle={{ flex: 1, justifyContent: 'center' }}
-                >
-                  <Image source={{ uri: img }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+              {loadingRelated ? (
+                <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 20 }} />
+              ) : (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
+                  {relatedProducts.length > 0 ? relatedProducts.map((p) => (
+                    <TouchableOpacity
+                      key={p.id}
+                      style={styles.relatedCard}
+                      onPress={() => navigation.push('ProductDetails', { product: p })}
+                    >
+                      <Image source={{ uri: p.images[0] }} style={styles.relatedImage} />
+                      <Text style={styles.relatedName} numberOfLines={1}>{p.name}</Text>
+                      <Text style={styles.relatedPrice}>RWF {Number(p.price).toLocaleString()}</Text>
+                    </TouchableOpacity>
+                  )) : (
+                    <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>{t('product.noRelatedProducts')}</Text>
+                  )}
                 </ScrollView>
-              </View>
-            ))}
-          </ScrollView>
-
-          <View style={styles.zoomFooter}>
-            <Text style={styles.zoomInstruction}>{t('product.zoomInstruction')}</Text>
+              )}
+            </View>
           </View>
-        </SafeAreaView>
-      </Modal>
+        </ScrollView>
 
-      {/* Write Review Modal */}
-      <WriteReviewModal
-        visible={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-        product={product}
-        user={user}
-        onSubmitted={fetchReviews}
-      />
-    </SafeAreaView>
+        {/* Action Footer */}
+        <View style={styles.footer}>
+          <TouchableOpacity
+            style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
+            onPress={handleAddToCart}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.buyBtn}
+            onPress={handleBuyNow}
+            disabled={product.stock === 0}
+            activeOpacity={0.8}
+          >
+            <Zap size={18} color="#fff" fill="#fff" />
+            <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Full Screen Zoom Modal */}
+        <Modal visible={isZoomVisible} transparent={false} animationType="fade" onRequestClose={() => setIsZoomVisible(false)}>
+          <SafeAreaView style={styles.zoomModal}>
+            <View style={styles.zoomHeader}>
+              <TouchableOpacity style={styles.zoomClose} onPress={() => setIsZoomVisible(false)}>
+                <X size={24} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.zoomCount}>{activeImage + 1} / {images.length}</Text>
+            </View>
+
+            <ScrollView
+              horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+              contentOffset={{ x: activeImage * width, y: 0 }}
+              onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))}
+              style={styles.zoomScroll}
+            >
+              {images.map((img, i) => (
+                <View key={i} style={{ width, height: '100%', justifyContent: 'center' }}>
+                  <ScrollView
+                    maximumZoomScale={3}
+                    minimumZoomScale={1}
+                    showsHorizontalScrollIndicator={false}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ flex: 1, justifyContent: 'center' }}
+                  >
+                    <Image source={{ uri: img }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+                  </ScrollView>
+                </View>
+              ))}
+            </ScrollView>
+
+            <View style={styles.zoomFooter}>
+              <Text style={styles.zoomInstruction}>{t('product.zoomInstruction')}</Text>
+            </View>
+          </SafeAreaView>
+        </Modal>
+
+        {/* Write Review Modal */}
+        <WriteReviewModal
+          visible={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          product={product}
+          user={user}
+          onSubmitted={fetchReviews}
+        />
+      </SafeAreaView>
+    </WebLayoutWrapper>
   );
 }
 
@@ -1012,11 +1022,11 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },
   seeAll: { fontSize: SIZES.fontSm, color: COLORS.primaryBlue, fontWeight: '600' },
   relatedScroll: { gap: 16, paddingBottom: 8 },
-  relatedCard: { 
-    width: 130, 
-    gap: 6, 
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 18, 
+  relatedCard: {
+    width: 130,
+    gap: 6,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
     padding: 8,
     borderWidth: 1,
     borderColor: '#F1F5F9',
@@ -1036,10 +1046,10 @@ const styles = StyleSheet.create({
   barLabel: { fontSize: 11, color: COLORS.textSecondary, width: 25 },
   barBg: { flex: 1, height: 6, backgroundColor: '#F3F4F6', borderRadius: 3, overflow: 'hidden' },
   barFill: { height: '100%', backgroundColor: '#FBBC04' },
-  reviewItem: { 
-    marginBottom: 16, 
-    backgroundColor: '#F8FAFC', 
-    padding: 14, 
+  reviewItem: {
+    marginBottom: 16,
+    backgroundColor: '#F8FAFC',
+    padding: 14,
     borderRadius: 18,
     borderWidth: 1,
     borderColor: '#F1F5F9',
@@ -1051,12 +1061,12 @@ const styles = StyleSheet.create({
   reviewComment: { fontSize: 13, color: COLORS.textSecondary, lineHeight: 18 },
   viewMoreReviews: { alignItems: 'center', paddingVertical: 8 },
   viewMoreText: { fontSize: 13, fontWeight: '700', color: COLORS.primaryBlue },
-  
+
   // Zoom Modal Styles
   zoomModal: { flex: 1, backgroundColor: '#000' },
-  zoomHeader: { 
+  zoomHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: 20, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 
+    padding: 20, position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10
   },
   zoomClose: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
   zoomCount: { color: '#fff', fontSize: 16, fontWeight: '700' },

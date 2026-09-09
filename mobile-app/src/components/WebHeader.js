@@ -1,0 +1,510 @@
+import React, { useState } from 'react';
+import {
+    View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Platform
+} from 'react-native';
+import {
+    Search, ShoppingCart, Heart, User, MapPin, Phone, MessageSquare,
+    ShieldCheck, Truck, Sparkles, ChevronDown, Flame, Smartphone, Laptop,
+    Headphones, Watch, Gamepad2, Cpu, Tag, ExternalLink, Home, ListOrdered
+} from 'lucide-react-native';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
+import { useLanguage } from '../context/LanguageContext';
+import { COLORS, SHADOWS } from '../constants/theme';
+
+export default function WebHeader({ navigation, onSearch, activeCategory, onSelectCategory }) {
+    const { user, profile } = useAuth() || {};
+    const { cartItems = [], total = 0 } = useCart() || {};
+    const { wishlistItems = [] } = useWishlist() || {};
+    const { t, currentLanguage = 'en', changeLanguage } = useLanguage() || {};
+    const language = currentLanguage || 'en';
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCat, setSelectedCat] = useState('All');
+    const [showLangMenu, setShowLangMenu] = useState(false);
+
+    const totalCartCount = (cartItems || []).reduce((acc, item) => acc + (item?.quantity || 1), 0);
+    const totalWishlistCount = wishlistItems?.length || 0;
+
+    const categories = [
+        { id: 'all', label: 'All Categories', icon: Flame },
+        { id: 'smartphones', label: 'Smartphones', icon: Smartphone },
+        { id: 'laptops', label: 'Laptops & PCs', icon: Laptop },
+        { id: 'audio', label: 'Audio & Sound', icon: Headphones },
+        { id: 'wearables', label: 'Smartwatches', icon: Watch },
+        { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
+        { id: 'accessories', label: 'Accessories', icon: Cpu },
+    ];
+
+    const handleSearchSubmit = () => {
+        if (onSearch) {
+            onSearch(searchQuery);
+        } else if (navigation) {
+            navigation.navigate('Search', { query: searchQuery, category: selectedCat !== 'All' ? selectedCat : null });
+        }
+    };
+
+    const fmt = (n) => `RWF ${Number(n || 0).toLocaleString()}`;
+
+    return (
+        <View style={styles.webHeaderWrapper}>
+            {/* ─── 1. Top Announcement Bar ───────────────────────────────── */}
+            <View style={styles.topBar}>
+                <View style={styles.topBarInner}>
+                    <View style={styles.topBarLeft}>
+                        <View style={styles.badgePromo}>
+                            <Truck size={13} color="#FFFFFF" />
+                            <Text style={styles.badgePromoText}>Express Delivery across Rwanda (Gisenyi, Kigali, Musanze)</Text>
+                        </View>
+                        <View style={styles.topDivider} />
+                        <TouchableOpacity style={styles.contactItem} onPress={() => navigation?.navigate('ChatSupport')}>
+                            <Phone size={13} color="#94A3B8" />
+                            <Text style={styles.contactText}>Hotline: +250 788 000 000</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.topBarRight}>
+                        <TouchableOpacity
+                            style={styles.adminPortalBtn}
+                            onPress={() => {
+                                if (Platform.OS === 'web') {
+                                    window.location.href = '/admin/';
+                                }
+                            }}
+                        >
+                            <ShieldCheck size={13} color="#3B82F6" />
+                            <Text style={styles.adminPortalText}>Admin Dashboard</Text>
+                            <ExternalLink size={11} color="#3B82F6" />
+                        </TouchableOpacity>
+
+                        <View style={styles.topDivider} />
+
+                        {/* Language Switcher */}
+                        <View style={{ position: 'relative' }}>
+                            <TouchableOpacity style={styles.langBtn} onPress={() => setShowLangMenu(!showLangMenu)}>
+                                <Text style={styles.langBtnText}>{language.toUpperCase()}</Text>
+                                <ChevronDown size={13} color="#94A3B8" />
+                            </TouchableOpacity>
+                            {showLangMenu && (
+                                <View style={styles.langDropdown}>
+                                    {[
+                                        { code: 'en', label: '🇬🇧 English' },
+                                        { code: 'fr', label: '🇫🇷 Français' },
+                                        { code: 'rw', label: '🇷🇼 Kinyarwanda' },
+                                    ].map((item) => (
+                                        <TouchableOpacity
+                                            key={item.code}
+                                            style={styles.langOption}
+                                            onPress={() => {
+                                                changeLanguage(item.code);
+                                                setShowLangMenu(false);
+                                            }}
+                                        >
+                                            <Text style={[styles.langOptionText, language === item.code && styles.langOptionActive]}>
+                                                {item.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            </View>
+
+            {/* ─── 2. Main Brand Header ────────────────────────────────────── */}
+            <View style={styles.mainHeader}>
+                <View style={styles.mainHeaderInner}>
+                    {/* Logo */}
+                    <TouchableOpacity style={styles.logoGroup} onPress={() => navigation?.navigate('Home')} activeOpacity={0.9}>
+                        <Image
+                            source={require('../../assets/logo.png')}
+                            style={styles.logoImg}
+                            resizeMode="contain"
+                        />
+                        <View style={styles.logoTextGroup}>
+                            <Text style={styles.logoTitle}>GISENYI GADGETS</Text>
+                            <Text style={styles.logoTagline}>Rwanda's Premier Tech & Electronics Store</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/* Central Mega Search Bar */}
+                    <View style={styles.megaSearchBox}>
+                        <View style={styles.searchCatSelect}>
+                            <Text style={styles.searchCatText}>{selectedCat}</Text>
+                            <ChevronDown size={14} color="#64748B" />
+                        </View>
+                        <View style={styles.searchDivider} />
+                        <TextInput
+                            style={styles.megaSearchInput}
+                            placeholder="Search flagship phones, gaming laptops, smartwatches, audio accessories..."
+                            placeholderTextColor="#94A3B8"
+                            value={searchQuery}
+                            onChangeText={setSearchQuery}
+                            onSubmitEditing={handleSearchSubmit}
+                            returnKeyType="search"
+                        />
+                        <TouchableOpacity style={styles.megaSearchBtn} onPress={handleSearchSubmit} activeOpacity={0.85}>
+                            <Search size={18} color="#FFFFFF" strokeWidth={2.5} />
+                            <Text style={styles.megaSearchBtnText}>Search</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Header Action Icons */}
+                    <View style={styles.actionRow}>
+                        {/* Wishlist Icon */}
+                        <TouchableOpacity
+                            style={styles.actionItem}
+                            onPress={() => navigation?.navigate('Wishlist')}
+                            activeOpacity={0.8}
+                        >
+                            <View style={styles.iconWrap}>
+                                <Heart size={22} color="#1E293B" strokeWidth={2} />
+                                {totalWishlistCount > 0 && (
+                                    <View style={styles.badgeDot}>
+                                        <Text style={styles.badgeText}>{totalWishlistCount}</Text>
+                                    </View>
+                                )}
+                            </View>
+                            <Text style={styles.actionLabel}>Wishlist</Text>
+                        </TouchableOpacity>
+
+                        {/* Cart Icon */}
+                        <TouchableOpacity
+                            style={styles.actionItem}
+                            onPress={() => navigation?.navigate('Cart')}
+                            activeOpacity={0.8}
+                        >
+                            <View style={styles.iconWrap}>
+                                <ShoppingCart size={22} color="#1E293B" strokeWidth={2} />
+                                {totalCartCount > 0 && (
+                                    <View style={[styles.badgeDot, { backgroundColor: '#3B82F6' }]}>
+                                        <Text style={styles.badgeText}>{totalCartCount > 99 ? '99+' : totalCartCount}</Text>
+                                    </View>
+                                )}
+                            </View>
+                            <View style={{ alignItems: 'flex-start' }}>
+                                <Text style={styles.actionLabel}>My Cart</Text>
+                                <Text style={styles.cartTotalText}>{fmt(total)}</Text>
+                            </View>
+                        </TouchableOpacity>
+
+                        {/* User Account / Sign In */}
+                        <TouchableOpacity
+                            style={styles.accountCardBtn}
+                            onPress={() => {
+                                if (user) navigation?.navigate('Profile');
+                                else navigation?.navigate('Login', { returnTo: 'Profile' });
+                            }}
+                            activeOpacity={0.85}
+                        >
+                            <View style={styles.avatarCircle}>
+                                {user && profile?.avatar_url ? (
+                                    <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
+                                ) : (
+                                    <User size={20} color="#3B82F6" strokeWidth={2.2} />
+                                )}
+                            </View>
+                            <View style={styles.accountTextGroup}>
+                                <Text style={styles.accountSubText}>{user ? 'Welcome back' : 'Guest Account'}</Text>
+                                <Text style={styles.accountMainText}>{user ? (profile?.full_name || 'My Account') : 'Sign In / Register'}</Text>
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
+
+            {/* ─── 3. Header Navbar & Category Strip ───────────────────────── */}
+            <View style={styles.categoryStrip}>
+                <View style={styles.categoryStripInner}>
+                    {/* Main Navigation Links (Left) */}
+                    <View style={styles.mainNavRow}>
+                        {[
+                            { label: 'Home', route: 'Home', icon: Home },
+                            { label: 'All Products', route: 'Search', icon: Search },
+                            { label: 'My Orders', route: 'Orders', icon: ListOrdered },
+                        ].map((item, idx) => (
+                            <TouchableOpacity
+                                key={idx}
+                                style={styles.mainNavItem}
+                                onPress={() => navigation?.navigate(item.route)}
+                                activeOpacity={0.8}
+                            >
+                                <item.icon size={14} color="#3B82F6" strokeWidth={2.2} />
+                                <Text style={styles.mainNavText}>{item.label}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    <View style={styles.navDivider} />
+
+                    {/* Category Filter Pills (Right) */}
+                    <View style={styles.navLinksRow}>
+                        {categories.map((cat) => {
+                            const isActive = activeCategory === cat.id;
+                            return (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    style={[styles.navLinkItem, isActive && styles.navLinkItemActive]}
+                                    onPress={() => onSelectCategory && onSelectCategory(cat.id)}
+                                >
+                                    <Text style={[styles.navLinkText, isActive && styles.navLinkTextActive]}>
+                                        {cat.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+            </View>
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    webHeaderWrapper: {
+        width: '100%',
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E2E8F0',
+        zIndex: 100,
+    },
+    // Top Bar
+    topBar: {
+        backgroundColor: '#0F172A',
+        paddingVertical: 7,
+        borderBottomWidth: 1,
+        borderBottomColor: '#1E293B',
+    },
+    topBarInner: {
+        maxWidth: 1280,
+        width: '100%',
+        alignSelf: 'center',
+        paddingHorizontal: 24,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    topBarLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    badgePromo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        backgroundColor: '#2563EB',
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderRadius: 12,
+    },
+    badgePromoText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700' },
+    topDivider: { width: 1, height: 14, backgroundColor: '#334155' },
+    contactItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    contactText: { color: '#94A3B8', fontSize: 12, fontWeight: '500' },
+
+    topBarRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    adminPortalBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 5,
+        backgroundColor: '#1E293B',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 6,
+        borderWidth: 1,
+        borderColor: 'rgba(59, 130, 246, 0.3)',
+    },
+    adminPortalText: { color: '#3B82F6', fontSize: 11, fontWeight: '700' },
+    langBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2 },
+    langBtnText: { color: '#F8FAFC', fontSize: 12, fontWeight: '700' },
+    langDropdown: {
+        position: 'absolute',
+        top: 24,
+        right: 0,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 8,
+        paddingVertical: 6,
+        width: 140,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
+        elevation: 10,
+        zIndex: 200,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    langOption: { paddingHorizontal: 12, paddingVertical: 8 },
+    langOptionText: { fontSize: 13, color: '#334155', fontWeight: '500' },
+    langOptionActive: { color: '#2563EB', fontWeight: '700' },
+
+    // Main Header
+    mainHeader: {
+        paddingVertical: 16,
+        backgroundColor: '#FFFFFF',
+    },
+    mainHeaderInner: {
+        maxWidth: 1280,
+        width: '100%',
+        alignSelf: 'center',
+        paddingHorizontal: 24,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 24,
+    },
+    logoGroup: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    logoImg: { width: 44, height: 44 },
+    logoTextGroup: { gap: 1 },
+    logoTitle: { fontSize: 18, fontWeight: '900', color: '#0F172A', letterSpacing: 0.5 },
+    logoTagline: { fontSize: 11, fontWeight: '600', color: '#2563EB' },
+
+    // Search
+    megaSearchBox: {
+        flex: 1,
+        maxWidth: 620,
+        height: 48,
+        backgroundColor: '#F8FAFC',
+        borderRadius: 12,
+        borderWidth: 1.5,
+        borderColor: '#CBD5E1',
+        flexDirection: 'row',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    searchCatSelect: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 14,
+        height: '100%',
+        backgroundColor: '#F1F5F9',
+    },
+    searchCatText: { fontSize: 13, fontWeight: '600', color: '#334155' },
+    searchDivider: { width: 1, height: 24, backgroundColor: '#CBD5E1' },
+    megaSearchInput: {
+        flex: 1,
+        paddingHorizontal: 14,
+        fontSize: 14,
+        color: '#0F172A',
+        height: '100%',
+        outlineStyle: 'none',
+    },
+    megaSearchBtn: {
+        backgroundColor: '#2563EB',
+        paddingHorizontal: 20,
+        height: '100%',
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    megaSearchBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+
+    // Actions
+    actionRow: { flexDirection: 'row', alignItems: 'center', gap: 20 },
+    actionItem: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    iconWrap: { position: 'relative' },
+    badgeDot: {
+        position: 'absolute',
+        top: -6,
+        right: -8,
+        backgroundColor: '#EF4444',
+        borderRadius: 10,
+        minWidth: 18,
+        height: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 4,
+        borderWidth: 1.5,
+        borderColor: '#FFFFFF',
+    },
+    badgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
+    actionLabel: { fontSize: 13, fontWeight: '700', color: '#1E293B' },
+    cartTotalText: { fontSize: 11, fontWeight: '800', color: '#2563EB' },
+
+    accountCardBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        backgroundColor: '#F1F5F9',
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    avatarCircle: {
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        backgroundColor: '#DBEAFE',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    avatarImg: { width: 34, height: 34, borderRadius: 17 },
+    accountTextGroup: { gap: 1 },
+    accountSubText: { fontSize: 10, color: '#64748B', fontWeight: '600' },
+    accountMainText: { fontSize: 12, fontWeight: '800', color: '#0F172A' },
+
+    // Category & Navbar Strip
+    categoryStrip: {
+        backgroundColor: '#0F172A',
+        borderTopWidth: 1,
+        borderTopColor: '#1E293B',
+        paddingVertical: 6,
+    },
+    categoryStripInner: {
+        maxWidth: 1280,
+        width: '100%',
+        alignSelf: 'center',
+        paddingHorizontal: 24,
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: Platform.select({ web: 'space-between', default: 'flex-start' }),
+        gap: 12,
+    },
+    mainNavRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        flexWrap: 'wrap',
+    },
+    mainNavItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 6,
+        backgroundColor: '#1E293B',
+    },
+    mainNavText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#FFFFFF',
+    },
+    navBadgeDot: {
+        backgroundColor: '#EF4444',
+        borderRadius: 10,
+        minWidth: 16,
+        height: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 4,
+    },
+    navBadgeText: { color: '#FFFFFF', fontSize: 10, fontWeight: '900' },
+    navDivider: { width: 1, height: 20, backgroundColor: '#334155' },
+
+    navLinksRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
+    navLinkItem: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 6,
+    },
+    navLinkItemActive: {
+        backgroundColor: '#3B82F6',
+    },
+    navLinkText: { color: '#94A3B8', fontSize: 12, fontWeight: '600' },
+    navLinkTextActive: { color: '#FFFFFF', fontWeight: '800' },
+});

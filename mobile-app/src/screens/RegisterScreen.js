@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from '../components/BlurView';
-import { Mail, Lock, User, Check } from 'lucide-react-native';
+import { Mail, Lock, User, Check, ArrowLeft } from 'lucide-react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -40,7 +40,7 @@ const Field = ({ icon: Icon, value, onChangeText, onFocus, onBlur, isFocused, pl
   </View>
 );
 
-export default function RegisterScreen({ navigation }) {
+export default function RegisterScreen({ navigation, route }) {
   const { signUp, signInWithGoogle } = useAuth();
   const { t } = useLanguage();
   const [form, setForm] = useState({ fullName: '', email: '', password: '', confirmPassword: '' });
@@ -49,6 +49,8 @@ export default function RegisterScreen({ navigation }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState(null);
+
+  const returnTo = route?.params?.returnTo || null;
 
   const set = (key) => (val) => { setForm((f) => ({ ...f, [key]: val })); setError(''); };
 
@@ -85,7 +87,7 @@ export default function RegisterScreen({ navigation }) {
         fullName: form.fullName.trim(),
       });
 
-      navigation.replace('Login', { message: t('auth.accountCreatedMessage') });
+      navigation.replace('Login', { message: t('auth.accountCreatedMessage'), returnTo });
     } catch (e) {
       setError(e.message || t('auth.errors.registrationFailed'));
     } finally {
@@ -95,14 +97,26 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.topNav}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.navigate('Main');
+          }}
+        >
+          <ArrowLeft size={20} color={COLORS.textPrimary} />
+          <Text style={styles.backBtnText}>Continue Browsing</Text>
+        </TouchableOpacity>
+      </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          
+
           <View style={styles.header}>
             <View style={styles.logoWrap}>
-              <Image 
-                source={require('../../assets/logo.png')} 
-                style={{ width: 100, height: 100 }} 
+              <Image
+                source={require('../../assets/logo.png')}
+                style={{ width: 100, height: 100 }}
                 resizeMode="contain"
               />
             </View>
@@ -117,87 +131,87 @@ export default function RegisterScreen({ navigation }) {
           {/* Glass Form Card */}
           <BlurView intensity={70} tint="light" style={styles.formCard}>
             <View style={styles.form}>
-            <Field
-              icon={User}
-              value={form.fullName}
-              onChangeText={set('fullName')}
-              placeholder={t('auth.fullName')}
-              isFocused={focusedField === 'fullName'}
-              onFocus={() => setFocusedField('fullName')}
-              onBlur={() => setFocusedField(null)}
-            />
-            <Field
-              icon={Mail}
-              value={form.email}
-              onChangeText={set('email')}
-              placeholder={t('auth.email')}
-              keyType="email-address"
-              isFocused={focusedField === 'email'}
-              onFocus={() => setFocusedField('email')}
-              onBlur={() => setFocusedField(null)}
-            />
-            <Field
-              icon={Lock}
-              value={form.password}
-              onChangeText={set('password')}
-              placeholder={t('auth.password')}
-              secureEntry
-              isFocused={focusedField === 'password'}
-              onFocus={() => setFocusedField('password')}
-              onBlur={() => setFocusedField(null)}
-            />
-            <Field
-              icon={Lock}
-              value={form.confirmPassword}
-              onChangeText={set('confirmPassword')}
-              placeholder={t('auth.confirmPassword')}
-              secureEntry
-              isFocused={focusedField === 'confirmPassword'}
-              onFocus={() => setFocusedField('confirmPassword')}
-              onBlur={() => setFocusedField(null)}
-            />
+              <Field
+                icon={User}
+                value={form.fullName}
+                onChangeText={set('fullName')}
+                placeholder={t('auth.fullName')}
+                isFocused={focusedField === 'fullName'}
+                onFocus={() => setFocusedField('fullName')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <Field
+                icon={Mail}
+                value={form.email}
+                onChangeText={set('email')}
+                placeholder={t('auth.email')}
+                keyType="email-address"
+                isFocused={focusedField === 'email'}
+                onFocus={() => setFocusedField('email')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <Field
+                icon={Lock}
+                value={form.password}
+                onChangeText={set('password')}
+                placeholder={t('auth.password')}
+                secureEntry
+                isFocused={focusedField === 'password'}
+                onFocus={() => setFocusedField('password')}
+                onBlur={() => setFocusedField(null)}
+              />
+              <Field
+                icon={Lock}
+                value={form.confirmPassword}
+                onChangeText={set('confirmPassword')}
+                placeholder={t('auth.confirmPassword')}
+                secureEntry
+                isFocused={focusedField === 'confirmPassword'}
+                onFocus={() => setFocusedField('confirmPassword')}
+                onBlur={() => setFocusedField(null)}
+              />
 
-            {/* Terms Checkbox */}
-            <TouchableOpacity style={styles.checkboxRow} onPress={() => setAgreed(!agreed)} activeOpacity={0.7}>
-              <View style={[styles.checkbox, agreed && styles.checkboxActive]}>
-                {agreed && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
-              </View>
-              <Text style={styles.checkboxText}>
-                {t('auth.agreeToTerms')} <Text style={styles.linkText}>{t('auth.termsAndConditions')}</Text>
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.registerBtn, loading && { opacity: 0.6 }]}
-              onPress={handleRegister} disabled={loading} activeOpacity={0.85}
-            >
-              <Text style={styles.registerBtnText}>{loading ? t('auth.signingUp') : t('auth.signUp')}</Text>
-            </TouchableOpacity>
-
-            <View style={styles.dividerRow}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>{t('auth.orContinueWith')}</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.googleBtn, googleLoading && { opacity: 0.6 }]}
-              onPress={handleGoogleSignIn}
-              disabled={googleLoading}
-              activeOpacity={0.85}
-            >
-              <GoogleIcon size={20} />
-              <Text style={styles.googleBtnText}>
-                {googleLoading ? t('auth.openingGoogle') : t('auth.continueWithGoogle')}
-              </Text>
-            </TouchableOpacity>
-
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>{t('auth.alreadyHaveAccount')} </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginLink}>{t('auth.signIn')}</Text>
+              {/* Terms Checkbox */}
+              <TouchableOpacity style={styles.checkboxRow} onPress={() => setAgreed(!agreed)} activeOpacity={0.7}>
+                <View style={[styles.checkbox, agreed && styles.checkboxActive]}>
+                  {agreed && <Check size={14} color="#FFFFFF" strokeWidth={3} />}
+                </View>
+                <Text style={styles.checkboxText}>
+                  {t('auth.agreeToTerms')} <Text style={styles.linkText}>{t('auth.termsAndConditions')}</Text>
+                </Text>
               </TouchableOpacity>
-            </View>
+
+              <TouchableOpacity
+                style={[styles.registerBtn, loading && { opacity: 0.6 }]}
+                onPress={handleRegister} disabled={loading} activeOpacity={0.85}
+              >
+                <Text style={styles.registerBtnText}>{loading ? t('auth.signingUp') : t('auth.signUp')}</Text>
+              </TouchableOpacity>
+
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>{t('auth.orContinueWith')}</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.googleBtn, googleLoading && { opacity: 0.6 }]}
+                onPress={handleGoogleSignIn}
+                disabled={googleLoading}
+                activeOpacity={0.85}
+              >
+                <GoogleIcon size={20} />
+                <Text style={styles.googleBtnText}>
+                  {googleLoading ? t('auth.openingGoogle') : t('auth.continueWithGoogle')}
+                </Text>
+              </TouchableOpacity>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>{t('auth.alreadyHaveAccount')} </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login', { returnTo })}>
+                  <Text style={styles.loginLink}>{t('auth.signIn')}</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </BlurView>
         </ScrollView>
@@ -208,6 +222,28 @@ export default function RegisterScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
+  topNav: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  backBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#202124',
+  },
   scroll: { flexGrow: 1, padding: 24, paddingBottom: 40, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 32, marginTop: 10 },
   logoWrap: { marginBottom: 20 },

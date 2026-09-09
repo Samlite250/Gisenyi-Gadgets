@@ -189,59 +189,59 @@ export default function OrdersScreen({ navigation }) {
     return (
       <BlurView intensity={40} tint="light" style={styles.orderCard}>
         <TouchableOpacity
-        onPress={() => navigation.navigate('OrderTracking', { order: item })}
-        activeOpacity={0.7}
-      >
-        <View style={styles.orderHeader}>
-          <View style={styles.orderIdWrap}>
-            <View style={styles.iconBox}>
-              <ShoppingBag size={18} color={COLORS.primaryBlue} />
-            </View>
-            <View>
-              <Text style={styles.orderId}>{item.order_number}</Text>
-              <View style={styles.metaRow}>
-                <Clock size={12} color={COLORS.textMuted} />
-                <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
+          onPress={() => navigation.navigate('OrderTracking', { order: item })}
+          activeOpacity={0.7}
+        >
+          <View style={styles.orderHeader}>
+            <View style={styles.orderIdWrap}>
+              <View style={styles.iconBox}>
+                <ShoppingBag size={18} color={COLORS.primaryBlue} />
+              </View>
+              <View>
+                <Text style={styles.orderId}>{item.order_number}</Text>
+                <View style={styles.metaRow}>
+                  <Clock size={12} color={COLORS.textMuted} />
+                  <Text style={styles.metaText}>{formatDate(item.created_at)}</Text>
+                </View>
               </View>
             </View>
-          </View>
-          <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-            {StatusIcon && <StatusIcon size={12} color={status.color} style={{ marginRight: 4 }} />}
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-          </View>
-        </View>
-
-        <View style={styles.orderDivider} />
-
-        <View style={styles.orderBody}>
-          <View style={styles.itemsWrapper}>
-            {item.order_items?.slice(0, 2).map((oi, i) => (
-              <View key={i} style={styles.itemPreviewRow}>
-                <View style={styles.bulletPoint} />
-                <Text style={styles.itemPreviewText} numberOfLines={1}>
-                  <Text style={{ fontWeight: '600', color: COLORS.textPrimary }}>{oi.quantity}x</Text> {oi.product_name}
-                </Text>
-              </View>
-            ))}
-            {itemCount > 2 && (
-              <Text style={styles.moreItems}>{t('orders.moreItems', { count: itemCount - 2 })}</Text>
-            )}
+            <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+              {StatusIcon && <StatusIcon size={12} color={status.color} style={{ marginRight: 4 }} />}
+              <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+            </View>
           </View>
 
-          <View style={styles.priceWrap}>
-            <Text style={styles.totalLabel}>{t('orders.totalAmount')}</Text>
-            <Text style={styles.orderTotal}>{fmt(item.total)}</Text>
-          </View>
-        </View>
+          <View style={styles.orderDivider} />
 
-        <View style={styles.orderFooter}>
-          <Text style={styles.itemCountText}>{t('orders.itemCount', { count: itemCount })}</Text>
-          <View style={styles.trackBtn}>
-            <Text style={styles.trackBtnText}>{t('orders.trackOrder')}</Text>
-            <ChevronRight size={16} color={COLORS.primaryBlue} />
+          <View style={styles.orderBody}>
+            <View style={styles.itemsWrapper}>
+              {item.order_items?.slice(0, 2).map((oi, i) => (
+                <View key={i} style={styles.itemPreviewRow}>
+                  <View style={styles.bulletPoint} />
+                  <Text style={styles.itemPreviewText} numberOfLines={1}>
+                    <Text style={{ fontWeight: '600', color: COLORS.textPrimary }}>{oi.quantity}x</Text> {oi.product_name}
+                  </Text>
+                </View>
+              ))}
+              {itemCount > 2 && (
+                <Text style={styles.moreItems}>{t('orders.moreItems', { count: itemCount - 2 })}</Text>
+              )}
+            </View>
+
+            <View style={styles.priceWrap}>
+              <Text style={styles.totalLabel}>{t('orders.totalAmount')}</Text>
+              <Text style={styles.orderTotal}>{fmt(item.total)}</Text>
+            </View>
           </View>
-        </View>
-      </TouchableOpacity>
+
+          <View style={styles.orderFooter}>
+            <Text style={styles.itemCountText}>{t('orders.itemCount', { count: itemCount })}</Text>
+            <View style={styles.trackBtn}>
+              <Text style={styles.trackBtnText}>{t('orders.trackOrder')}</Text>
+              <ChevronRight size={16} color={COLORS.primaryBlue} />
+            </View>
+          </View>
+        </TouchableOpacity>
 
         {/* Confirm Receipt Button for Delivered Orders */}
         {isDelivered && !isConfirmed && (
@@ -294,15 +294,46 @@ export default function OrdersScreen({ navigation }) {
   const filteredOrders = activeFilter === t('orders.all')
     ? orders
     : orders.filter((o) => {
-        const statusMap = {
-          [t('orders.pending')]: 'pending',
-          [t('orders.processing')]: 'processing',
-          [t('orders.shipped')]: 'shipped',
-          [t('orders.delivered')]: 'delivered',
-          [t('orders.cancelled')]: 'cancelled',
-        };
-        return o.status?.toLowerCase() === statusMap[activeFilter];
-      });
+      const statusMap = {
+        [t('orders.pending')]: 'pending',
+        [t('orders.processing')]: 'processing',
+        [t('orders.shipped')]: 'shipped',
+        [t('orders.delivered')]: 'delivered',
+        [t('orders.cancelled')]: 'cancelled',
+      };
+      return o.status?.toLowerCase() === statusMap[activeFilter];
+    });
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <BlurView intensity={70} tint="light" style={styles.header}>
+          <View>
+            <Text style={styles.headerTitle}>{t('orders.title')}</Text>
+            <Text style={styles.headerCount}>Sign in to view your orders</Text>
+          </View>
+        </BlurView>
+
+        <View style={styles.empty}>
+          <View style={styles.emptyIconBg}>
+            <Package size={56} color={COLORS.primaryBlue} strokeWidth={1.5} />
+          </View>
+          <Text style={styles.emptyTitle}>Track & Manage Orders</Text>
+          <Text style={styles.emptySub}>
+            Please sign in or create an account to view your past orders, track active shipments, and leave product reviews.
+          </Text>
+          <TouchableOpacity
+            style={styles.shopBtn}
+            onPress={() => navigation.navigate('Login', { returnTo: 'Orders' })}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.shopBtnText}>Sign In / Create Account</Text>
+            <ChevronRight size={18} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TextInput,
-  TouchableOpacity, Image, FlatList, RefreshControl, Platform, Dimensions,
+  TouchableOpacity, Image, FlatList, RefreshControl, Platform, Dimensions, useWindowDimensions,
 } from 'react-native';
 import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,6 +18,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import SkeletonLoader from '../components/SkeletonLoader';
+import WebLayoutWrapper from '../components/WebLayoutWrapper';
 import { productLogger } from '../utils/logger';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
@@ -30,10 +31,38 @@ const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=600', // Camera
 ];
 
-const getFallbackImage = (id) => {
-  const hash = String(id || '1').split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-  return FALLBACK_IMAGES[hash % FALLBACK_IMAGES.length];
-};
+const DEFAULT_BANNERS = [
+  {
+    id: 'banner-def-1',
+    type: 'banner',
+    title: 'Big Sale Up to 40% OFF',
+    subtitle: 'ON ALL ELECTRONICS',
+    button_text: 'Shop Now',
+    color: '#0F172A',
+    image_url: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=600',
+    link_category: 'smartwatches',
+  },
+  {
+    id: 'banner-def-2',
+    type: 'banner',
+    title: 'Flagship Smartphones',
+    subtitle: 'NEW ARRIVALS 2026',
+    button_text: 'Explore Models',
+    color: '#1E1B4B',
+    image_url: 'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=600',
+    link_category: 'smartphones',
+  },
+  {
+    id: 'banner-def-3',
+    type: 'banner',
+    title: 'Gaming Laptops & PCs',
+    subtitle: 'POWERFUL WORKSTATIONS',
+    button_text: 'Buy Now',
+    color: '#064E3B',
+    image_url: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600',
+    link_category: 'laptops',
+  },
+];
 
 // ProductCard MUST be outside the parent component to prevent re-mount shaking
 const ProductCard = ({ product, style, onPress, onWishlist, wishlisted, fmt }) => (
@@ -47,7 +76,7 @@ const ProductCard = ({ product, style, onPress, onWishlist, wishlisted, fmt }) =
         <Image
           source={{ uri: product.images[0] }}
           style={styles.productImage}
-          resizeMode="cover"
+          resizeMode="contain"
         />
         <TouchableOpacity style={styles.heartBtn} onPress={onWishlist}>
           <Heart size={16} color={wishlisted ? COLORS.error : '#666'} fill={wishlisted ? COLORS.error : 'none'} />
@@ -86,6 +115,8 @@ export default function HomeScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [activeBannerIndex, setActiveBannerIndex] = useState(0);
+
+  const { width } = useWindowDimensions();
 
   const scrollRef = React.useRef(null);
   const bannerScrollRef = React.useRef(null);
@@ -144,7 +175,12 @@ export default function HomeScreen({ navigation }) {
 
       // ── Banners & Offers ──────────────────────────────────────────
       const allBanners = bannersData || [];
-      setBanners(allBanners.filter(b => b.type === 'banner'));
+      const dbBanners = allBanners.filter(b => b.type === 'banner');
+      if (dbBanners.length < 2) {
+        setBanners([...dbBanners, ...DEFAULT_BANNERS.slice(dbBanners.length)]);
+      } else {
+        setBanners(dbBanners);
+      }
       setOffers(allBanners.filter(b => b.type === 'offer'));
 
       // ── Products ─────────────────────────────────────────────────
@@ -153,7 +189,7 @@ export default function HomeScreen({ navigation }) {
         try {
           if (typeof p.images === 'string') parsedImages = JSON.parse(p.images);
           else if (Array.isArray(p.images)) parsedImages = p.images;
-        } catch(e) {}
+        } catch (e) { }
         const hasImg = parsedImages.length > 0 && typeof parsedImages[0] === 'string' && parsedImages[0].startsWith('http');
         return { ...p, images: hasImg ? parsedImages : [getFallbackImage(p.id)] };
       });
@@ -199,20 +235,27 @@ export default function HomeScreen({ navigation }) {
     return () => supabase.removeChannel(channel);
   }, [fetchData]);
 
+  const isDesktop = Platform.OS === 'web' && width >= 768;
+  const desktopContainerWidth = Math.min(width, 1280) - (isDesktop ? 48 : 32);
+  const bannerWidth = isDesktop
+    ? Math.max(340, Math.floor((desktopContainerWidth - 16) / 2))
+    : width - SIZES.md * 2;
+  const bannerSnapInterval = isDesktop ? desktopContainerWidth + 16 : bannerWidth + 16;
+
   // ── Professional Auto-scroll with smooth transitions ──────────
   useEffect(() => {
     if (banners.length <= 1 || !bannerScrollRef.current) return;
 
     let currentIndex = 0;
     const BANNER_INTERVAL = 10000; // 10 seconds
-    const BANNER_WIDTH = Dimensions.get('window').width - SIZES.md * 2 + 16;
 
     const scrollToNext = () => {
       if (bannerPaused) return;
-      currentIndex = (currentIndex + 1) % banners.length;
+      const step = isDesktop ? 2 : 1;
+      currentIndex = (currentIndex + step) % banners.length;
       setActiveBannerIndex(currentIndex);
       bannerScrollRef.current?.scrollTo({
-        x: currentIndex * BANNER_WIDTH,
+        x: (currentIndex / (isDesktop ? 2 : 1)) * bannerSnapInterval,
         animated: true,
       });
     };
@@ -224,7 +267,7 @@ export default function HomeScreen({ navigation }) {
         clearInterval(bannerAutoScrollRef.current);
       }
     };
-  }, [banners, bannerPaused]);
+  }, [banners, bannerPaused, isDesktop, bannerSnapInterval]);
 
   useEffect(() => {
     if (offers.length <= 1 || !offerScrollRef.current) return;
@@ -287,11 +330,11 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
         <SkeletonLoader width={'90%'} height={50} borderRadius={16} style={{ alignSelf: 'center', marginBottom: SIZES.lg }} />
-        
+
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Banner Skeleton */}
           <SkeletonLoader width={'90%'} height={170} borderRadius={24} style={{ alignSelf: 'center', marginBottom: SIZES.lg }} />
-          
+
           {/* Categories Skeleton */}
           <View style={{ paddingHorizontal: SIZES.md, marginBottom: SIZES.md }}>
             <SkeletonLoader width={120} height={24} borderRadius={6} style={{ marginBottom: 16 }} />
@@ -328,405 +371,429 @@ export default function HomeScreen({ navigation }) {
       <ScrollView
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        style={{ flex: 1, width: '100%' }}
+        contentContainerStyle={{
+          width: '100%',
+          flexGrow: 1,
+          paddingBottom: Platform.OS === 'web' && width >= 768 ? 0 : 90
+        }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchData(); }} tintColor={COLORS.primaryBlue} />}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          {/* Avatar + greeting */}
-          <TouchableOpacity style={styles.headerLeft} onPress={() => navigation.navigate('Profile')} activeOpacity={0.8}>
-            <View style={styles.avatar}>
-              {profile?.avatar_url ? (
-                <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
-              ) : (
-                <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+        <WebLayoutWrapper
+          navigation={navigation}
+          onSearch={(q) => setSearchQuery(q)}
+          activeCategory={activeCategory}
+          onSelectCategory={(catId) => setActiveCategory(catId)}
+        >
+          {/* Mobile Header & Search Bar (hidden on Desktop Web) */}
+          {!(Platform.OS === 'web' && width >= 768) && (
+            <>
+              <View style={styles.header}>
+                <TouchableOpacity style={styles.headerLeft} onPress={() => navigation.navigate('Profile')} activeOpacity={0.8}>
+                  <View style={styles.avatar}>
+                    {profile?.avatar_url ? (
+                      <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
+                    ) : (
+                      <Text style={styles.avatarText}>{displayName.charAt(0).toUpperCase()}</Text>
+                    )}
+                  </View>
+                  <View style={styles.headerTextGroup}>
+                    <View style={styles.locationPill}>
+                      <MapPin size={10} color="#3B82F6" />
+                      <Text style={styles.locationText}>{userLocation}, {userCountry}</Text>
+                    </View>
+                    <Text style={styles.greeting}>Hello, {displayName}</Text>
+                    <Text style={styles.tagline}>Find your next tech obsession</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('Notifications')}>
+                  <Bell size={21} color='#1A1A1A' />
+                  <View style={styles.notifDot} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={[styles.searchBarWrapper, isSearchFocused && styles.searchBarWrapperFocused]}>
+                <View style={styles.searchBar}>
+                  <Search size={20} color={isSearchFocused ? COLORS.primaryBlue : COLORS.textMuted} />
+                  <TextInput
+                    placeholder={t('home.searchPlaceholder')}
+                    placeholderTextColor={COLORS.textMuted}
+                    style={styles.searchInput}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setIsSearchFocused(false)}
+                    returnKeyType="search"
+                  />
+                  {searchQuery.length > 0 ? (
+                    <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 8 }}>
+                      <Text style={{ color: COLORS.primaryBlue, fontWeight: '700', fontSize: 13 }}>Clear</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity style={styles.filterBtn}>
+                      <SlidersHorizontal size={18} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            </>
+          )}
+
+          {/* Banners Carousel — from DB */}
+          {banners.length > 0 && (
+            <View style={styles.bannerContainerWrap}>
+              <ScrollView
+                ref={bannerScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: SIZES.md }}
+                snapToInterval={bannerSnapInterval}
+                snapToAlignment={isDesktop ? "start" : "center"}
+                decelerationRate="fast"
+                pagingEnabled={false}
+                onTouchStart={handleBannerTouchStart}
+                onScroll={handleBannerScroll}
+                scrollEventThrottle={16}
+              >
+                {banners.map((b, index) => (
+                  <View
+                    key={b.id || index}
+                    style={[
+                      styles.banner,
+                      {
+                        width: bannerWidth,
+                        backgroundColor: b.color,
+                        paddingLeft: isDesktop ? SIZES.xl : 16,
+                        paddingRight: isDesktop ? 0 : 12,
+                        paddingVertical: isDesktop ? SIZES.xl : 12,
+                      },
+                      index !== banners.length - 1 && { marginRight: 16 }
+                    ]}
+                  >
+                    <View style={styles.bannerContent}>
+                      <Text style={[styles.bannerSubtitle, !isDesktop && { fontSize: 10 }]}>{b.subtitle}</Text>
+                      <Text style={[styles.bannerTitle, !isDesktop && { fontSize: 16, lineHeight: 21 }]} numberOfLines={2}>{b.title}</Text>
+                      <TouchableOpacity
+                        style={[styles.bannerButton, !isDesktop && { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 10 }]}
+                        activeOpacity={0.8}
+                        onPress={() => {
+                          if (b.link_category) {
+                            // Find category by name or slug
+                            const category = categories.find(c =>
+                              c.name?.toLowerCase() === b.link_category?.toLowerCase() ||
+                              c.slug?.toLowerCase() === b.link_category?.toLowerCase()
+                            );
+                            if (category) {
+                              setActiveCategory(category.id);
+                              // Scroll to products section
+                              setTimeout(() => {
+                                scrollRef.current?.scrollTo({ y: 600, animated: true });
+                              }, 100);
+                            } else {
+                              navigation.navigate('Search', { category: b.link_category });
+                            }
+                          } else {
+                            navigation.navigate('Search');
+                          }
+                        }}
+                      >
+                        <Text style={[styles.bannerButtonText, !isDesktop && { fontSize: 11 }]}>{b.button_text}</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={[styles.bannerImageContainer, !isDesktop && { width: 105, height: 105, marginRight: 0 }]}>
+                      <Image source={{ uri: b.image_url }} style={[styles.bannerImage, !isDesktop && { width: 96, height: 96, borderRadius: 48 }]} resizeMode="cover" />
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+              {banners.length > 1 && (
+                <View style={styles.paginationDots}>
+                  {(isDesktop ? Array.from({ length: Math.ceil(banners.length / 2) }) : banners).map((_, index) => {
+                    const isActive = isDesktop
+                      ? Math.floor(activeBannerIndex / 2) === index
+                      : activeBannerIndex === index;
+                    return (
+                      <View
+                        key={index}
+                        style={[
+                          styles.dot,
+                          isActive && styles.activeDot
+                        ]}
+                      />
+                    );
+                  })}
+                </View>
               )}
             </View>
-            <View style={styles.headerTextGroup}>
-              <View style={styles.locationPill}>
-                <MapPin size={10} color="#3B82F6" />
-                <Text style={styles.locationText}>{userLocation}, {userCountry}</Text>
-              </View>
-              <Text style={styles.greeting}>Hello, {displayName}</Text>
-              <Text style={styles.tagline}>Find your next tech obsession</Text>
-            </View>
-          </TouchableOpacity>
-          {/* Notification bell */}
-          <TouchableOpacity style={styles.notifBtn} onPress={() => navigation.navigate('Notifications')}>
-            <Bell size={21} color='#1A1A1A' />
-            <View style={styles.notifDot} />
-          </TouchableOpacity>
-        </View>
+          )}
 
-        {/* Search Bar */}
-        <View style={[styles.searchBarWrapper, isSearchFocused && styles.searchBarWrapperFocused]}>
-          <View style={styles.searchBar}>
-            <Search size={20} color={isSearchFocused ? COLORS.primaryBlue : COLORS.textMuted} />
-            <TextInput
-              placeholder={t('home.searchPlaceholder')}
-              placeholderTextColor={COLORS.textMuted}
-              style={styles.searchInput}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              returnKeyType="search"
-            />
-            {searchQuery.length > 0 ? (
-              <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 8 }}>
-                <Text style={{ color: COLORS.primaryBlue, fontWeight: '700', fontSize: 13 }}>Clear</Text>
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.filterBtn}>
-                <SlidersHorizontal size={18} color={COLORS.textSecondary} />
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Banners Carousel — from DB */}
-        {banners.length > 0 && (
-          <View style={styles.bannerContainerWrap}>
-            <ScrollView
-              ref={bannerScrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: SIZES.md }}
-              snapToInterval={Dimensions.get('window').width - SIZES.md * 2 + 16}
-              snapToAlignment="center"
-              decelerationRate="fast"
-              pagingEnabled={false}
-              onTouchStart={handleBannerTouchStart}
-              onScroll={handleBannerScroll}
-              scrollEventThrottle={16}
-            >
-              {banners.map((b, index) => (
-                <View
-                  key={b.id}
-                  style={[
-                    styles.banner,
-                    { backgroundColor: b.color },
-                    index !== banners.length - 1 && { marginRight: 16 }
-                  ]}
-                >
-                  <View style={styles.bannerContent}>
-                    <Text style={styles.bannerSubtitle}>{b.subtitle}</Text>
-                    <Text style={styles.bannerTitle}>{b.title}</Text>
-                    <TouchableOpacity
-                      style={styles.bannerButton}
-                      activeOpacity={0.8}
-                      onPress={() => {
-                        if (b.link_category) {
-                          // Find category by name or slug
-                          const category = categories.find(c =>
-                            c.name?.toLowerCase() === b.link_category?.toLowerCase() ||
-                            c.slug?.toLowerCase() === b.link_category?.toLowerCase()
-                          );
-                          if (category) {
-                            setActiveCategory(category.id);
-                            // Scroll to products section
-                            setTimeout(() => {
-                              scrollRef.current?.scrollTo({ y: 600, animated: true });
-                            }, 100);
-                          } else {
-                            navigation.navigate('Search', { category: b.link_category });
-                          }
-                        } else {
-                          navigation.navigate('Search');
-                        }
-                      }}
-                    >
-                      <Text style={styles.bannerButtonText}>{b.button_text}</Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.bannerImageContainer}>
-                    <Image source={{ uri: b.image_url }} style={styles.bannerImage} resizeMode="cover" />
-                  </View>
+          {/* Special Offers — from DB */}
+          {offers.length > 0 && (
+            <View style={styles.offersSection}>
+              <View style={styles.sectionHeader}>
+                <View style={styles.sectionTitleRow}>
+                  <Flame size={22} color="#EF4444" fill="#EF4444" />
+                  <Text style={styles.sectionTitle}>Special Offers</Text>
                 </View>
-              ))}
-            </ScrollView>
-            {banners.length > 1 && (
-              <View style={styles.paginationDots}>
-                {banners.map((_, index) => (
-                  <View
-                    key={index}
+                <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+                  <Text style={styles.seeAll}>See all</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView
+                ref={offerScrollRef}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: SIZES.md }}
+                snapToInterval={186}
+                decelerationRate="fast"
+                onTouchStart={handleOfferTouchStart}
+                scrollEventThrottle={16}
+              >
+                {offers.map((offer, index) => (
+                  <TouchableOpacity
+                    key={offer.id}
                     style={[
-                      styles.dot,
-                      index === activeBannerIndex && styles.activeDot
+                      styles.offerCard,
+                      { backgroundColor: offer.color },
+                      index !== offers.length - 1 && { marginRight: 16 }
                     ]}
-                  />
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Special Offers — from DB */}
-        {offers.length > 0 && (
-          <View style={styles.offersSection}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionTitleRow}>
-                <Flame size={22} color="#EF4444" fill="#EF4444" />
-                <Text style={styles.sectionTitle}>Special Offers</Text>
-              </View>
-              <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-                <Text style={styles.seeAll}>See all</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView
-              ref={offerScrollRef}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: SIZES.md }}
-              snapToInterval={186}
-              decelerationRate="fast"
-              onTouchStart={handleOfferTouchStart}
-              scrollEventThrottle={16}
-            >
-              {offers.map((offer, index) => (
-                <TouchableOpacity
-                  key={offer.id}
-                  style={[
-                    styles.offerCard,
-                    { backgroundColor: offer.color },
-                    index !== offers.length - 1 && { marginRight: 16 }
-                  ]}
-                  activeOpacity={0.9}
-                  onPress={() => {
-                    if (offer.link_category) {
-                      const category = categories.find(c =>
-                        c.name?.toLowerCase() === offer.link_category?.toLowerCase() ||
-                        c.slug?.toLowerCase() === offer.link_category?.toLowerCase()
-                      );
-                      if (category) {
-                        setActiveCategory(category.id);
-                        setTimeout(() => {
-                          scrollRef.current?.scrollTo({ y: 600, animated: true });
-                        }, 100);
-                      } else {
-                        navigation.navigate('Search', { category: offer.link_category });
+                    activeOpacity={0.9}
+                    onPress={() => {
+                      if (offer.link_category) {
+                        const category = categories.find(c =>
+                          c.name?.toLowerCase() === offer.link_category?.toLowerCase() ||
+                          c.slug?.toLowerCase() === offer.link_category?.toLowerCase()
+                        );
+                        if (category) {
+                          setActiveCategory(category.id);
+                          setTimeout(() => {
+                            scrollRef.current?.scrollTo({ y: 600, animated: true });
+                          }, 100);
+                        } else {
+                          navigation.navigate('Search', { category: offer.link_category });
+                        }
                       }
-                    }
-                  }}
-                >
-                  <View style={styles.offerImageHalf}>
-                    <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
-                  </View>
-                  <View style={styles.offerContentHalf}>
-                    <View style={styles.offerBadge}>
-                      <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                    }}
+                  >
+                    <View style={styles.offerImageHalf}>
+                      <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
                     </View>
-                    <Text style={styles.offerLabel}>{offer.label}</Text>
-                    <Text style={styles.offerTagline} numberOfLines={2}>{offer.tagline}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
-        )}
+                    <View style={styles.offerContentHalf}>
+                      <View style={styles.offerBadge}>
+                        <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                      </View>
+                      <Text style={styles.offerLabel}>{offer.label}</Text>
+                      <Text style={styles.offerTagline} numberOfLines={2}>{offer.tagline}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
 
 
-        {/* Categories */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
-            <Text style={styles.seeAll}>{t('home.viewAll')}</Text>
-          </TouchableOpacity>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.catRow}>
-            {categories.map((c) => {
-              const isActive = activeCategory === c.id;
-              
-              // Map slug/id to respective Lucide icon
-              const slug = c.slug?.toLowerCase() || c.id?.toLowerCase() || '';
-              const Icon = {
-                smartphones: Smartphone,
-                phones: Smartphone,
-                laptops: Laptop,
-                tablets: Tablet,
-                headphones: Headphones,
-                audio: Headphones,
-                smartwatches: Watch,
-                watches: Watch,
-                gaming: Gamepad2,
-                accessories: Cpu,
-                tech: Cpu,
-                cameras: Camera,
-                photo: Camera,
-              }[slug] || ShoppingBag;
-
-              return (
-                <TouchableOpacity
-                  key={c.id}
-                  style={styles.catItem}
-                  activeOpacity={0.7}
-                  onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
-                >
-                  <View style={[styles.catIconCircle, isActive && styles.catIconCircleActive]}>
-                    <Icon size={28} color={isActive ? '#FFFFFF' : '#64748B'} strokeWidth={2.2} />
-                  </View>
-                  <Text style={[styles.catName, isActive && styles.catNameActive]}>{c.name}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </ScrollView>
-
-        {/* Products Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {searchQuery ? `${t('common.search')} "${searchQuery}"` : (activeCategory === 'all' ? t('home.featured') : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products')}
-          </Text>
-          {!searchQuery && (
+          {/* Categories */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
               <Text style={styles.seeAll}>{t('home.viewAll')}</Text>
             </TouchableOpacity>
-          )}
-        </View>
-        <ScrollView horizontal={!searchQuery} showsHorizontalScrollIndicator={false} contentContainerStyle={searchQuery ? styles.searchResultGrid : styles.hScroll}>
-          {(() => {
-            const query = searchQuery.toLowerCase();
-            const filtered = allProducts.filter(p => 
-              p.name.toLowerCase().includes(query) || 
-              (p.brand && p.brand.toLowerCase().includes(query)) ||
-              (p.description && p.description.toLowerCase().includes(query))
-            );
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <View style={styles.catRow}>
+              {categories.map((c) => {
+                const isActive = activeCategory === c.id;
 
-            if (searchQuery) {
-              if (filtered.length === 0) {
+                // Map slug/id to respective Lucide icon
+                const slug = c.slug?.toLowerCase() || c.id?.toLowerCase() || '';
+                const Icon = {
+                  smartphones: Smartphone,
+                  phones: Smartphone,
+                  laptops: Laptop,
+                  tablets: Tablet,
+                  headphones: Headphones,
+                  audio: Headphones,
+                  smartwatches: Watch,
+                  watches: Watch,
+                  gaming: Gamepad2,
+                  accessories: Cpu,
+                  tech: Cpu,
+                  cameras: Camera,
+                  photo: Camera,
+                }[slug] || ShoppingBag;
+
                 return (
-                  <View style={styles.noResults}>
-                    <Search size={40} color={COLORS.textMuted} />
-                    <Text style={styles.noResultsText}>No products found matching "{searchQuery}"</Text>
-                  </View>
+                  <TouchableOpacity
+                    key={c.id}
+                    style={styles.catItem}
+                    activeOpacity={0.7}
+                    onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
+                  >
+                    <View style={[styles.catIconCircle, isActive && styles.catIconCircleActive]}>
+                      <Icon size={28} color={isActive ? '#FFFFFF' : '#64748B'} strokeWidth={2.2} />
+                    </View>
+                    <Text style={[styles.catName, isActive && styles.catNameActive]}>{c.name}</Text>
+                  </TouchableOpacity>
                 );
+              })}
+            </View>
+          </ScrollView>
+
+          {/* Products Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {searchQuery ? `${t('common.search')} "${searchQuery}"` : (activeCategory === 'all' ? t('home.featured') : (categories.find(c => c.id === activeCategory)?.name || '') + ' Products')}
+            </Text>
+            {!searchQuery && (
+              <TouchableOpacity onPress={() => navigation.navigate('Search', { category: activeCategory !== 'all' ? activeCategory : null })}>
+                <Text style={styles.seeAll}>{t('home.viewAll')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          <ScrollView horizontal={!searchQuery} showsHorizontalScrollIndicator={false} contentContainerStyle={searchQuery ? styles.searchResultGrid : styles.hScroll}>
+            {(() => {
+              const query = searchQuery.toLowerCase();
+              const filtered = allProducts.filter(p =>
+                p.name.toLowerCase().includes(query) ||
+                (p.brand && p.brand.toLowerCase().includes(query)) ||
+                (p.description && p.description.toLowerCase().includes(query))
+              );
+
+              if (searchQuery) {
+                if (filtered.length === 0) {
+                  return (
+                    <View style={styles.noResults}>
+                      <Search size={40} color={COLORS.textMuted} />
+                      <Text style={styles.noResultsText}>No products found matching "{searchQuery}"</Text>
+                    </View>
+                  );
+                }
+                return filtered.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    style={styles.searchResultCard}
+                    onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                    onWishlist={() => toggleWishlist(p)}
+                    wishlisted={isInWishlist(p.id)}
+                    fmt={fmt}
+                  />
+                ));
               }
-              return filtered.map((p) => (
+
+              // Use memoized displayProducts for instant filtering
+              return displayProducts.map((p) => (
                 <ProductCard
                   key={p.id}
                   product={p}
-                  style={styles.searchResultCard}
+                  style={styles.featuredCard}
                   onPress={() => navigation.navigate('ProductDetails', { product: p })}
                   onWishlist={() => toggleWishlist(p)}
                   wishlisted={isInWishlist(p.id)}
                   fmt={fmt}
                 />
               ));
-            }
-
-            // Use memoized displayProducts for instant filtering
-            return displayProducts.map((p) => (
-              <ProductCard
-                key={p.id}
-                product={p}
-                style={styles.featuredCard}
-                onPress={() => navigation.navigate('ProductDetails', { product: p })}
-                onWishlist={() => toggleWishlist(p)}
-                wishlisted={isInWishlist(p.id)}
-                fmt={fmt}
-              />
-            ));
-          })()}
-        </ScrollView>
+            })()}
+          </ScrollView>
 
 
 
-        {/* Live Support Help Section */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Need Help?</Text>
-        </View>
-        <TouchableOpacity 
-          style={styles.helpCard} 
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('ChatSupport')}
-        >
-          <View style={styles.helpContent}>
-            <Text style={styles.helpTitle}>24/7 Live Support</Text>
-            <Text style={styles.helpSub}>Chat with our gadget experts now</Text>
-            <View style={styles.onlineBadge}>
-              <View style={styles.onlineDot} />
-              <Text style={styles.onlineText}>We are online</Text>
+          {/* Live Support Help Section */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Need Help?</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.helpCard}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate('ChatSupport')}
+          >
+            <View style={styles.helpContent}>
+              <Text style={styles.helpTitle}>24/7 Live Support</Text>
+              <Text style={styles.helpSub}>Chat with our gadget experts now</Text>
+              <View style={styles.onlineBadge}>
+                <View style={styles.onlineDot} />
+                <Text style={styles.onlineText}>We are online</Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.helpIconBox}>
-            <MessageSquare size={32} color={COLORS.primaryBlue} />
-          </View>
-        </TouchableOpacity>
-
-        {/* Discovery Grid — 30+ Cards */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Discover Gadgets</Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-            <Text style={styles.seeAll}>View all 50+ items</Text>
+            <View style={styles.helpIconBox}>
+              <MessageSquare size={32} color={COLORS.primaryBlue} />
+            </View>
           </TouchableOpacity>
-        </View>
-        <View style={styles.discoveryGrid}>
-          {allProducts.slice(0, 40).map((p) => (
-            <View key={p.id} style={styles.discoveryCard}>
-              <TouchableOpacity 
-                activeOpacity={0.9}
-                onPress={() => navigation.navigate('ProductDetails', { product: p })}
-                style={{ flex: 1 }}
-              >
-                <View style={styles.discoveryImageWrap}>
-                  <Image 
-                    source={{ uri: (p.images && p.images[0]) || getFallbackImage(p.id) }} 
-                    style={styles.discoveryImage} 
-                    resizeMode="contain" 
-                  />
-                  <TouchableOpacity style={styles.discoveryHeart} onPress={() => toggleWishlist(p)}>
-                    <Heart size={14} color={isInWishlist(p.id) ? COLORS.error : '#666'} fill={isInWishlist(p.id) ? COLORS.error : 'none'} />
-                  </TouchableOpacity>
-                  {p.compare_price > p.price && (
-                    <View style={styles.discoveryBadge}>
-                      <Text style={styles.discoveryBadgeText}>OFFER</Text>
-                    </View>
-                  )}
-                </View>
-                <View style={styles.discoveryInfo}>
-                  <Text style={styles.discoveryName} numberOfLines={1}>{p.name}</Text>
-                  <View style={styles.discoveryMeta}>
-                    <Text style={styles.discoveryPrice}>{fmt(p.price)}</Text>
-                    <View style={styles.discoveryRating}>
-                      <Star size={10} color="#FBBC04" fill="#FBBC04" />
-                      <Text style={styles.discoveryRatingText}>{p.rating}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.discoveryAddBtn} onPress={() => addToCart(p)}>
-                    <ShoppingBag size={14} color="#fff" />
-                    <Text style={styles.discoveryAddText}>Add</Text>
-                  </TouchableOpacity>
-                </View>
-              </TouchableOpacity>
-            </View>
-          ))}
-        </View>
 
-        {/* Recently Viewed by You */}
-        {!searchQuery && recentlyViewed.length > 0 && (
-          <View style={styles.sectionContainer}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>👁️ Recently Viewed</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
-              {recentlyViewed.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  style={styles.featuredCard}
-                  onPress={() => navigation.navigate('ProductDetails', { productId: p.id })}
-                  onWishlist={() => toggleWishlist(p)}
-                  wishlisted={isInWishlist(p.id)}
-                  fmt={fmt}
-                />
-              ))}
-            </ScrollView>
+          {/* Discovery Grid — 30+ Cards */}
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Discover Gadgets</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
+              <Text style={styles.seeAll}>View all 50+ items</Text>
+            </TouchableOpacity>
           </View>
-        )}
+          <View style={styles.discoveryGrid}>
+            {allProducts.slice(0, 40).map((p) => (
+              <View key={p.id} style={styles.discoveryCard}>
+                <TouchableOpacity
+                  activeOpacity={0.9}
+                  onPress={() => navigation.navigate('ProductDetails', { product: p })}
+                  style={{ flex: 1 }}
+                >
+                  <View style={styles.discoveryImageWrap}>
+                    <Image
+                      source={{ uri: (p.images && p.images[0]) || getFallbackImage(p.id) }}
+                      style={styles.discoveryImage}
+                      resizeMode="contain"
+                    />
+                    <TouchableOpacity style={styles.discoveryHeart} onPress={() => toggleWishlist(p)}>
+                      <Heart size={14} color={isInWishlist(p.id) ? COLORS.error : '#666'} fill={isInWishlist(p.id) ? COLORS.error : 'none'} />
+                    </TouchableOpacity>
+                    {p.compare_price > p.price && (
+                      <View style={styles.discoveryBadge}>
+                        <Text style={styles.discoveryBadgeText}>OFFER</Text>
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.discoveryInfo}>
+                    <Text style={styles.discoveryName} numberOfLines={1}>{p.name}</Text>
+                    <View style={styles.discoveryMeta}>
+                      <Text style={styles.discoveryPrice}>{fmt(p.price)}</Text>
+                      <View style={styles.discoveryRating}>
+                        <Star size={10} color="#FBBC04" fill="#FBBC04" />
+                        <Text style={styles.discoveryRatingText}>{p.rating}</Text>
+                      </View>
+                    </View>
+                    <TouchableOpacity style={styles.discoveryAddBtn} onPress={() => addToCart(p)}>
+                      <ShoppingBag size={14} color="#fff" />
+                      <Text style={styles.discoveryAddText}>Add</Text>
+                    </TouchableOpacity>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
 
-        <View style={{ height: SIZES.xxl || 40 }} />
+          {/* Recently Viewed by You */}
+          {!searchQuery && recentlyViewed.length > 0 && (
+            <View style={styles.sectionContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Recently Viewed</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.hScroll}>
+                {recentlyViewed.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    style={styles.featuredCard}
+                    onPress={() => navigation.navigate('ProductDetails', { productId: p.id })}
+                    onWishlist={() => toggleWishlist(p)}
+                    wishlisted={isInWishlist(p.id)}
+                    fmt={fmt}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {Platform.OS !== 'web' && <View style={{ height: SIZES.xxl || 40 }} />}
+        </WebLayoutWrapper>
       </ScrollView>
     </SafeAreaView>
   );
@@ -905,15 +972,15 @@ const styles = StyleSheet.create({
 
   catRow: { flexDirection: 'row', paddingHorizontal: SIZES.md, paddingRight: 40, marginBottom: SIZES.lg, gap: 16 },
   catItem: { alignItems: 'center', gap: 10, width: 75 },
-  catIconCircle: { 
-    width: 64, 
-    height: 64, 
-    borderRadius: 32, 
-    backgroundColor: '#F8FAFC', 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    borderWidth: 1.5, 
-    borderColor: '#F1F5F9', 
+  catIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1.5,
+    borderColor: '#F1F5F9',
   },
   catIconCircleActive: {
     backgroundColor: COLORS.primaryBlue,
@@ -953,15 +1020,15 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     position: 'relative'
   },
-  productImage: { 
-    width: '100%', 
+  productImage: {
+    width: '100%',
     height: '100%',
   },
   imagePlaceholder: { backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
-  heartBtn: { 
-    position: 'absolute', top: 8, right: 8, 
-    width: 32, height: 32, backgroundColor: 'rgba(255,255,255,0.95)', 
-    borderRadius: 16, justifyContent: 'center', alignItems: 'center', 
+  heartBtn: {
+    position: 'absolute', top: 8, right: 8,
+    width: 32, height: 32, backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 16, justifyContent: 'center', alignItems: 'center',
     ...SHADOWS.sm,
     zIndex: 10
   },
@@ -1071,7 +1138,7 @@ const styles = StyleSheet.create({
   flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.md, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
   flashDealContent: { flex: 1, justifyContent: 'center', gap: 6 },
   flashHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  flashBadgeWrap: { 
+  flashBadgeWrap: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#EF4444', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6,
   },
@@ -1086,10 +1153,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: SIZES.md,
-    justifyContent: 'space-between',
+    gap: 16,
+    justifyContent: Platform.select({ web: 'flex-start', default: 'space-between' }),
   },
   searchResultCard: {
-    width: '48%',
+    width: Platform.select({ web: 'calc(25% - 12px)', default: '48%' }),
     marginBottom: 16,
   },
   noResults: {
@@ -1108,17 +1176,26 @@ const styles = StyleSheet.create({
   discoveryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: SIZES.md - 6,
-    justifyContent: 'space-between',
+    paddingHorizontal: SIZES.md,
+    gap: 16,
+    justifyContent: Platform.select({ web: 'flex-start', default: 'space-between' }),
   },
   discoveryCard: {
-    width: '48%',
+    width: Platform.select({ web: 'calc(25% - 12px)', default: '48%' }),
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: '#F1F5F9',
-    ...SHADOWS.sm,
+    overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 4px 15px rgba(0,0,0,0.04)',
+        transition: 'all 0.2s ease-in-out',
+        cursor: 'pointer',
+      },
+      default: SHADOWS.sm,
+    }),
   },
   discoveryImageWrap: {
     height: 140,

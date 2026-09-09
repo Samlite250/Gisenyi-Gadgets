@@ -34,8 +34,8 @@ export default function App() {
   };
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: '#F8FAFC' }}>
+    <SafeAreaProvider style={{ flex: 1, width: '100%', height: '100%' }}>
+      <View style={{ flex: 1, width: '100%', height: '100%', backgroundColor: '#F8FAFC' }}>
         {/* Global Luxury Background Blobs - Vibrant colors to make glassmorphism pop */}
         <View style={{ position: 'absolute', width: 600, height: 600, borderRadius: 300, backgroundColor: '#3B82F6', top: -150, left: -150, opacity: 0.15 }} />
         <View style={{ position: 'absolute', width: 500, height: 500, borderRadius: 250, backgroundColor: '#10B981', bottom: -100, right: -150, opacity: 0.12 }} />
@@ -46,7 +46,7 @@ export default function App() {
           <AuthProvider>
             <CartProvider>
               <WishlistProvider>
-                <NavigationContainer linking={linking}>
+                <NavigationContainer linking={linking} style={{ flex: 1, width: '100%' }}>
                   <StatusBar style="dark" backgroundColor="transparent" translucent />
                   <RootNavigator />
                 </NavigationContainer>

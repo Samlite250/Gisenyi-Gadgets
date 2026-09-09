@@ -1,5 +1,13 @@
 {
+  "name": "gisenyi-gadgets",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node scripts/build-all.js"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.10.0"
   }
 }

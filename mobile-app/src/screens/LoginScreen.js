@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES } from '../constants/theme';
@@ -20,6 +20,8 @@ export default function LoginScreen({ navigation, route }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState(null);
+
+  const returnTo = route?.params?.returnTo || null;
   const successMessage = route?.params?.message || null;
 
   const handleLogin = async () => {
@@ -32,6 +34,13 @@ export default function LoginScreen({ navigation, route }) {
     setFocusedField(null); // Clear focus on submit
     try {
       await signIn({ email: email.trim().toLowerCase(), password });
+      if (returnTo) {
+        navigation.navigate(returnTo);
+      } else if (navigation.canGoBack()) {
+        navigation.goBack();
+      } else {
+        navigation.navigate('Main');
+      }
     } catch (err) {
       setError(err.message || t('auth.loginError'));
     } finally {
@@ -41,6 +50,18 @@ export default function LoginScreen({ navigation, route }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.topNav}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.navigate('Main');
+          }}
+        >
+          <ArrowLeft size={20} color={COLORS.textPrimary} />
+          <Text style={styles.backBtnText}>Continue Browsing</Text>
+        </TouchableOpacity>
+      </View>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Header */}
@@ -115,7 +136,7 @@ export default function LoginScreen({ navigation, route }) {
 
               <View style={styles.footer}>
                 <Text style={styles.footerText}>{t('auth.dontHaveAccount')} </Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <TouchableOpacity onPress={() => navigation.navigate('Register', { returnTo })}>
                   <Text style={styles.registerText}>{t('auth.signUp')}</Text>
                 </TouchableOpacity>
               </View>
@@ -129,6 +150,28 @@ export default function LoginScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: 'transparent' },
+  topNav: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  backBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
   scrollContent: { flexGrow: 1, padding: 24, paddingBottom: 40, justifyContent: 'center' },
   header: { alignItems: 'center', marginBottom: 40, marginTop: 20 },
   logoWrap: { marginBottom: 24 },

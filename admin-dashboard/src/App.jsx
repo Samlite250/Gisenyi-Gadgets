@@ -11,37 +11,37 @@ import {
   Search, ChevronLeft, ChevronRight, CreditCard,
 } from 'lucide-react';
 
-import DashboardPage  from './pages/DashboardPage';
-import ProductsPage   from './pages/ProductsPage';
-import OrdersPage     from './pages/OrdersPage';
-import UsersPage      from './pages/UsersPage';
-import VendorsPage    from './pages/VendorsPage';
-import ReviewsPage    from './pages/ReviewsPage';
-import SettingsPage   from './pages/SettingsPage';
-import SupportPage    from './pages/SupportPage';
+import DashboardPage from './pages/DashboardPage';
+import ProductsPage from './pages/ProductsPage';
+import OrdersPage from './pages/OrdersPage';
+import UsersPage from './pages/UsersPage';
+import VendorsPage from './pages/VendorsPage';
+import ReviewsPage from './pages/ReviewsPage';
+import SettingsPage from './pages/SettingsPage';
+import SupportPage from './pages/SupportPage';
 import CategoriesPage from './pages/CategoriesPage';
-import SuppliersPage  from './pages/SuppliersPage';
-import BannersPage       from './pages/BannersPage';
-import TransactionsPage    from './pages/TransactionsPage';
-import NotificationsPage   from './pages/NotificationsPage';
-import LoginPage           from './pages/LoginPage';
-import Loader         from './components/Loader';
-import { supabase }   from './services/supabase';
+import SuppliersPage from './pages/SuppliersPage';
+import BannersPage from './pages/BannersPage';
+import TransactionsPage from './pages/TransactionsPage';
+import NotificationsPage from './pages/NotificationsPage';
+import LoginPage from './pages/LoginPage';
+import Loader from './components/Loader';
+import { supabase } from './services/supabase';
 
 
 const NAV_ITEMS = [
-  { path: '/',           icon: LayoutDashboard, label: 'Dashboard'  },
-  { path: '/products',   icon: Package,         label: 'Products'   },
-  { path: '/categories', icon: Tag,             label: 'Categories' },
-  { path: '/banners',    icon: Image,           label: 'Banners'    },
-  { path: '/orders',        icon: ShoppingCart,  label: 'Orders'       },
-  { path: '/transactions',  icon: CreditCard,    label: 'Transactions' },
-  { path: '/suppliers',     icon: Handshake,     label: 'Suppliers'    },
-  { path: '/users',      icon: Users,           label: 'Users'      },
-  { path: '/reviews',    icon: Star,            label: 'Reviews'    },
-  { path: '/support',    icon: MessageCircle,   label: 'Support'    },
-  { path: '/notifications', icon: Bell,          label: 'Notifications' },
-  { path: '/settings',   icon: Settings,        label: 'Settings'   },
+  { path: '/', icon: LayoutDashboard, label: 'Dashboard' },
+  { path: '/products', icon: Package, label: 'Products' },
+  { path: '/categories', icon: Tag, label: 'Categories' },
+  { path: '/banners', icon: Image, label: 'Banners' },
+  { path: '/orders', icon: ShoppingCart, label: 'Orders' },
+  { path: '/transactions', icon: CreditCard, label: 'Transactions' },
+  { path: '/suppliers', icon: Handshake, label: 'Suppliers' },
+  { path: '/users', icon: Users, label: 'Users' },
+  { path: '/reviews', icon: Star, label: 'Reviews' },
+  { path: '/support', icon: MessageCircle, label: 'Support' },
+  { path: '/notifications', icon: Bell, label: 'Notifications' },
+  { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 function AppInner({ user, onLogout }) {
@@ -144,8 +144,8 @@ function AppInner({ user, onLogout }) {
 
           {/* Sign out */}
           <div style={{ padding: '16px 14px', borderTop: '1px solid var(--border)', marginTop: 'auto' }}>
-            <button 
-              className="nav-item nav-item-logout" 
+            <button
+              className="nav-item nav-item-logout"
               style={{ width: '100%', margin: 0 }}
               title={collapsed ? "Sign Out" : ""}
               onClick={onLogout}
@@ -199,18 +199,18 @@ function AppInner({ user, onLogout }) {
           {/* Page content */}
           <main className="page-content">
             <Routes>
-              <Route path="/"           element={<DashboardPage />}  />
-              <Route path="/products"   element={<ProductsPage />}   />
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/products" element={<ProductsPage />} />
               <Route path="/categories" element={<CategoriesPage />} />
-              <Route path="/orders"     element={<OrdersPage />}     />
-              <Route path="/suppliers"  element={<SuppliersPage />}  />
-              <Route path="/users"      element={<UsersPage />}      />
-              <Route path="/reviews"    element={<ReviewsPage />}    />
-              <Route path="/banners"    element={<BannersPage />}    />
-              <Route path="/support"       element={<SupportPage />}      />
+              <Route path="/orders" element={<OrdersPage />} />
+              <Route path="/suppliers" element={<SuppliersPage />} />
+              <Route path="/users" element={<UsersPage />} />
+              <Route path="/reviews" element={<ReviewsPage />} />
+              <Route path="/banners" element={<BannersPage />} />
+              <Route path="/support" element={<SupportPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
-              <Route path="/notifications"  element={<NotificationsPage />} />
-              <Route path="/settings"     element={<SettingsPage />}     />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </main>
         </div>
@@ -288,7 +288,7 @@ export default function App() {
   }
 
   return (
-    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <Router basename={import.meta.env.BASE_URL || '/admin'} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppInner user={session.user} onLogout={handleLogout} />
     </Router>
   );

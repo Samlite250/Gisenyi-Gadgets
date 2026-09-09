@@ -101,6 +101,15 @@ try {
   console.log(`Copying admin dashboard from ${adminDist} -> ${ADMIN_DIST_TARGET}`);
   copyDirSync(adminDist, ADMIN_DIST_TARGET);
 
+  // Mirror admin assets to root dist/assets to prevent root relative asset 404s
+  const adminAssetsDir = path.join(adminDist, 'assets');
+  const rootAssetsDir = path.join(DIST_DIR, 'assets');
+  if (fs.existsSync(adminAssetsDir)) {
+    fs.mkdirSync(rootAssetsDir, { recursive: true });
+    copyDirSync(adminAssetsDir, rootAssetsDir);
+    console.log('✅ Mirrored admin assets to root dist/assets');
+  }
+
   // Copy root serve.json to dist/serve.json if present
   const serveJsonRoot = path.join(ROOT_DIR, 'serve.json');
   if (fs.existsSync(serveJsonRoot)) {

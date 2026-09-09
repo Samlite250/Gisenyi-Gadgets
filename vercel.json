@@ -3,7 +3,7 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/admin/(.*)",
+      "source": "/admin/((?!.*\\.).*)",
       "destination": "/admin/index.html"
     },
     {
@@ -11,7 +11,7 @@
       "destination": "/admin/index.html"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!.*\\.).*)",
       "destination": "/index.html"
     }
   ]

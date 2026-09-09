@@ -101,6 +101,13 @@ try {
   console.log(`Copying admin dashboard from ${adminDist} -> ${ADMIN_DIST_TARGET}`);
   copyDirSync(adminDist, ADMIN_DIST_TARGET);
 
+  // Copy root serve.json to dist/serve.json if present
+  const serveJsonRoot = path.join(ROOT_DIR, 'serve.json');
+  if (fs.existsSync(serveJsonRoot)) {
+    fs.copyFileSync(serveJsonRoot, path.join(DIST_DIR, 'serve.json'));
+    console.log('✅ Copied serve.json to dist/serve.json');
+  }
+
   console.log('\n✅ Unified Build Complete Successfully!');
   console.log(`   Customer Store Web App: /  -> ${DIST_DIR}`);
   console.log(`   Admin Dashboard Web App: /admin -> ${ADMIN_DIST_TARGET}`);

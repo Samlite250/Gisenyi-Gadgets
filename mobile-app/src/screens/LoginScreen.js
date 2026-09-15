@@ -425,15 +425,26 @@ const styles = StyleSheet.create({
   },
   authCardWrapper: {
     width: '100%',
+    maxWidth: 440,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    padding: 24,
+    ...Platform.select({
+      web: { boxShadow: '0px 10px 30px rgba(15, 23, 42, 0.08)' },
+      default: SHADOWS.md,
+    }),
   },
   authCardWrapperDesktop: {
+    maxWidth: 'none',
     width: 900,
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
+    padding: 0,
     borderRadius: 28,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    overflow: 'hidden',
     ...Platform.select({
       web: { boxShadow: '0px 20px 50px rgba(15, 23, 42, 0.08)' },
       default: SHADOWS.lg,

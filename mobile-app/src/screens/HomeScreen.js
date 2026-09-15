@@ -842,9 +842,9 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.seeAll}>View all 50+ items</Text>
             </TouchableOpacity>
           </View>
-          <View style={[styles.discoveryGrid, isDesktop && { gap: 16, justifyContent: 'flex-start' }]}>
+          <View style={[styles.discoveryGrid, isDesktop ? { gap: 16, justifyContent: 'flex-start' } : { gap: 10, justifyContent: 'space-between' }]}>
             {allProducts.slice(0, 40).map((p) => (
-              <View key={p.id} style={[styles.discoveryCard, isDesktop ? { width: 'calc(25% - 12px)' } : { width: '48.5%' }]} {...(Platform.OS === 'web' ? { dataSet: { hover: 'true' } } : {})}>
+              <View key={p.id} style={[styles.discoveryCard, isDesktop ? { width: 'calc(25% - 12px)' } : (Platform.OS === 'web' ? { width: 'calc(50% - 5px)' } : { width: '48.5%' })]} {...(Platform.OS === 'web' ? { dataSet: { hover: 'true' } } : {})}>
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => navigation.navigate('ProductDetails', { product: p })}

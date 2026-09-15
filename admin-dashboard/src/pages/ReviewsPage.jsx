@@ -9,7 +9,7 @@ const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-RW', { day: 'numer
 function StarRating({ rating }) {
   return (
     <div style={{ display: 'flex', gap: 2 }}>
-      {[1,2,3,4,5].map((s) => (
+      {[1, 2, 3, 4, 5].map((s) => (
         <Star key={s} size={14} color={s <= rating ? '#FBBC04' : 'var(--border)'} fill={s <= rating ? '#FBBC04' : 'none'} />
       ))}
     </div>
@@ -17,12 +17,12 @@ function StarRating({ rating }) {
 }
 
 export default function ReviewsPage() {
-  const [reviews, setReviews]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [ratingFilter, setRating] = useState('All');
-  const [deleting, setDeleting]   = useState(null);
-  const [lightbox, setLightbox]   = useState(null); // photo URL for lightbox
+  const [deleting, setDeleting] = useState(null);
+  const [lightbox, setLightbox] = useState(null); // photo URL for lightbox
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -76,15 +76,15 @@ export default function ReviewsPage() {
       <div className="page-header">
         <div>
           <h2 className="page-title">Customer Reviews</h2>
-          <p className="page-subtitle">{reviews.length} total · ★ {avgRating} avg · {withPhotos} with photos</p>
+          <p className="page-subtitle">{reviews.length} total · Avg Rating: {avgRating} · {withPhotos} with photos</p>
         </div>
       </div>
 
       {/* Stats Row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 12, marginBottom: 20 }}>
-        {[5,4,3,2,1].map((star) => {
+        {[5, 4, 3, 2, 1].map((star) => {
           const count = reviews.filter(r => r.rating === star).length;
-          const pct   = reviews.length ? Math.round(count / reviews.length * 100) : 0;
+          const pct = reviews.length ? Math.round(count / reviews.length * 100) : 0;
           return (
             <div key={star} className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
               <Star size={18} color={STAR_COLOR[star]} fill={STAR_COLOR[star]} />
@@ -117,7 +117,7 @@ export default function ReviewsPage() {
               onChange={(e) => setRating(e.target.value)}
             >
               <option value="All">All Stars</option>
-              {[5,4,3,2,1].map((s) => <option key={s} value={String(s)}>★ {s} Stars</option>)}
+              {[5, 4, 3, 2, 1].map((s) => <option key={s} value={String(s)}>{s} Stars</option>)}
             </select>
           </div>
           <span className="text-muted">{filtered.length} reviews</span>
@@ -148,7 +148,7 @@ export default function ReviewsPage() {
                       ? JSON.parse(r.products.images)
                       : (r.products?.images || []);
                     productImg = imgs[0] || null;
-                  } catch {}
+                  } catch { }
 
                   return (
                     <tr key={r.id}>

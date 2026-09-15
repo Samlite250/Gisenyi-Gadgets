@@ -6,11 +6,11 @@ import toast from 'react-hot-toast';
 
 
 const TABS = [
-  { id: 'general',   label: 'General',       icon: Globe   },
-  { id: 'payments',  label: 'Payments',      icon: CreditCard },
-  { id: 'shipping',  label: 'Shipping',      icon: Package },
-  { id: 'notify',    label: 'Notifications', icon: Bell    },
-  { id: 'security',  label: 'Security',      icon: Shield  },
+  { id: 'general', label: 'General', icon: Globe },
+  { id: 'payments', label: 'Payments', icon: CreditCard },
+  { id: 'shipping', label: 'Shipping', icon: Package },
+  { id: 'notify', label: 'Notifications', icon: Bell },
+  { id: 'security', label: 'Security', icon: Shield },
 ];
 
 const Field = ({ label, children }) => (
@@ -37,9 +37,9 @@ const Toggle = ({ label, desc, checked, onChange }) => (
 
 export default function SettingsPage() {
   const [activeTab, setTab] = useState('general');
-  const [saved, setSaved]   = useState(false);
+  const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [newPassword, setNewPassword]     = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPw, setChangingPw] = useState(false);
 
@@ -48,7 +48,7 @@ export default function SettingsPage() {
   const [notificationBody, setNotificationBody] = useState('');
   const [notificationType, setNotificationType] = useState('general');
   const [sendingNotification, setSendingNotification] = useState(false);
-  const [form, setForm]     = useState({
+  const [form, setForm] = useState({
     platformName: '',
     supportEmail: '',
     supportPhone: '',
@@ -118,12 +118,12 @@ export default function SettingsPage() {
   const setCheck = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.checked }));
 
   const ALLOWED_KEYS = new Set([
-    'platformName','supportEmail','supportPhone','whatsappNumber','currency',
-    'mtnNumber','mtnAccountName','airtelNumber','airtelAccountName',
-    'mtnInstructions','airtelInstructions','bankInstructions','cryptoInstructions',
-    'freeShippingThreshold','standardShippingFee','expressShippingFee',
-    'emailNewOrder','emailNewUser','emailLowStock','lowStockThreshold',
-    'twoFactorEnabled','maintenanceMode',
+    'platformName', 'supportEmail', 'supportPhone', 'whatsappNumber', 'currency',
+    'mtnNumber', 'mtnAccountName', 'airtelNumber', 'airtelAccountName',
+    'mtnInstructions', 'airtelInstructions', 'bankInstructions', 'cryptoInstructions',
+    'freeShippingThreshold', 'standardShippingFee', 'expressShippingFee',
+    'emailNewOrder', 'emailNewUser', 'emailLowStock', 'lowStockThreshold',
+    'twoFactorEnabled', 'maintenanceMode',
   ]);
 
   const handleSave = async (e) => {
@@ -250,7 +250,7 @@ export default function SettingsPage() {
           <h2 className="page-title">Settings</h2>
           <p className="page-subtitle">Configure your platform settings & contact information</p>
         </div>
-        {saved && <span className="badge badge-green">✓ Settings saved successfully!</span>}
+        {saved && <span className="badge badge-green">Settings saved successfully!</span>}
       </div>
 
       <div className="settings-tabs-layout">
@@ -767,10 +767,10 @@ export default function SettingsPage() {
                             onChange={(e) => setNotificationType(e.target.value)}
                             style={{ fontWeight: 600 }}
                           >
-                            <option value="general">📢 General Announcement</option>
-                            <option value="promo">🎉 Promotion / Sale</option>
-                            <option value="system">⚙️ System Update</option>
-                            <option value="order">📦 Order Related</option>
+                            <option value="general">General Announcement</option>
+                            <option value="promo">Promotion / Sale</option>
+                            <option value="system">System Update</option>
+                            <option value="order">Order Related</option>
                           </select>
                         </Field>
 
@@ -910,9 +910,9 @@ export default function SettingsPage() {
                       <Bell size={16} /> Admin Notification Preferences
                     </h4>
                     <div style={{ background: 'var(--surface-bg)', borderRadius: 12, padding: 16 }}>
-                      <Toggle label="New Order Notifications"  desc="Get notified when a new order is placed"         checked={form.emailNewOrder}  onChange={setCheck('emailNewOrder')} />
-                      <Toggle label="New User Registrations"   desc="Get notified when a new customer registers"      checked={form.emailNewUser}   onChange={setCheck('emailNewUser')}  />
-                      <Toggle label="Low Stock Alerts"         desc="Get notified when product stock is running low"  checked={form.emailLowStock}  onChange={setCheck('emailLowStock')} />
+                      <Toggle label="New Order Notifications" desc="Get notified when a new order is placed" checked={form.emailNewOrder} onChange={setCheck('emailNewOrder')} />
+                      <Toggle label="New User Registrations" desc="Get notified when a new customer registers" checked={form.emailNewUser} onChange={setCheck('emailNewUser')} />
+                      <Toggle label="Low Stock Alerts" desc="Get notified when product stock is running low" checked={form.emailLowStock} onChange={setCheck('emailLowStock')} />
                       <div style={{ marginTop: 16, paddingLeft: 16 }}>
                         <Field label="Low Stock Threshold (units)">
                           <input

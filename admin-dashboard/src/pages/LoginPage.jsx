@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
 import toast from 'react-hot-toast';
-import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldCheck, Package, TrendingUp } from 'lucide-react';
 
 const BASE = import.meta.env.BASE_URL || '/admin/';
 const logoUrl = `${BASE}logo.png`.replace(/\/\//g, '/');
@@ -82,15 +82,15 @@ export default function LoginPage({ onLogin }) {
           </p>
           <div className="login-panel-features">
             <div className="login-feature">
-              <div className="login-feature-icon">📦</div>
+              <div className="login-feature-icon"><Package size={20} color="#60A5FA" /></div>
               <span>Inventory Management</span>
             </div>
             <div className="login-feature">
-              <div className="login-feature-icon">📊</div>
+              <div className="login-feature-icon"><TrendingUp size={20} color="#34D399" /></div>
               <span>Real-time Analytics</span>
             </div>
             <div className="login-feature">
-              <div className="login-feature-icon">🔒</div>
+              <div className="login-feature-icon"><Lock size={20} color="#FBBF24" /></div>
               <span>Secure Platform</span>
             </div>
           </div>

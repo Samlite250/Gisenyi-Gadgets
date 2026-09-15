@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, Shield, ShieldOff, Eye, Edit2, X } from 'lucide-react';
+import { Search, Shield, ShieldOff, Eye, Edit2, X, Users, Handshake, UserCheck, User } from 'lucide-react';
 import { supabase } from '../services/supabase';
 import Loader from '../components/Loader';
 
@@ -24,7 +24,7 @@ export default function UsersPage() {
     try {
       const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
       if (data?.length) setUsers(data);
-      
+
       const { count } = await supabase.from('suppliers').select('*', { count: 'exact', head: true });
       setSupplierCount(count || 0);
     } catch (err) {
@@ -86,10 +86,8 @@ export default function UsersPage() {
           { label: 'Active Users', value: users.filter(u => u.is_active).length, color: '#10B981', bg: 'rgba(16,185,129,0.1)' },
         ].map((s) => (
           <div className="stat-card" key={s.label}>
-            <div className="stat-icon" style={{ background: s.bg }}>
-              <div style={{ color: s.color, fontWeight: 800, fontSize: 18 }}>
-                {s.label === 'Total Users' ? '👥' : s.label === 'Suppliers' ? '🤝' : s.label === 'Active Users' ? '✅' : '👤'}
-              </div>
+            <div className="stat-icon" style={{ background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {s.label === 'Total Users' ? <Users size={20} color={s.color} /> : s.label === 'Suppliers' ? <Handshake size={20} color={s.color} /> : s.label === 'Active Users' ? <UserCheck size={20} color={s.color} /> : <User size={20} color={s.color} />}
             </div>
             <div className="stat-label">{s.label}</div>
             <div className="stat-value">{s.value}</div>

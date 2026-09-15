@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Search, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { Search, CheckCircle, XCircle, Eye, Star } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 
@@ -7,10 +7,10 @@ import { supabase } from '../services/supabase';
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('en-RW', { day: 'numeric', month: 'short', year: 'numeric' });
 
 export default function VendorsPage() {
-  const [vendors, setVendors]     = useState([]);
-  const [loading, setLoading]     = useState(true);
-  const [search, setSearch]       = useState('');
-  const [selected, setSelected]   = useState(null);
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState(null);
   const [togglingId, setToggling] = useState(null);
 
   const fetchVendors = useCallback(async () => {
@@ -54,10 +54,10 @@ export default function VendorsPage() {
 
       <div className="stats-grid" style={{ marginBottom: 16 }}>
         {[
-          { label: 'Total Vendors',    value: vendors.length },
-          { label: 'Verified',         value: vendors.filter(v => v.is_verified).length },
-          { label: 'Pending Review',   value: vendors.filter(v => !v.is_verified && v.is_active).length },
-          { label: 'Total Sales',      value: vendors.reduce((s, v) => s + (v.total_sales || 0), 0) },
+          { label: 'Total Vendors', value: vendors.length },
+          { label: 'Verified', value: vendors.filter(v => v.is_verified).length },
+          { label: 'Pending Review', value: vendors.filter(v => !v.is_verified && v.is_active).length },
+          { label: 'Total Sales', value: vendors.reduce((s, v) => s + (v.total_sales || 0), 0) },
         ].map((s) => (
           <div className="stat-card" key={s.label}>
             <div className="stat-label">{s.label}</div>
@@ -91,12 +91,12 @@ export default function VendorsPage() {
                   <td><span style={{ fontWeight: 700 }}>{v.total_sales}</span></td>
                   <td>
                     {v.rating > 0
-                      ? <span style={{ color: '#FBBC04', fontWeight: 700 }}>★ {v.rating}</span>
+                      ? <span style={{ color: '#FBBC04', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}><Star size={13} fill="#FBBC04" color="#FBBC04" /> {v.rating}</span>
                       : <span className="text-muted">—</span>}
                   </td>
                   <td>
                     <span className={`badge ${v.is_verified ? 'badge-green' : 'badge-yellow'}`}>
-                      {v.is_verified ? '✓ Verified' : 'Pending'}
+                      {v.is_verified ? 'Verified' : 'Pending'}
                     </span>
                   </td>
                   <td>
@@ -135,14 +135,14 @@ export default function VendorsPage() {
             <div className="modal-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                 {[
-                  { label: 'Owner',    value: selected.profiles?.full_name },
-                  { label: 'Email',    value: selected.email               },
-                  { label: 'Phone',    value: selected.phone               },
-                  { label: 'Location', value: selected.location            },
-                  { label: 'Rating',   value: selected.rating > 0 ? `★ ${selected.rating}` : '—' },
-                  { label: 'Total Sales', value: selected.total_sales      },
-                  { label: 'Status',   value: selected.is_active ? 'Active' : 'Inactive' },
-                  { label: 'Joined',   value: fmtDate(selected.created_at) },
+                  { label: 'Owner', value: selected.profiles?.full_name },
+                  { label: 'Email', value: selected.email },
+                  { label: 'Phone', value: selected.phone },
+                  { label: 'Location', value: selected.location },
+                  { label: 'Rating', value: selected.rating > 0 ? `★ ${selected.rating}` : '—' },
+                  { label: 'Total Sales', value: selected.total_sales },
+                  { label: 'Status', value: selected.is_active ? 'Active' : 'Inactive' },
+                  { label: 'Joined', value: fmtDate(selected.created_at) },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <div className="form-label">{label}</div>

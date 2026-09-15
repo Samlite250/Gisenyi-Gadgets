@@ -2,7 +2,7 @@
   "expo": {
     "name": "Gisenyi Gadgets",
     "slug": "gisenyi-gadgets",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -24,7 +24,7 @@
         "backgroundColor": "#0F172A"
       },
       "package": "com.gisenyigadgets.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]

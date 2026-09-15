@@ -14,6 +14,9 @@ import { CartProvider } from './src/context/CartContext';
 import { WishlistProvider } from './src/context/WishlistContext';
 import { LanguageProvider } from './src/context/LanguageContext';
 
+// Toast Component
+import Toast from './src/components/Toast';
+
 // Navigator
 import RootNavigator from './src/navigation/RootNavigator';
 
@@ -45,6 +48,7 @@ export default function App() {
         <LanguageProvider>
           <AuthProvider>
             <CartProvider>
+              <Toast />
               <WishlistProvider>
                 <NavigationContainer linking={linking} style={{ flex: 1, width: '100%' }}>
                   <StatusBar style="dark" backgroundColor="transparent" translucent />

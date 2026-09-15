@@ -49,8 +49,8 @@ export default function CartScreen({ navigation }) {
     setApplyingPromo(false);
     setPromoMsg(res);
     if (res.success) setPromoInput('');
-    const t = setTimeout(() => { if (isMounted.current) setPromoMsg(null); }, 3000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => { if (isMounted.current) setPromoMsg(null); }, 3000);
+    return () => clearTimeout(timer);
   };
 
   const renderItem = ({ item }) => (
@@ -113,6 +113,82 @@ export default function CartScreen({ navigation }) {
     </View>
   );
 
+  const renderFooter = () => {
+    if (cartItems.length === 0) return null;
+    return (
+      <View style={styles.footerContainer}>
+        {/* Promotion Code Section */}
+        <View style={styles.promoContainer}>
+          <View style={[styles.promoSection, activePromo && styles.promoSectionActive]}>
+            <View style={styles.promoInputWrapper}>
+              <Ticket size={20} color={activePromo ? COLORS.primaryGreen : COLORS.textMuted} />
+              <TextInput
+                style={styles.promoInput}
+                placeholder={activePromo ? `Code ${activePromo} Active` : "Promo Code"}
+                placeholderTextColor={COLORS.textMuted}
+                value={promoInput}
+                onChangeText={setPromoInput}
+                autoCapitalize="characters"
+                editable={!activePromo}
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
+              onPress={handleApplyPromo}
+              disabled={!!activePromo || applyingPromo}
+            >
+              {activePromo
+                ? <CircleCheckBig size={18} color="#fff" />
+                : applyingPromo
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.promoBtnText}>Apply</Text>}
+            </TouchableOpacity>
+          </View>
+          {promoMsg && (
+            <Text style={[styles.promoMsg, promoMsg.success ? styles.promoMsgSuccess : styles.promoMsgError]}>
+              {promoMsg.message}
+            </Text>
+          )}
+        </View>
+
+        {/* Order Summary Card */}
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Order Summary</Text>
+          <View style={styles.summaryRows}>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
+              <Text style={styles.summaryValue}>{fmt(subtotal)}</Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>{t('cart.shipping')}</Text>
+              <Text style={[styles.summaryValue, shippingFee === 0 && { color: COLORS.primaryGreen }]}>
+                {shippingFee === 0 ? t('common.free', 'FREE') : fmt(shippingFee)}
+              </Text>
+            </View>
+            {promoDiscount > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>{t('common.discount', 'Discount')} ({activePromo})</Text>
+                <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
+              </View>
+            )}
+            <View style={styles.divider} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.totalLabel}>{t('cart.total')}</Text>
+              <Text style={styles.totalAmount}>{fmt(total)}</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.checkoutBtn}
+            onPress={handleCheckout}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <WebLayoutWrapper navigation={navigation}>
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -132,76 +208,8 @@ export default function CartScreen({ navigation }) {
           contentContainerStyle={cartItems.length === 0 ? { flex: 1 } : styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={<EmptyCart />}
+          ListFooterComponent={renderFooter}
         />
-
-        {cartItems.length > 0 && (
-          <View style={styles.footer}>
-            {/* Promotion Code Section */}
-            <View style={styles.promoContainer}>
-              <View style={[styles.promoSection, activePromo && styles.promoSectionActive]}>
-                <View style={styles.promoInputWrapper}>
-                  <Ticket size={20} color={activePromo ? COLORS.primaryGreen : COLORS.textMuted} />
-                  <TextInput
-                    style={styles.promoInput}
-                    placeholder={activePromo ? `Code ${activePromo} Active` : "Promo Code"}
-                    placeholderTextColor={COLORS.textMuted}
-                    value={promoInput}
-                    onChangeText={setPromoInput}
-                    autoCapitalize="characters"
-                    editable={!activePromo}
-                  />
-                </View>
-                <TouchableOpacity
-                  style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
-                  onPress={handleApplyPromo}
-                  disabled={!!activePromo || applyingPromo}
-                >
-                  {activePromo
-                    ? <CircleCheckBig size={18} color="#fff" />
-                    : applyingPromo
-                      ? <ActivityIndicator size="small" color="#fff" />
-                      : <Text style={styles.promoBtnText}>Apply</Text>}
-                </TouchableOpacity>
-              </View>
-              {promoMsg && (
-                <Text style={[styles.promoMsg, promoMsg.success ? styles.promoMsgSuccess : styles.promoMsgError]}>
-                  {promoMsg.message}
-                </Text>
-              )}
-            </View>
-
-            <View style={styles.summaryRows}>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('cart.subtotal')}</Text>
-                <Text style={styles.summaryValue}>{fmt(subtotal)}</Text>
-              </View>
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>{t('cart.shipping')}</Text>
-                <Text style={[styles.summaryValue, shippingFee === 0 && { color: COLORS.primaryGreen }]}>
-                  {shippingFee === 0 ? t('common.free', 'FREE') : fmt(shippingFee)}
-                </Text>
-              </View>
-              {promoDiscount > 0 && (
-                <View style={styles.summaryRow}>
-                  <Text style={styles.summaryLabel}>{t('common.discount', 'Discount')} ({activePromo})</Text>
-                  <Text style={[styles.summaryValue, { color: COLORS.error }]}>-{fmt(promoDiscount)}</Text>
-                </View>
-              )}
-              <View style={styles.divider} />
-              <View style={styles.summaryRow}>
-                <Text style={styles.totalLabel}>{t('cart.total')}</Text>
-                <Text style={styles.totalAmount}>{fmt(total)}</Text>
-              </View>
-            </View>
-            <TouchableOpacity
-              style={styles.checkoutBtn}
-              onPress={handleCheckout}
-              activeOpacity={0.85}
-            >
-              <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </SafeAreaView>
     </WebLayoutWrapper>
   );
@@ -222,7 +230,7 @@ const styles = StyleSheet.create({
     minWidth: 20, height: 20, justifyContent: 'center', alignItems: 'center',
   },
   headerCount: { color: '#fff', fontSize: 11, fontWeight: '800' },
-  listContent: { padding: SIZES.lg, paddingBottom: 180 },
+  listContent: { padding: SIZES.lg, paddingBottom: 60 },
   cartItem: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -253,44 +261,57 @@ const styles = StyleSheet.create({
   qtyText: { fontSize: 14, fontWeight: '700', minWidth: 24, textAlign: 'center' },
   deleteBtn: { padding: 4 },
   itemTotal: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
-  footer: {
-    padding: SIZES.lg,
-    paddingBottom: Platform.OS === 'ios' ? 34 : SIZES.lg,
-    borderTopWidth: 1, borderColor: '#F3F4F6',
-    backgroundColor: '#FFFFFF',
-    ...SHADOWS.lg,
-  },
-  summaryRows: { marginBottom: SIZES.md },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SIZES.md },
-  summaryLabel: { fontSize: 14, color: COLORS.textSecondary },
-  summaryValue: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '600' },
-  divider: { height: 1, backgroundColor: 'rgba(0,0,0,0.05)', marginVertical: 12 },
-  totalLabel: { fontSize: 16, fontWeight: '600', color: COLORS.textSecondary },
-  totalAmount: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary },
-  checkoutBtn: {
-    backgroundColor: COLORS.textPrimary,
-    height: 56,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SIZES.md },
   emptyTitle: { fontSize: 18, fontWeight: '700', color: COLORS.textPrimary },
   emptySub: { fontSize: 14, color: COLORS.textSecondary },
   shopBtn: { backgroundColor: COLORS.primaryBlue, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, marginTop: 12 },
   shopBtnText: { color: '#fff', fontWeight: '700' },
-  promoContainer: { marginBottom: 20 },
+  footerContainer: {
+    marginTop: SIZES.sm,
+    marginBottom: SIZES.xl,
+  },
+  summaryCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: SIZES.lg,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    ...SHADOWS.sm,
+  },
+  summaryTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    marginBottom: SIZES.md,
+  },
+  summaryRows: { marginBottom: SIZES.md },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: SIZES.sm },
+  summaryLabel: { fontSize: 14, color: COLORS.textSecondary },
+  summaryValue: { fontSize: 14, color: COLORS.textPrimary, fontWeight: '600' },
+  divider: { height: 1, backgroundColor: 'rgba(0,0,0,0.05)', marginVertical: 12 },
+  totalLabel: { fontSize: 16, fontWeight: '700', color: COLORS.textPrimary },
+  totalAmount: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary },
+  checkoutBtn: {
+    backgroundColor: COLORS.textPrimary,
+    height: 54,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: SIZES.xs,
+  },
+  checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  promoContainer: { marginBottom: SIZES.md },
   promoSection: {
     flexDirection: 'row',
     gap: 12,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 6,
     paddingLeft: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     alignItems: 'center',
+    ...SHADOWS.sm,
   },
   promoSectionActive: {
     borderColor: COLORS.primaryGreen,

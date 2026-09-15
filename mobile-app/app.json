@@ -32,7 +32,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "owner": "samdev251",
+    "owner": "samdev250",
     "plugins": [
       "expo-web-browser",
       [
@@ -46,7 +46,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "c52c15a1-0fb3-4684-b4b3-d65eb3dca103"
+        "projectId": "b0f6dd7c-493a-43bb-80f9-720966be95f4"
       }
     }
   }

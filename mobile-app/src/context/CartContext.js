@@ -12,6 +12,8 @@ export function CartProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [activePromo, setActivePromo] = useState(null);
+  const [toast, setToast] = useState({ visible: false, message: '', product: null });
+  const toastTimer = useRef(null);
 
   // Load cart from AsyncStorage on mount
   useEffect(() => {
@@ -42,6 +44,19 @@ export function CartProvider({ children }) {
     } catch (err) {
       cartLogger.error('Failed to save cart to storage', err);
     }
+  };
+
+  const showToast = (message, product = null) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ visible: true, message, product });
+    toastTimer.current = setTimeout(() => {
+      setToast((prev) => ({ ...prev, visible: false }));
+    }, 3500);
+  };
+
+  const hideToast = () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast((prev) => ({ ...prev, visible: false }));
   };
 
   const addToCart = (product, quantity = 1, selectedColor = null, selectedStorage = null) => {
@@ -75,6 +90,8 @@ export function CartProvider({ children }) {
         },
       ];
     });
+
+    showToast('Item added to cart!', product);
   };
 
   const removeFromCart = (cartItemId) => {
@@ -165,6 +182,9 @@ export function CartProvider({ children }) {
     total,
     promoDiscount,
     activePromo,
+    toast,
+    showToast,
+    hideToast,
     applyPromoCode,
     addToCart,
     removeFromCart,

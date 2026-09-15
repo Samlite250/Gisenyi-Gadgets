@@ -53,6 +53,35 @@ export default function SearchScreen({ navigation, route }) {
 
   const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
+  // Resolve a category slug to a UUID using multiple strategies
+  const resolveCategoryUUID = useCallback(async (catSlug) => {
+    if (!catSlug || catSlug === 'all') return null;
+
+    // Strategy 1: exact slug match
+    const { data: bySlug } = await supabase
+      .from('categories')
+      .select('id, name')
+      .eq('slug', catSlug)
+      .maybeSingle();
+    if (bySlug?.id) return bySlug.id;
+
+    // Strategy 2: name starts with slug (handles 'laptops' → 'Laptops & PCs')
+    const { data: byName } = await supabase
+      .from('categories')
+      .select('id, name')
+      .ilike('name', `${catSlug}%`)
+      .maybeSingle();
+    if (byName?.id) return byName.id;
+
+    // Strategy 3: slug contains the keyword anywhere
+    const { data: byPartial } = await supabase
+      .from('categories')
+      .select('id, name')
+      .ilike('name', `%${catSlug}%`)
+      .maybeSingle();
+    return byPartial?.id ?? null;
+  }, []);
+
   const doSearch = useCallback(async (q, catSlug) => {
     // On mobile, if no query and no category, clear results for landing screen.
     // On desktop, default to showing all active products in the 4-column grid.
@@ -65,31 +94,22 @@ export default function SearchScreen({ navigation, route }) {
     setLoading(true);
     try {
       // ── Resolve category slug → UUID ──────────────────────────
-      let categoryUUID = null;
-      if (catSlug && catSlug !== 'all') {
-        const { data: catRow } = await supabase
-          .from('categories')
-          .select('id')
-          .or(`slug.eq.${catSlug},name.ilike.%${catSlug}%`)
-          .maybeSingle();
-        categoryUUID = catRow?.id ?? null;
-      }
+      const categoryUUID = await resolveCategoryUUID(catSlug);
 
       let qb = supabase
         .from('products')
         .select('*')
         .eq('is_active', true);
 
-      // Text search
+      // Text search — search name, description, brand and sku/tags if available
       if (q.trim()) {
-        qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%`);
+        qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%,model.ilike.%${q.trim()}%`);
       }
 
-      // Filter by category UUID if resolved, else search by category keyword
+      // Filter by category UUID if resolved. Skip filter entirely if UUID lookup failed
+      // so text query still returns cross-category results.
       if (categoryUUID) {
         qb = qb.eq('category_id', categoryUUID);
-      } else if (catSlug && catSlug !== 'all') {
-        qb = qb.or(`name.ilike.%${catSlug}%,description.ilike.%${catSlug}%,brand.ilike.%${catSlug}%`);
       }
 
       // Price filtering
@@ -103,7 +123,7 @@ export default function SearchScreen({ navigation, route }) {
       else if (sortBy === 'Top Rated') qb = qb.order('rating', { ascending: false });
       else qb = qb.order('created_at', { ascending: false });
 
-      const { data, error } = await qb.limit(40);
+      const { data, error } = await qb.limit(60);
 
       if (error) throw error;
 
@@ -128,7 +148,7 @@ export default function SearchScreen({ navigation, route }) {
     } finally {
       setLoading(false);
     }
-  }, [sortBy, priceRange, isDesktop]);
+  }, [sortBy, priceRange, isDesktop, resolveCategoryUUID]);
 
   useEffect(() => {
     let cat = route.params?.category;
@@ -260,13 +280,12 @@ export default function SearchScreen({ navigation, route }) {
   };
 
   const getPageTitle = () => {
-    if (selectedCategory) {
-      const catFormatted = selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1);
-      return `${catFormatted} Collection`;
-    }
-    if (query) {
-      return `Search: "${query}"`;
-    }
+    const catLabel = selectedCategory && selectedCategory !== 'all'
+      ? selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)
+      : null;
+    if (query && catLabel) return `"${query}" in ${catLabel}`;
+    if (query) return `Search: "${query}"`;
+    if (catLabel) return `${catLabel} Collection`;
     return 'All Gadgets & Products';
   };
 

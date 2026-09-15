@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Eye, EyeOff, ArrowLeft, Mail, Lock, Sparkles, Truck, ShieldCheck, CreditCard, Star } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { supabase } from '../services/supabase';
 import { COLORS, SHADOWS } from '../constants/theme';
 
 const AnimatedBubble = ({
@@ -232,7 +233,22 @@ export default function LoginScreen({ navigation, route }) {
     setError('');
     setFocusedField(null);
     try {
-      await signIn({ email: email.trim().toLowerCase(), password });
+      const data = await signIn({ email: email.trim().toLowerCase(), password });
+
+      // Admin Security Guard: Check if logging user has admin role or email
+      let isAdminUser = email.trim().toLowerCase() === 'gisenyigadgets@gmail.com';
+      if (!isAdminUser && data?.user?.id) {
+        const { data: prof } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
+        if (prof?.role === 'admin') isAdminUser = true;
+      }
+
+      if (isAdminUser) {
+        if (Platform.OS === 'web') {
+          window.location.href = '/admin';
+          return;
+        }
+      }
+
       if (returnTo) {
         navigation.navigate(returnTo);
       } else if (navigation.canGoBack()) {

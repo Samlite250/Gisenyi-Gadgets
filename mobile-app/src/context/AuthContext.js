@@ -111,6 +111,14 @@ export function AuthProvider({ children }) {
         authLogger.warn('Profile fetch error', error);
       } else {
         setProfile(data);
+
+        // Security Guard: Admin users on web must be strictly redirected to /admin
+        if (Platform.OS === 'web') {
+          const isAdmin = data?.role === 'admin' || user?.email?.toLowerCase() === 'gisenyigadgets@gmail.com';
+          if (isAdmin && !window.location.pathname.startsWith('/admin')) {
+            window.location.href = '/admin';
+          }
+        }
       }
     } catch (err) {
       authLogger.error('Profile fetch failed', err);

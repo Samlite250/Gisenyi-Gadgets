@@ -196,50 +196,25 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
                             </View>
                         </TouchableOpacity>
 
-                        {/* Admin Console Action Button (If Admin User) */}
-                        {isAdmin && (
-                            <TouchableOpacity
-                                style={styles.adminActionBtn}
-                                onPress={() => {
-                                    if (Platform.OS === 'web') {
-                                        window.location.href = '/admin';
-                                    } else {
-                                        navigation?.navigate('Profile');
-                                    }
-                                }}
-                                activeOpacity={0.85}
-                            >
-                                <ShieldCheck size={18} color="#FFFFFF" strokeWidth={2.5} />
-                                <Text style={styles.adminActionText}>Admin Console</Text>
-                            </TouchableOpacity>
-                        )}
-
                         {/* User Account / Sign In */}
                         <TouchableOpacity
-                            style={[styles.accountCardBtn, isAdmin && styles.accountCardBtnAdmin]}
+                            style={styles.accountCardBtn}
                             onPress={() => {
                                 if (user) navigation?.navigate('Profile');
                                 else navigation?.navigate('Login', { returnTo: 'Profile' });
                             }}
                             activeOpacity={0.85}
                         >
-                            <View style={[styles.avatarCircle, isAdmin && { backgroundColor: '#EFF6FF', borderColor: '#3B82F6' }]}>
+                            <View style={styles.avatarCircle}>
                                 {user && profile?.avatar_url ? (
                                     <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
                                 ) : (
-                                    <User size={20} color={isAdmin ? '#2563EB' : '#3B82F6'} strokeWidth={2.2} />
+                                    <User size={20} color="#3B82F6" strokeWidth={2.2} />
                                 )}
                             </View>
                             <View style={styles.accountTextGroup}>
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                                    <Text style={styles.accountSubText}>{user ? 'Welcome back' : 'Guest Account'}</Text>
-                                    {isAdmin && (
-                                        <View style={styles.adminRoleBadge}>
-                                            <Text style={styles.adminRoleBadgeText}>ADMIN</Text>
-                                        </View>
-                                    )}
-                                </View>
-                                <Text style={styles.accountMainText}>{user ? (profile?.full_name || user?.email || 'My Account') : 'Sign In / Register'}</Text>
+                                <Text style={styles.accountSubText}>{user ? 'Welcome back' : 'Guest Account'}</Text>
+                                <Text style={styles.accountMainText}>{user ? (profile?.full_name || 'My Account') : 'Sign In / Register'}</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
@@ -284,23 +259,6 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
                                 </TouchableOpacity>
                             );
                         })}
-
-                        {isAdmin && (
-                            <TouchableOpacity
-                                style={[styles.mainNavItem, { backgroundColor: '#DC2626', marginLeft: 4 }]}
-                                onPress={() => {
-                                    if (Platform.OS === 'web') {
-                                        window.location.href = '/admin';
-                                    } else {
-                                        navigation?.navigate('Profile');
-                                    }
-                                }}
-                                activeOpacity={0.85}
-                            >
-                                <ShieldCheck size={14} color="#FFFFFF" strokeWidth={2.5} />
-                                <Text style={[styles.mainNavText, { color: '#FFFFFF', fontWeight: '800' }]}>Admin Dashboard</Text>
-                            </TouchableOpacity>
-                        )}
                     </View>
 
                     <View style={styles.navDivider} />

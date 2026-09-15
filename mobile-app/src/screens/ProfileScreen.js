@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Heart, MapPin, CreditCard, Settings,
-  HelpCircle, LogOut, ChevronRight, Package, Bell, Edit3, ShoppingBag, Calendar,
+  HelpCircle, LogOut, ChevronRight, Package, Bell, Edit3, ShoppingBag, Calendar, ShieldCheck,
 } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -35,7 +35,8 @@ export default function ProfileScreen({ navigation }) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [orderCount, setOrderCount] = useState(null);
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || t('common.guest', 'Guest User');
+  const isAdmin = profile?.role === 'admin' || user?.email?.toLowerCase() === 'gisenyigadgets@gmail.com';
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || (user?.email ? user.email.split('@')[0] : t('common.guest', 'Guest User'));
   const displayEmail = user?.email || '';
   const avatarUrl = profile?.avatar_url;
 
@@ -97,7 +98,14 @@ export default function ProfileScreen({ navigation }) {
             }
           </View>
           <View style={styles.userNameWrap}>
-            <Text style={styles.name}>{user ? displayName : 'Welcome to Gisenyi Gadgets!'}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={styles.name}>{user ? displayName : 'Welcome to Gisenyi Gadgets!'}</Text>
+              {isAdmin && (
+                <View style={{ backgroundColor: '#DC2626', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 }}>
+                  <Text style={{ color: '#fff', fontSize: 10, fontWeight: '900', letterSpacing: 0.5 }}>ADMIN</Text>
+                </View>
+              )}
+            </View>
             <Text style={styles.email}>{user ? displayEmail : 'Sign in to access your orders & profile'}</Text>
           </View>
           {user ? (
@@ -140,6 +148,30 @@ export default function ProfileScreen({ navigation }) {
 
         {/* Menu Items */}
         <View style={styles.menu}>
+          {isAdmin && (
+            <TouchableOpacity
+              style={[styles.menuItem, { backgroundColor: '#0F172A', borderColor: '#1E293B', padding: 18 }]}
+              onPress={() => {
+                if (Platform.OS === 'web') {
+                  window.location.href = '/admin';
+                } else {
+                  Alert.alert('Admin Console', 'Please access https://gisenyigadgets.vercel.app/admin in your browser to manage platform settings.');
+                }
+              }}
+              activeOpacity={0.85}
+            >
+              <View style={styles.menuLeft}>
+                <View style={[styles.menuIconBox, { backgroundColor: '#DC2626' }]}>
+                  <ShieldCheck size={22} color="#FFFFFF" />
+                </View>
+                <View>
+                  <Text style={[styles.menuTitle, { color: '#FFFFFF', fontWeight: '800', fontSize: 16 }]}>Admin Console</Text>
+                  <Text style={{ fontSize: 12, color: '#94A3B8', fontWeight: '500' }}>Manage orders, inventory & platform users</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#94A3B8" />
+            </TouchableOpacity>
+          )}
           {getMenuItems(t).map((item) => (
             <TouchableOpacity
               key={item.id}

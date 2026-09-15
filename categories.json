@@ -1,0 +1,47 @@
+[
+  {
+    "id": "536dc0a4-e3ea-4b68-82d6-a5260c999b9d",
+    "name": "Smartphones",
+    "slug": "smartphones"
+  },
+  {
+    "id": "ff499b40-3564-48cf-98cb-7e6043d3a3f5",
+    "name": "Laptops",
+    "slug": "laptops"
+  },
+  {
+    "id": "ea7aabd4-23c8-4822-b0dc-21b70e0ef75b",
+    "name": "Headphones",
+    "slug": "headphones"
+  },
+  {
+    "id": "cfe5cde7-a36f-492d-be78-b930751bc9c3",
+    "name": "Smartwatches",
+    "slug": "smartwatches"
+  },
+  {
+    "id": "20157264-a1ac-46b7-a40d-37b0d5a51b10",
+    "name": "Tablets",
+    "slug": "tablets"
+  },
+  {
+    "id": "61905bbd-c5f4-44fd-b9db-d7ca35688323",
+    "name": "Cameras",
+    "slug": "cameras"
+  },
+  {
+    "id": "e498fcb5-0e39-4467-873d-310d004dbd82",
+    "name": "Accessories",
+    "slug": "accessories"
+  },
+  {
+    "id": "4333d1fe-48c6-486b-a80d-1a08f54123d6",
+    "name": "Gaming",
+    "slug": "gaming"
+  },
+  {
+    "id": "177986c0-08cc-4da5-a5ef-539791c3b34d",
+    "name": "Televisions",
+    "slug": "televisions"
+  }
+]

@@ -431,14 +431,15 @@ INSERT INTO public.platform_settings (key, value) VALUES
   ('platformName',          '"Gisenyi Gadgets"'),
   ('currency',              '"RWF"'),
   ('supportEmail',          '"support@gisenyigadgets.rw"'),
-  ('whatsapp_number',       '"+250788000000"'),
-  ('mtnNumber',             '"+250781000000"'),
-  ('airtelNumber',          '"+250731000000"'),
+  ('supportPhone',          '"+250780112019"'),
+  ('whatsappNumber',        '"+250780112019"'),
+  ('mtnNumber',             '"+250780112019"'),
+  ('airtelNumber',          '"+250780112019"'),
   ('standardShippingFee',   '"2000"'),
   ('expressShippingFee',    '"5000"'),
   ('freeShippingThreshold', '"50000"'),
   ('lowStockThreshold',     '"5"')
-ON CONFLICT (key) DO NOTHING;
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 -- Suppliers
 INSERT INTO public.suppliers (name, phone, business_name, location, commission_rate, notes)

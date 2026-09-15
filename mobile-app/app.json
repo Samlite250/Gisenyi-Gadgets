@@ -41,7 +41,8 @@
           "photosPermission": "Gisenyi Gadgets needs access to your photos to upload payment screenshots."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      "expo-status-bar"
     ],
     "extra": {
       "eas": {

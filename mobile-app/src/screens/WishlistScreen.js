@@ -1,32 +1,35 @@
 import React from 'react';
 import {
   View, Text, StyleSheet, FlatList,
-  Image, TouchableOpacity,
+  Image, TouchableOpacity, Platform, useWindowDimensions, ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from '../components/BlurView';
-import { ChevronLeft, Heart, ShoppingCart } from 'lucide-react-native';
+import { ChevronLeft, Heart, ShoppingCart, Home, ArrowLeft } from 'lucide-react-native';
 import { useWishlist } from '../context/WishlistContext';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import WebLayoutWrapper from '../components/WebLayoutWrapper';
 
 export default function WishlistScreen({ navigation }) {
   const { wishlistItems, removeFromWishlist } = useWishlist();
   const { addToCart, isInCart } = useCart();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
 
-  const fmt = (n) => `RWF ${n.toLocaleString()}`;
+  const fmt = (n) => `RWF ${Number(n).toLocaleString()}`;
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+    <View key={item.id} style={[styles.card, isDesktop && styles.desktopCard]}>
       <TouchableOpacity
         activeOpacity={0.9}
         onPress={() => navigation.navigate('ProductDetails', { product: item })}
       >
         {item.images?.[0]
-          ? <Image source={{ uri: item.images[0] }} style={styles.image} />
-          : <View style={[styles.image, styles.imagePlaceholder]}>
+          ? <Image source={{ uri: item.images[0] }} style={[styles.image, isDesktop && styles.desktopImage]} />
+          : <View style={[styles.image, styles.imagePlaceholder, isDesktop && styles.desktopImage]}>
             <Heart size={32} color={COLORS.textMuted} />
           </View>
         }
@@ -57,37 +60,65 @@ export default function WishlistScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <BlurView intensity={70} tint="light" style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <ChevronLeft size={24} color={COLORS.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{t('wishlist.title')}</Text>
-        <Text style={styles.headerCount}>{wishlistItems.length}</Text>
-      </BlurView>
-
-      <FlatList
-        data={wishlistItems}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        contentContainerStyle={wishlistItems.length === 0 ? { flex: 1 } : styles.list}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIcon}>
-              <Heart size={48} color={COLORS.textMuted} />
+    <WebLayoutWrapper navigation={navigation}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Desktop Title & Navigation Banner */}
+        {isDesktop ? (
+          <View style={styles.desktopBanner}>
+            <View style={styles.desktopBannerLeft}>
+              <Text style={styles.desktopTitle}>{t('wishlist.title')}</Text>
             </View>
-            <Text style={styles.emptyTitle}>{t('wishlist.empty')}</Text>
-            <Text style={styles.emptySub}>{t('wishlist.addItems')}</Text>
-            <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate('Home')}>
-              <Text style={styles.browseBtnText}>{t('wishlist.browseProducts')}</Text>
-            </TouchableOpacity>
+            <Text style={styles.desktopCount}>{wishlistItems.length} Saved Items</Text>
           </View>
-        }
-      />
-    </SafeAreaView>
+        ) : (
+          <BlurView intensity={70} tint="light" style={styles.header}>
+            <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+              <ChevronLeft size={24} color={COLORS.textPrimary} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>{t('wishlist.title')}</Text>
+            <Text style={styles.headerCount}>{wishlistItems.length}</Text>
+          </BlurView>
+        )}
+
+        {isDesktop ? (
+          wishlistItems.length === 0 ? (
+            <View style={styles.empty}>
+              <View style={styles.emptyIcon}><Heart size={48} color={COLORS.textMuted} /></View>
+              <Text style={styles.emptyTitle}>{t('wishlist.empty')}</Text>
+              <Text style={styles.emptySub}>{t('wishlist.addItems')}</Text>
+              <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate('Home')}>
+                <Text style={styles.browseBtnText}>{t('wishlist.browseProducts')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={styles.desktopGrid} showsVerticalScrollIndicator={false}>
+              {wishlistItems.map((item) => renderItem({ item }))}
+            </ScrollView>
+          )
+        ) : (
+          <FlatList
+            key="wishlist-2-col"
+            data={wishlistItems}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            numColumns={2}
+            columnWrapperStyle={styles.row}
+            contentContainerStyle={wishlistItems.length === 0 ? { flex: 1 } : styles.list}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <View style={styles.emptyIcon}><Heart size={48} color={COLORS.textMuted} /></View>
+                <Text style={styles.emptyTitle}>{t('wishlist.empty')}</Text>
+                <Text style={styles.emptySub}>{t('wishlist.addItems')}</Text>
+                <TouchableOpacity style={styles.browseBtn} onPress={() => navigation.navigate('Home')}>
+                  <Text style={styles.browseBtnText}>{t('wishlist.browseProducts')}</Text>
+                </TouchableOpacity>
+              </View>
+            }
+          />
+        )}
+      </SafeAreaView>
+    </WebLayoutWrapper>
   );
 }
 
@@ -105,7 +136,60 @@ const styles = StyleSheet.create({
   list: { padding: SIZES.lg, gap: SIZES.lg },
   row: { justifyContent: 'space-between', marginBottom: SIZES.md },
   card: { width: '47%', gap: 8 },
+  desktopCard: { width: 'calc(25% - 12px)' },
   image: { width: '100%', height: 160, borderRadius: 12, backgroundColor: '#F5F5F5' },
+  desktopGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    padding: 24,
+    paddingBottom: 60,
+    alignItems: 'flex-start',
+  },
+  desktopImage: { height: 180 },
+  desktopBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  desktopBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  backHomeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  backHomeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  desktopTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  desktopCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+  },
   imagePlaceholder: { justifyContent: 'center', alignItems: 'center' },
   removeBtn: {
     position: 'absolute', top: 8, right: 8,

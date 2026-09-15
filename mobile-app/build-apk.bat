@@ -15,7 +15,7 @@ if %errorlevel% neq 0 (
     echo Please run: npx eas-cli login
     echo.
     echo Username: samdev251
-    echo Password: @Samlite0790268691
+    echo Password: @Samlite0780112019
     echo.
     pause
     exit /b 1

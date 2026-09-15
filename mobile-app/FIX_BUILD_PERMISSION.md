@@ -48,7 +48,7 @@ If the command doesn't work, create the project manually:
 1. **Go to:** https://expo.dev/
 2. **Login** with:
    - Username: `samdev251`
-   - Password: `@Samlite0790268691`
+   - Password: `@Samlite0780112019`
 3. Click **"+ New Project"**
 4. Enter name: `gisenyi-gadgets`
 5. Copy the new project ID
@@ -165,7 +165,7 @@ npx eas-cli logout
 # Login again
 npx eas-cli login
 # Username: samdev251
-# Password: @Samlite0790268691
+# Password: @Samlite0780112019
 ```
 
 ### Need to delete old project link?

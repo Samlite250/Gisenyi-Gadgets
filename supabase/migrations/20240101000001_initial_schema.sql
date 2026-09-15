@@ -421,10 +421,10 @@ ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO public.platform_settings (key, value) VALUES
   ('platformName','"Gisenyi Gadgets"'),('currency','"RWF"'),
-  ('supportEmail','"support@gisenyigadgets.rw"'),('whatsapp_number','"+250788000000"'),
-  ('mtnNumber','"+250781000000"'),('airtelNumber','"+250731000000"'),
+  ('supportEmail','"support@gisenyigadgets.rw"'),('supportPhone','"+250780112019"'),
+  ('whatsappNumber','"+250780112019"'),('mtnNumber','"+250780112019"'),('airtelNumber','"+250780112019"'),
   ('standardShippingFee','"2000"'),('freeShippingThreshold','"50000"'),('lowStockThreshold','"5"')
-ON CONFLICT (key) DO NOTHING;
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 
 INSERT INTO public.banners (type, title, subtitle, button_text, color, image_url, sort_order) VALUES
   ('banner','Big Sale Up to 40% OFF','On all electronics','Shop Now','#1E293B','https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=300',1),

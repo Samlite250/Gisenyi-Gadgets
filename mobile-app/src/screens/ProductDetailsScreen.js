@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback, useLayoutEffect } from
 import {
   View, Text, StyleSheet, ScrollView, Image,
   TouchableOpacity, Alert, Dimensions, ActivityIndicator, Platform,
-  Linking,
+  Linking, useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -25,10 +25,16 @@ import WebLayoutWrapper from '../components/WebLayoutWrapper';
 import { productLogger } from '../utils/logger';
 import { addToRecentlyViewed } from '../utils/recentlyViewed';
 
-const { width } = Dimensions.get('window');
+// Fallback static width for non-web or server-side usage
+const { width: staticWidth } = Dimensions.get('window');
 
 export default function ProductDetailsScreen({ route, navigation }) {
   const { t } = useLanguage();
+  const { width: windowWidth } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  // On web we constrain the gallery to the content column width; on native use full screen width
+  const [galleryWidth, setGalleryWidth] = useState(isWeb ? windowWidth : staticWidth);
+
   const [product, setProduct] = useState(route.params?.product || null);
   const [loadingProduct, setLoadingProduct] = useState(!product);
 
@@ -292,7 +298,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   };
 
   const handleWhatsApp = async () => {
-    const rawPhone = supplier?.phone || '+250788000000';
+    const rawPhone = supplier?.phone || '+250780112019';
     let cleanPhone = rawPhone.replace(/[^\d+]/g, '');
     if (cleanPhone.startsWith('0')) cleanPhone = '+250' + cleanPhone.slice(1);
     const intlNumber = cleanPhone.replace('+', '');
@@ -350,10 +356,18 @@ export default function ProductDetailsScreen({ route, navigation }) {
     );
   }
 
+  // On web, WebLayoutWrapper's ScrollView owns all vertical scrolling;
+  // use a plain View so content flows at full natural height.
+  // On mobile, use ScrollView for native scroll behavior.
+  const PageContent = isWeb ? View : ScrollView;
+  const pageContentProps = isWeb
+    ? { style: styles.scroll }
+    : { showsVerticalScrollIndicator: false, contentContainerStyle: styles.scroll };
+
   return (
     <WebLayoutWrapper navigation={navigation}>
-      <SafeAreaView style={styles.container} edges={['top']}>
-        {/* Header */}
+      <View style={[styles.container, isWeb && styles.containerWeb]}>
+        {/* Header - back/share/cart */}
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
             <ChevronLeft size={24} color={COLORS.textPrimary} />
@@ -368,14 +382,17 @@ export default function ProductDetailsScreen({ route, navigation }) {
           </View>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+        <PageContent {...pageContentProps}>
           {/* Image Gallery */}
-          <View style={styles.galleryWrap}>
+          <View
+            style={styles.galleryWrap}
+            onLayout={(e) => setGalleryWidth(e.nativeEvent.layout.width)}
+          >
             <ScrollView
               ref={scrollRef}
               horizontal pagingEnabled showsHorizontalScrollIndicator={false}
               onMomentumScrollEnd={(e) =>
-                setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))
+                setActiveImage(Math.round(e.nativeEvent.contentOffset.x / galleryWidth))
               }
             >
               {images.map((img, i) => (
@@ -383,8 +400,9 @@ export default function ProductDetailsScreen({ route, navigation }) {
                   key={i}
                   activeOpacity={0.9}
                   onPress={() => setIsZoomVisible(true)}
+                  style={{ width: galleryWidth }}
                 >
-                  <Image source={{ uri: img }} style={styles.heroImage} resizeMode="cover" />
+                  <Image source={{ uri: img }} style={[styles.heroImage, { width: galleryWidth }]} resizeMode="cover" />
                   <View style={styles.zoomHint}>
                     <Maximize2 size={16} color="#fff" />
                     <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
@@ -431,7 +449,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
                     style={[styles.thumbnailWrap, i === activeImage && styles.thumbnailActive]}
                     onPress={() => {
                       setActiveImage(i);
-                      scrollRef.current?.scrollTo({ x: i * width, animated: true });
+                      scrollRef.current?.scrollTo({ x: i * galleryWidth, animated: true });
                     }}
                   >
                     <Image source={{ uri: img }} style={styles.thumbnail} resizeMode="cover" />
@@ -534,6 +552,28 @@ export default function ProductDetailsScreen({ route, navigation }) {
                 </TouchableOpacity>
               </View>
             </View>
+
+            {/* Inline CTA buttons — web only, shown right after options/quantity */}
+            {isWeb && (
+              <View style={styles.ctaRow}>
+                <TouchableOpacity
+                  style={[styles.cartBtn, styles.ctaBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
+                  onPress={handleAddToCart}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.buyBtn, styles.ctaBtn]}
+                  onPress={handleBuyNow}
+                  disabled={product.stock === 0}
+                  activeOpacity={0.8}
+                >
+                  <Zap size={18} color="#fff" fill="#fff" />
+                  <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Trust Badges */}
             <View style={styles.badgesRow}>
@@ -725,28 +765,30 @@ export default function ProductDetailsScreen({ route, navigation }) {
               )}
             </View>
           </View>
-        </ScrollView>
+        </PageContent>
 
-        {/* Action Footer */}
-        <View style={styles.footer}>
-          <TouchableOpacity
-            style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
-            onPress={handleAddToCart}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
-          </TouchableOpacity>
+        {/* Action Footer — mobile only; web uses inline CTA buttons above */}
+        {!isWeb && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
+              onPress={handleAddToCart}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.buyBtn}
-            onPress={handleBuyNow}
-            disabled={product.stock === 0}
-            activeOpacity={0.8}
-          >
-            <Zap size={18} color="#fff" fill="#fff" />
-            <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
-          </TouchableOpacity>
-        </View>
+            <TouchableOpacity
+              style={styles.buyBtn}
+              onPress={handleBuyNow}
+              disabled={product.stock === 0}
+              activeOpacity={0.8}
+            >
+              <Zap size={18} color="#fff" fill="#fff" />
+              <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Full Screen Zoom Modal */}
         <Modal visible={isZoomVisible} transparent={false} animationType="fade" onRequestClose={() => setIsZoomVisible(false)}>
@@ -760,12 +802,12 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
             <ScrollView
               horizontal pagingEnabled showsHorizontalScrollIndicator={false}
-              contentOffset={{ x: activeImage * width, y: 0 }}
-              onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / width))}
+              contentOffset={{ x: activeImage * staticWidth, y: 0 }}
+              onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / staticWidth))}
               style={styles.zoomScroll}
             >
               {images.map((img, i) => (
-                <View key={i} style={{ width, height: '100%', justifyContent: 'center' }}>
+                <View key={i} style={{ width: staticWidth, height: '100%', justifyContent: 'center' }}>
                   <ScrollView
                     maximumZoomScale={3}
                     minimumZoomScale={1}
@@ -793,13 +835,14 @@ export default function ProductDetailsScreen({ route, navigation }) {
           user={user}
           onSubmitted={fetchReviews}
         />
-      </SafeAreaView>
+      </View>
     </WebLayoutWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: 'transparent' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  containerWeb: { flex: undefined, backgroundColor: '#F8FAFC' },
   topBar: {
     flexDirection: 'row', justifyContent: 'space-between',
     padding: SIZES.md, paddingBottom: 0,
@@ -809,9 +852,9 @@ const styles = StyleSheet.create({
     width: 42, height: 42, backgroundColor: COLORS.cardBg,
     borderRadius: 21, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm,
   },
-  scroll: { paddingBottom: 120 },
-  galleryWrap: { position: 'relative' },
-  heroImage: { width, height: 320 },
+  scroll: { paddingBottom: Platform.OS === 'web' ? 40 : 120 },
+  galleryWrap: { position: 'relative', width: '100%', overflow: 'hidden' },
+  heroImage: { width: staticWidth, height: 320 },
   dots: {
     position: 'absolute', bottom: SIZES.sm, left: 0, right: 0,
     flexDirection: 'row', justifyContent: 'center', gap: SIZES.xs,
@@ -907,6 +950,11 @@ const styles = StyleSheet.create({
     borderTopColor: '#f3f4f6',
     ...SHADOWS.lg,
   },
+  footerWeb: {
+    marginTop: 24,
+    borderRadius: 16,
+    marginHorizontal: 0,
+  },
   storagePill: {
     paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 20, borderWidth: 1.5,
@@ -962,6 +1010,16 @@ const styles = StyleSheet.create({
   },
   cartBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   buyBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  // Inline CTA row shown on web inside the details section
+  ctaRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: SIZES.md,
+    marginBottom: SIZES.sm,
+  },
+  ctaBtn: {
+    height: 54,
+  },
   sellerSection: {
     marginTop: SIZES.lg,
     paddingTop: SIZES.md,

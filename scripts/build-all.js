@@ -18,7 +18,9 @@ const SUPABASE_ENV = {
 
 function run(command, cwd) {
   console.log(`\n🚀 Executing: ${command} in ${cwd}`);
-  execSync(command, { cwd, stdio: 'inherit', env: SUPABASE_ENV, shell: true });
+  const isWin = process.platform === 'win32';
+  const cmd = isWin && command.startsWith('npm ') ? command.replace(/^npm /, 'npm.cmd ') : command;
+  execSync(cmd, { cwd, stdio: 'inherit', env: SUPABASE_ENV, shell: true });
 }
 
 function copyDirSync(src, dest) {
@@ -42,6 +44,20 @@ try {
   console.log('📦 Gisenyi Gadgets Unified Web Build');
   console.log('==================================================');
 
+  // 0. Ensure Sub-Package Dependencies on Vercel/CI
+  const mobileNodeModules = path.join(MOBILE_APP_DIR, 'node_modules');
+  const adminNodeModules = path.join(ADMIN_DIR, 'node_modules');
+
+  if (!fs.existsSync(mobileNodeModules) || process.env.VERCEL) {
+    console.log('\n[0/3] Installing Mobile App dependencies...');
+    run('npm install --legacy-peer-deps', MOBILE_APP_DIR);
+  }
+
+  if (!fs.existsSync(adminNodeModules) || process.env.VERCEL) {
+    console.log('\n[0/3] Installing Admin Dashboard dependencies...');
+    run('npm install --legacy-peer-deps', ADMIN_DIR);
+  }
+
   // 1. Build Mobile App Expo Web
   console.log('\n[1/3] Building Mobile Customer Store App (Expo Web)...');
   run('npm run build:web', MOBILE_APP_DIR);
@@ -55,7 +71,11 @@ try {
 
   // Clean target dist folder
   if (fs.existsSync(DIST_DIR)) {
-    fs.rmSync(DIST_DIR, { recursive: true, force: true });
+    try {
+      fs.rmSync(DIST_DIR, { recursive: true, force: true });
+    } catch (e) {
+      console.warn('⚠️ Safe warning cleaning dist folder:', e.message);
+    }
   }
   fs.mkdirSync(DIST_DIR, { recursive: true });
 
@@ -110,11 +130,17 @@ try {
     console.log('✅ Mirrored admin assets to root dist/assets');
   }
 
-  // Copy root serve.json to dist/serve.json if present
+  // Copy root serve.json to dist/serve.json with relative public path
   const serveJsonRoot = path.join(ROOT_DIR, 'serve.json');
   if (fs.existsSync(serveJsonRoot)) {
-    fs.copyFileSync(serveJsonRoot, path.join(DIST_DIR, 'serve.json'));
-    console.log('✅ Copied serve.json to dist/serve.json');
+    try {
+      const serveConfig = JSON.parse(fs.readFileSync(serveJsonRoot, 'utf8'));
+      serveConfig.public = '.';
+      fs.writeFileSync(path.join(DIST_DIR, 'serve.json'), JSON.stringify(serveConfig, null, 2));
+      console.log('✅ Copied serve.json to dist/serve.json with public "."');
+    } catch (e) {
+      fs.copyFileSync(serveJsonRoot, path.join(DIST_DIR, 'serve.json'));
+    }
   }
 
   console.log('\n✅ Unified Build Complete Successfully!');

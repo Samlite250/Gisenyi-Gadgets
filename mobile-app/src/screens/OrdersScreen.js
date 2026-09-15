@@ -2,20 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, RefreshControl, Image,
-  Dimensions, Alert,
+  Dimensions, Platform, useWindowDimensions, ScrollView, Alert,
 } from 'react-native';
 import { BlurView } from '../components/BlurView';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin, CircleCheckBig } from 'lucide-react-native';
+import { Package, ChevronRight, Clock, ShoppingBag, Truck, MapPin, CircleCheckBig, Home, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { supabase } from '../services/supabase';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
+import WebLayoutWrapper from '../components/WebLayoutWrapper';
 import { orderLogger } from '../utils/logger';
 
 export default function OrdersScreen({ navigation }) {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { width } = useWindowDimensions();
+  const isDesktop = Platform.OS === 'web' && width >= 768;
 
   const STATUS_CONFIG = {
     pending: { label: t('orders.pending'), color: '#F59E0B', bg: '#FEF3C7', icon: Clock },
@@ -187,7 +190,7 @@ export default function OrdersScreen({ navigation }) {
     console.log('Order:', item.order_number, '| Status:', item.status, '| Delivered:', isDelivered, '| Confirmed:', isConfirmed, '| All Reviewed:', allReviewed);
 
     return (
-      <BlurView intensity={40} tint="light" style={styles.orderCard}>
+      <BlurView key={item.id} intensity={40} tint="light" style={styles.orderCard}>
         <TouchableOpacity
           onPress={() => navigation.navigate('OrderTracking', { order: item })}
           activeOpacity={0.7}
@@ -306,107 +309,145 @@ export default function OrdersScreen({ navigation }) {
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <BlurView intensity={70} tint="light" style={styles.header}>
-          <View>
-            <Text style={styles.headerTitle}>{t('orders.title')}</Text>
-            <Text style={styles.headerCount}>Sign in to view your orders</Text>
-          </View>
-        </BlurView>
+      <WebLayoutWrapper navigation={navigation}>
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <BlurView intensity={70} tint="light" style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>{t('orders.title')}</Text>
+              <Text style={styles.headerCount}>Sign in to view your orders</Text>
+            </View>
+          </BlurView>
 
-        <View style={styles.empty}>
-          <View style={styles.emptyIconBg}>
-            <Package size={56} color={COLORS.primaryBlue} strokeWidth={1.5} />
+          <View style={styles.empty}>
+            <View style={styles.emptyIconBg}>
+              <Package size={56} color={COLORS.primaryBlue} strokeWidth={1.5} />
+            </View>
+            <Text style={styles.emptyTitle}>Track & Manage Orders</Text>
+            <Text style={styles.emptySub}>
+              Please sign in or create an account to view your past orders, track active shipments, and leave product reviews.
+            </Text>
+            <TouchableOpacity
+              style={styles.shopBtn}
+              onPress={() => navigation.navigate('Login', { returnTo: 'Orders' })}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.shopBtnText}>Sign In / Create Account</Text>
+              <ChevronRight size={18} color="#fff" />
+            </TouchableOpacity>
           </View>
-          <Text style={styles.emptyTitle}>Track & Manage Orders</Text>
-          <Text style={styles.emptySub}>
-            Please sign in or create an account to view your past orders, track active shipments, and leave product reviews.
-          </Text>
-          <TouchableOpacity
-            style={styles.shopBtn}
-            onPress={() => navigation.navigate('Login', { returnTo: 'Orders' })}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.shopBtnText}>Sign In / Create Account</Text>
-            <ChevronRight size={18} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </WebLayoutWrapper>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Refined Header */}
-      {/* Glass Header */}
-      <BlurView intensity={70} tint="light" style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>{t('orders.title')}</Text>
-          <Text style={styles.headerCount}>
-            {t('orders.orderCount', {
-              count: filteredOrders.length,
-              filter: activeFilter === t('orders.all') ? t('orders.total') : activeFilter.toLowerCase()
-            })}
-          </Text>
-        </View>
-      </BlurView>
-
-      {/* Pill-shaped Filter Tabs Wrapper (Fixes Stretching on Web) */}
-      {/* Pill-shaped Filter Tabs Wrapper with Glass Effect */}
-      <BlurView intensity={60} tint="light" style={styles.filterContainer}>
-        <FlatList
-          data={FILTERS}
-          horizontal
-          keyExtractor={(f) => f}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterList}
-          renderItem={({ item: f }) => {
-            const isActive = activeFilter === f;
-            return (
-              <TouchableOpacity
-                style={[styles.filterChip, isActive && styles.filterChipActive]}
-                onPress={() => setActiveFilter(f)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{f}</Text>
-              </TouchableOpacity>
-            );
-          }}
-        />
-      </BlurView>
-
-      <FlatList
-        data={filteredOrders}
-        keyExtractor={(item) => item.id}
-        renderItem={renderOrder}
-        contentContainerStyle={filteredOrders.length === 0 ? { flex: 1 } : styles.list}
-        showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primaryBlue} />}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <View style={styles.emptyIconBg}>
-              <Package size={56} color={COLORS.textMuted} strokeWidth={1.5} />
+    <WebLayoutWrapper navigation={navigation}>
+      <SafeAreaView style={styles.container} edges={['top']}>
+        {/* Desktop Banner Bar */}
+        {isDesktop ? (
+          <View style={styles.desktopBanner}>
+            <View style={styles.desktopBannerLeft}>
+              <Text style={styles.desktopTitle}>{t('orders.title')}</Text>
             </View>
-            <Text style={styles.emptyTitle}>{t('orders.empty')}</Text>
-            <Text style={styles.emptySub}>
-              {activeFilter !== t('orders.all')
-                ? t('orders.emptyFiltered', { filter: activeFilter.toLowerCase() })
-                : t('orders.emptyAll')}
-            </Text>
-            {activeFilter === t('orders.all') ? (
-              <TouchableOpacity style={styles.shopBtn} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
-                <Text style={styles.shopBtnText}>{t('orders.startShopping')}</Text>
-                <ChevronRight size={18} color="#fff" />
-              </TouchableOpacity>
-            ) : (
-              <TouchableOpacity style={styles.clearBtn} onPress={() => setActiveFilter(t('orders.all'))} activeOpacity={0.8}>
-                <Text style={styles.clearBtnText}>{t('orders.viewAll')}</Text>
-              </TouchableOpacity>
-            )}
+            <Text style={styles.desktopCount}>{filteredOrders.length} Orders</Text>
           </View>
-        }
-      />
-    </SafeAreaView>
+        ) : (
+          <BlurView intensity={70} tint="light" style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>{t('orders.title')}</Text>
+              <Text style={styles.headerCount}>
+                {t('orders.orderCount', {
+                  count: filteredOrders.length,
+                  filter: activeFilter === t('orders.all') ? t('orders.total') : activeFilter.toLowerCase()
+                })}
+              </Text>
+            </View>
+          </BlurView>
+        )}
+
+        {/* Pill-shaped Filter Tabs Wrapper */}
+        <BlurView intensity={60} tint="light" style={styles.filterContainer}>
+          <FlatList
+            data={FILTERS}
+            horizontal
+            keyExtractor={(f) => f}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterList}
+            renderItem={({ item: f }) => {
+              const isActive = activeFilter === f;
+              return (
+                <TouchableOpacity
+                  style={[styles.filterChip, isActive && styles.filterChipActive]}
+                  onPress={() => setActiveFilter(f)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.filterText, isActive && styles.filterTextActive]}>{f}</Text>
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </BlurView>
+
+        {isDesktop ? (
+          filteredOrders.length === 0 ? (
+            <View style={styles.empty}>
+              <View style={styles.emptyIconBg}><Package size={56} color={COLORS.textMuted} strokeWidth={1.5} /></View>
+              <Text style={styles.emptyTitle}>{t('orders.empty')}</Text>
+              <Text style={styles.emptySub}>
+                {activeFilter !== t('orders.all')
+                  ? t('orders.emptyFiltered', { filter: activeFilter.toLowerCase() })
+                  : t('orders.emptyAll')}
+              </Text>
+              {activeFilter === t('orders.all') ? (
+                <TouchableOpacity style={styles.shopBtn} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
+                  <Text style={styles.shopBtnText}>{t('orders.startShopping')}</Text>
+                  <ChevronRight size={18} color="#fff" />
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity style={styles.clearBtn} onPress={() => setActiveFilter(t('orders.all'))} activeOpacity={0.8}>
+                  <Text style={styles.clearBtnText}>{t('orders.viewAll')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <ScrollView contentContainerStyle={styles.desktopOrderGrid} showsVerticalScrollIndicator={false}>
+              {filteredOrders.map((item) => renderOrder({ item }))}
+            </ScrollView>
+          )
+        ) : (
+          <FlatList
+            key="orders-1-col"
+            data={filteredOrders}
+            keyExtractor={(item) => item.id}
+            renderItem={renderOrder}
+            contentContainerStyle={filteredOrders.length === 0 ? { flex: 1 } : styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.primaryBlue} />}
+            ListEmptyComponent={
+              <View style={styles.empty}>
+                <View style={styles.emptyIconBg}><Package size={56} color={COLORS.textMuted} strokeWidth={1.5} /></View>
+                <Text style={styles.emptyTitle}>{t('orders.empty')}</Text>
+                <Text style={styles.emptySub}>
+                  {activeFilter !== t('orders.all')
+                    ? t('orders.emptyFiltered', { filter: activeFilter.toLowerCase() })
+                    : t('orders.emptyAll')}
+                </Text>
+                {activeFilter === t('orders.all') ? (
+                  <TouchableOpacity style={styles.shopBtn} onPress={() => navigation.navigate('Home')} activeOpacity={0.8}>
+                    <Text style={styles.shopBtnText}>{t('orders.startShopping')}</Text>
+                    <ChevronRight size={18} color="#fff" />
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity style={styles.clearBtn} onPress={() => setActiveFilter(t('orders.all'))} activeOpacity={0.8}>
+                    <Text style={styles.clearBtnText}>{t('orders.viewAll')}</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        )}
+      </SafeAreaView>
+    </WebLayoutWrapper>
   );
 }
 
@@ -572,6 +613,61 @@ const styles = StyleSheet.create({
     color: '#075985',
     fontSize: 13,
     fontWeight: '600',
+  },
+
+  orderCardWrap: { width: '100%', marginBottom: 16 },
+  desktopOrderCardWrap: { width: 'calc(50% - 8px)' },
+  desktopRow: { justifyContent: 'space-between' },
+  desktopOrderGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+    padding: 24,
+    paddingBottom: 60,
+    alignItems: 'flex-start',
+  },
+  desktopBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  desktopBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  backHomeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  backHomeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  desktopTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  desktopCount: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
   },
 
   // Empty State

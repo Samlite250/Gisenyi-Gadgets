@@ -23,6 +23,23 @@ import { productLogger } from '../utils/logger';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
 
+const CATEGORY_IMAGES = {
+  smartphones: 'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=400',
+  phones: 'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=400',
+  laptops: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=400',
+  tablets: 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400',
+  headphones: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400',
+  audio: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=400',
+  smartwatches: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=400',
+  watches: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?q=80&w=400',
+  gaming: 'https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?q=80&w=400',
+  cameras: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=400',
+  photo: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=400',
+  accessories: 'https://images.unsplash.com/photo-1625772452859-1c03d5bf1137?q=80&w=400',
+  tech: 'https://images.unsplash.com/photo-1625772452859-1c03d5bf1137?q=80&w=400',
+  televisions: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?q=80&w=400',
+};
+
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1605236453806-6ff36851218e?q=80&w=600', // iPhone
   'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=600', // Laptop
@@ -66,7 +83,7 @@ const DEFAULT_BANNERS = [
 
 // ProductCard MUST be outside the parent component to prevent re-mount shaking
 const ProductCard = ({ product, style, onPress, onWishlist, wishlisted, fmt }) => (
-  <View style={[styles.productCard, style]}>
+  <View style={[styles.productCard, style]} {...(Platform.OS === 'web' ? { dataSet: { hover: 'true' } } : {})}>
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
@@ -539,55 +556,99 @@ export default function HomeScreen({ navigation }) {
                   <Text style={styles.seeAll}>See all</Text>
                 </TouchableOpacity>
               </View>
-              <ScrollView
-                ref={offerScrollRef}
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: SIZES.md }}
-                snapToInterval={186}
-                decelerationRate="fast"
-                onTouchStart={handleOfferTouchStart}
-                scrollEventThrottle={16}
-              >
-                {offers.map((offer, index) => (
-                  <TouchableOpacity
-                    key={offer.id}
-                    style={[
-                      styles.offerCard,
-                      { backgroundColor: offer.color },
-                      index !== offers.length - 1 && { marginRight: 16 }
-                    ]}
-                    activeOpacity={0.9}
-                    onPress={() => {
-                      if (offer.link_category) {
-                        const category = categories.find(c =>
-                          c.name?.toLowerCase() === offer.link_category?.toLowerCase() ||
-                          c.slug?.toLowerCase() === offer.link_category?.toLowerCase()
-                        );
-                        if (category) {
-                          setActiveCategory(category.id);
-                          setTimeout(() => {
-                            scrollRef.current?.scrollTo({ y: 600, animated: true });
-                          }, 100);
-                        } else {
-                          navigation.navigate('Search', { category: offer.link_category });
+              {/* Desktop: full-width responsive grid */}
+              {isDesktop ? (
+                <View style={styles.offersDesktopGrid}>
+                  {offers.map((offer) => (
+                    <TouchableOpacity
+                      key={offer.id}
+                      style={[
+                        styles.offerCardDesktop,
+                        { backgroundColor: offer.color },
+                      ]}
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        if (offer.link_category) {
+                          const category = categories.find(c =>
+                            c.name?.toLowerCase() === offer.link_category?.toLowerCase() ||
+                            c.slug?.toLowerCase() === offer.link_category?.toLowerCase()
+                          );
+                          if (category) {
+                            setActiveCategory(category.id);
+                            setTimeout(() => {
+                              scrollRef.current?.scrollTo({ y: 600, animated: true });
+                            }, 100);
+                          } else {
+                            navigation.navigate('Search', { category: offer.link_category });
+                          }
                         }
-                      }
-                    }}
-                  >
-                    <View style={styles.offerImageHalf}>
-                      <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
-                    </View>
-                    <View style={styles.offerContentHalf}>
-                      <View style={styles.offerBadge}>
-                        <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                      }}
+                    >
+                      <View style={styles.offerImageHalfDesktop}>
+                        <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
                       </View>
-                      <Text style={styles.offerLabel}>{offer.label}</Text>
-                      <Text style={styles.offerTagline} numberOfLines={2}>{offer.tagline}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
+                      <View style={styles.offerContentHalfDesktop}>
+                        <View style={styles.offerBadge}>
+                          <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                        </View>
+                        <Text style={styles.offerLabel}>{offer.label}</Text>
+                        <Text style={styles.offerTagline} numberOfLines={2}>{offer.tagline}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                /* Mobile: horizontal scroll */
+                <ScrollView
+                  ref={offerScrollRef}
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ paddingHorizontal: SIZES.md }}
+                  snapToInterval={186}
+                  decelerationRate="fast"
+                  onTouchStart={handleOfferTouchStart}
+                  scrollEventThrottle={16}
+                >
+                  {offers.map((offer, index) => (
+                    <TouchableOpacity
+                      key={offer.id}
+                      style={[
+                        styles.offerCard,
+                        { backgroundColor: offer.color },
+                        index !== offers.length - 1 && { marginRight: 16 }
+                      ]}
+                      activeOpacity={0.9}
+                      onPress={() => {
+                        if (offer.link_category) {
+                          const category = categories.find(c =>
+                            c.name?.toLowerCase() === offer.link_category?.toLowerCase() ||
+                            c.slug?.toLowerCase() === offer.link_category?.toLowerCase()
+                          );
+                          if (category) {
+                            setActiveCategory(category.id);
+                            setTimeout(() => {
+                              scrollRef.current?.scrollTo({ y: 600, animated: true });
+                            }, 100);
+                          } else {
+                            navigation.navigate('Search', { category: offer.link_category });
+                          }
+                        }
+                      }}
+                    >
+                      <View style={styles.offerImageHalf}>
+                        <Image source={{ uri: offer.image_url }} style={styles.offerImgFull} resizeMode="cover" />
+                      </View>
+                      <View style={styles.offerContentHalf}>
+                        <View style={styles.offerBadge}>
+                          <Text style={styles.offerDiscount}>{offer.discount}</Text>
+                        </View>
+                        <Text style={styles.offerLabel}>{offer.label}</Text>
+                        <Text style={styles.offerTagline} numberOfLines={2}>{offer.tagline}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
             </View>
           )}
 
@@ -600,13 +661,13 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.seeAll}>{t('home.viewAll')}</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.catRow}>
+          {/* Desktop: image-based category cards in a full-width grid */}
+          {isDesktop ? (
+            <View style={styles.catDesktopGrid}>
               {categories.map((c) => {
                 const isActive = activeCategory === c.id;
-
-                // Map slug/id to respective Lucide icon
                 const slug = c.slug?.toLowerCase() || c.id?.toLowerCase() || '';
+                const catImage = CATEGORY_IMAGES[slug];
                 const Icon = {
                   smartphones: Smartphone,
                   phones: Smartphone,
@@ -621,24 +682,77 @@ export default function HomeScreen({ navigation }) {
                   tech: Cpu,
                   cameras: Camera,
                   photo: Camera,
+                  televisions: Laptop,
                 }[slug] || ShoppingBag;
 
                 return (
                   <TouchableOpacity
                     key={c.id}
-                    style={styles.catItem}
-                    activeOpacity={0.7}
+                    style={[styles.catDesktopCard, isActive && styles.catDesktopCardActive]}
+                    activeOpacity={0.85}
                     onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
                   >
-                    <View style={[styles.catIconCircle, isActive && styles.catIconCircleActive]}>
-                      <Icon size={28} color={isActive ? '#FFFFFF' : '#64748B'} strokeWidth={2.2} />
+                    {catImage ? (
+                      <Image source={{ uri: catImage }} style={styles.catDesktopImage} resizeMode="cover" />
+                    ) : (
+                      <View style={styles.catDesktopIconFallback}>
+                        <Icon size={36} color="#64748B" strokeWidth={1.8} />
+                      </View>
+                    )}
+                    <View style={[styles.catDesktopOverlay, isActive && styles.catDesktopOverlayActive]} />
+                    <View style={styles.catDesktopLabelWrap}>
+                      <Text style={[styles.catDesktopLabel, isActive && styles.catDesktopLabelActive]}>{c.name}</Text>
                     </View>
-                    <Text style={[styles.catName, isActive && styles.catNameActive]}>{c.name}</Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
-          </ScrollView>
+          ) : (
+            /* Mobile: horizontal image scroll */
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.catRow}>
+                {categories.map((c) => {
+                  const isActive = activeCategory === c.id;
+                  const slug = c.slug?.toLowerCase() || c.id?.toLowerCase() || '';
+                  const catImage = CATEGORY_IMAGES[slug];
+                  const Icon = {
+                    smartphones: Smartphone,
+                    phones: Smartphone,
+                    laptops: Laptop,
+                    tablets: Tablet,
+                    headphones: Headphones,
+                    audio: Headphones,
+                    smartwatches: Watch,
+                    watches: Watch,
+                    gaming: Gamepad2,
+                    accessories: Cpu,
+                    tech: Cpu,
+                    cameras: Camera,
+                    photo: Camera,
+                    televisions: Laptop,
+                  }[slug] || ShoppingBag;
+
+                  return (
+                    <TouchableOpacity
+                      key={c.id}
+                      style={styles.catItem}
+                      activeOpacity={0.75}
+                      onPress={() => setActiveCategory(isActive ? 'all' : c.id)}
+                    >
+                      <View style={[styles.catIconCircle, isActive && styles.catIconCircleActive]}>
+                        {catImage ? (
+                          <Image source={{ uri: catImage }} style={styles.catMobileImage} resizeMode="cover" />
+                        ) : (
+                          <Icon size={26} color={isActive ? COLORS.primaryBlue : '#64748B'} strokeWidth={2} />
+                        )}
+                      </View>
+                      <Text style={[styles.catName, isActive && styles.catNameActive]}>{c.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          )}
 
           {/* Products Section */}
           <View style={styles.sectionHeader}>
@@ -730,7 +844,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <View style={styles.discoveryGrid}>
             {allProducts.slice(0, 40).map((p) => (
-              <View key={p.id} style={styles.discoveryCard}>
+              <View key={p.id} style={styles.discoveryCard} {...(Platform.OS === 'web' ? { dataSet: { hover: 'true' } } : {})}>
                 <TouchableOpacity
                   activeOpacity={0.9}
                   onPress={() => navigation.navigate('ProductDetails', { product: p })}
@@ -762,7 +876,7 @@ export default function HomeScreen({ navigation }) {
                     </View>
                     <TouchableOpacity style={styles.discoveryAddBtn} onPress={() => addToCart(p)}>
                       <ShoppingBag size={14} color="#fff" />
-                      <Text style={styles.discoveryAddText}>Add</Text>
+                      <Text style={styles.discoveryAddText}>Add to Cart</Text>
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
@@ -981,17 +1095,115 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#F1F5F9',
+    overflow: 'hidden',
   },
   catIconCircleActive: {
-    backgroundColor: COLORS.primaryBlue,
+    backgroundColor: '#FFFFFF',
     borderColor: COLORS.primaryBlue,
+    borderWidth: 2.5,
     ...Platform.select({
       web: { boxShadow: '0px 4px 12px rgba(66,133,244,0.35)' },
       default: { shadowColor: COLORS.primaryBlue, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.35, shadowRadius: 8, elevation: 6 },
     }),
   },
+  catMobileImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 32,
+  },
   catName: { fontSize: 11, fontWeight: '600', color: '#64748B', textAlign: 'center' },
   catNameActive: { color: COLORS.primaryBlue, fontWeight: '700' },
+
+  // Desktop image-based category cards
+  catDesktopGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: SIZES.md,
+    gap: 12,
+    marginBottom: SIZES.lg,
+  },
+  catDesktopCard: {
+    width: 'calc(11.11% - 11px)',
+    minWidth: 100,
+    height: 110,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 2px 10px rgba(0,0,0,0.08)',
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        cursor: 'pointer',
+      },
+      default: SHADOWS.sm,
+    }),
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  catDesktopCardActive: {
+    borderColor: COLORS.primaryBlue,
+    ...Platform.select({
+      web: { boxShadow: '0px 4px 16px rgba(66,133,244,0.35)' },
+      default: {},
+    }),
+  },
+  catDesktopImage: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  catDesktopIconFallback: {
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: '#F1F5F9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  catDesktopOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    ...Platform.select({
+      web: { backgroundImage: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.05) 60%)' },
+      default: { backgroundColor: 'rgba(0,0,0,0.3)' },
+    }),
+  },
+  catDesktopOverlayActive: {
+    ...Platform.select({
+      web: { backgroundImage: 'linear-gradient(to top, rgba(59,130,246,0.85) 0%, rgba(59,130,246,0.15) 60%)' },
+      default: { backgroundColor: 'rgba(59,130,246,0.4)' },
+    }),
+  },
+  catDesktopLabelWrap: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+  },
+  catDesktopLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: -0.2,
+    ...Platform.select({
+      web: { textShadow: '0px 1px 3px rgba(0,0,0,0.5)' },
+      default: {},
+    }),
+  },
+  catDesktopLabelActive: {
+    color: '#FFFFFF',
+  },
 
   hScroll: { paddingHorizontal: SIZES.md, gap: 16, paddingBottom: SIZES.md },
   featuredCard: { width: 170 },
@@ -1134,6 +1346,42 @@ const styles = StyleSheet.create({
   offersSection: {
     marginBottom: SIZES.xl,
   },
+  offersDesktopGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: SIZES.md,
+    gap: 16,
+    justifyContent: 'flex-start',
+  },
+  offerCardDesktop: {
+    flex: 1,
+    minWidth: 200,
+    maxWidth: 'calc(20% - 13px)',
+    height: 260,
+    borderRadius: 24,
+    overflow: 'hidden',
+    borderWidth: 0,
+    ...Platform.select({
+      web: {
+        boxShadow: '0px 4px 15px rgba(0,0,0,0.08)',
+        transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+        cursor: 'pointer',
+      },
+      default: SHADOWS.md,
+    }),
+  },
+  offerImageHalfDesktop: {
+    width: '100%',
+    height: '55%',
+    backgroundColor: '#F8F9FA',
+  },
+  offerContentHalfDesktop: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    justifyContent: 'flex-start',
+    gap: 4,
+  },
 
   flashDealContainer: { backgroundColor: '#FFF5F5', marginHorizontal: SIZES.md, borderRadius: 20, padding: 16, flexDirection: 'row', ...SHADOWS.sm, borderWidth: 1, borderColor: '#FEE2E2', marginBottom: SIZES.lg },
   flashDealContent: { flex: 1, justifyContent: 'center', gap: 6 },
@@ -1152,12 +1400,12 @@ const styles = StyleSheet.create({
   searchResultGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: SIZES.md,
-    gap: 16,
+    paddingHorizontal: Platform.select({ web: SIZES.md, default: 12 }),
+    gap: Platform.select({ web: 16, default: 10 }),
     justifyContent: Platform.select({ web: 'flex-start', default: 'space-between' }),
   },
   searchResultCard: {
-    width: Platform.select({ web: 'calc(25% - 12px)', default: '48%' }),
+    width: Platform.select({ web: 'calc(25% - 12px)', default: '48.5%' }),
     marginBottom: 16,
   },
   noResults: {
@@ -1176,17 +1424,17 @@ const styles = StyleSheet.create({
   discoveryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    paddingHorizontal: SIZES.md,
-    gap: 16,
+    paddingHorizontal: Platform.select({ web: SIZES.md, default: 12 }),
+    gap: Platform.select({ web: 16, default: 10 }),
     justifyContent: Platform.select({ web: 'flex-start', default: 'space-between' }),
   },
   discoveryCard: {
-    width: Platform.select({ web: 'calc(25% - 12px)', default: '48%' }),
+    width: Platform.select({ web: 'calc(25% - 12px)', default: '48.5%' }),
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
     overflow: 'hidden',
     ...Platform.select({
       web: {

@@ -1,8 +1,27 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Platform, Linking } from 'react-native';
 import { MapPin, Phone, ShieldCheck } from 'lucide-react-native';
+import { supabase } from '../services/supabase';
 
 export default function WebFooter({ navigation }) {
+    const [hotline, setHotline] = useState('+250 780 112 019');
+
+    useEffect(() => {
+        let isSubscribed = true;
+        supabase
+            .from('platform_settings')
+            .select('value')
+            .eq('key', 'supportPhone')
+            .maybeSingle()
+            .then(({ data }) => {
+                if (isSubscribed && data?.value) {
+                    const val = typeof data.value === 'string' ? data.value.replace(/"/g, '') : data.value;
+                    if (val) setHotline(val);
+                }
+            });
+        return () => { isSubscribed = false; };
+    }, []);
+
     return (
         <View style={styles.footerWrapper}>
             <View style={styles.footerInner}>
@@ -25,10 +44,10 @@ export default function WebFooter({ navigation }) {
                                 <MapPin size={14} color="#3B82F6" />
                                 <Text style={styles.contactText}>Gisenyi Main Market & Kigali Showroom, Rwanda</Text>
                             </View>
-                            <View style={styles.contactRow}>
+                            <TouchableOpacity style={styles.contactRow} onPress={() => Linking.openURL(`tel:${hotline}`)}>
                                 <Phone size={14} color="#3B82F6" />
-                                <Text style={styles.contactText}>Hotline: +250 788 000 000</Text>
-                            </View>
+                                <Text style={styles.contactText}>Hotline: {hotline}</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
 

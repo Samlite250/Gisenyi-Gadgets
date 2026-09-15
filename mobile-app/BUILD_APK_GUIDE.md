@@ -12,7 +12,7 @@ npx eas-cli login
 
 **Enter your credentials:**
 - Username: `samdev251`
-- Password: `@Samlite0790268691`
+- Password: `@Samlite0780112019`
 
 ### Step 2: Build the APK
 
@@ -101,7 +101,7 @@ Select "Android" when prompted.
 ### Issue: "Invalid credentials"
 **Solution:**
 1. Check username: `samdev251`
-2. Check password: `@Samlite0790268691`
+2. Check password: `@Samlite0780112019`
 3. Or create account at: https://expo.dev/signup
 
 ### Issue: "Build failed"

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRoute } from '@react-navigation/native';
 import {
     View, Text, StyleSheet, TouchableOpacity, TextInput, Image, Platform
 } from 'react-native';
@@ -24,6 +25,22 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
     const [selectedCat, setSelectedCat] = useState('All');
     const [showLangMenu, setShowLangMenu] = useState(false);
 
+    // Safely get route information for active nav states
+    let routeName = '';
+    let routeCategory = null;
+    try {
+        const route = useRoute();
+        routeName = route?.name || '';
+        routeCategory = route?.params?.category || null;
+    } catch (e) { }
+
+    const effectiveCategory = (
+        activeCategory ||
+        routeCategory ||
+        (routeName === 'Home' ? 'all' : (routeName === 'Search' && !routeCategory ? 'all' : null))
+    )?.toString().toLowerCase();
+
+
     const totalCartCount = (cartItems || []).reduce((acc, item) => acc + (item?.quantity || 1), 0);
     const totalWishlistCount = wishlistItems?.length || 0;
 
@@ -31,11 +48,32 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
         { id: 'all', label: 'All Categories', icon: Flame },
         { id: 'smartphones', label: 'Smartphones', icon: Smartphone },
         { id: 'laptops', label: 'Laptops & PCs', icon: Laptop },
-        { id: 'audio', label: 'Audio & Sound', icon: Headphones },
-        { id: 'wearables', label: 'Smartwatches', icon: Watch },
+        { id: 'headphones', label: 'Audio & Sound', icon: Headphones },
+        { id: 'smartwatches', label: 'Smartwatches', icon: Watch },
         { id: 'gaming', label: 'Gaming', icon: Gamepad2 },
         { id: 'accessories', label: 'Accessories', icon: Cpu },
     ];
+
+    const handleCategorySelect = (catId) => {
+        if (onSelectCategory) {
+            onSelectCategory(catId);
+        }
+        if (navigation) {
+            navigation.navigate('Search', { category: catId !== 'all' ? catId : null, query: '' });
+        }
+    };
+
+    const handleNavPress = (item) => {
+        if (item.route === 'Home') {
+            if (onSelectCategory) onSelectCategory('all');
+            navigation?.navigate('Home');
+        } else if (item.route === 'Search') {
+            if (onSelectCategory) onSelectCategory('all');
+            navigation?.navigate('Search', { category: null, query: '' });
+        } else {
+            navigation?.navigate(item.route);
+        }
+    };
 
     const handleSearchSubmit = () => {
         if (onSearch) {
@@ -49,71 +87,7 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
 
     return (
         <View style={styles.webHeaderWrapper}>
-            {/* ─── 1. Top Announcement Bar ───────────────────────────────── */}
-            <View style={styles.topBar}>
-                <View style={styles.topBarInner}>
-                    <View style={styles.topBarLeft}>
-                        <View style={styles.badgePromo}>
-                            <Truck size={13} color="#FFFFFF" />
-                            <Text style={styles.badgePromoText}>Express Delivery across Rwanda (Gisenyi, Kigali, Musanze)</Text>
-                        </View>
-                        <View style={styles.topDivider} />
-                        <TouchableOpacity style={styles.contactItem} onPress={() => navigation?.navigate('ChatSupport')}>
-                            <Phone size={13} color="#94A3B8" />
-                            <Text style={styles.contactText}>Hotline: +250 788 000 000</Text>
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.topBarRight}>
-                        <TouchableOpacity
-                            style={styles.adminPortalBtn}
-                            onPress={() => {
-                                if (Platform.OS === 'web') {
-                                    window.location.href = '/admin/';
-                                }
-                            }}
-                        >
-                            <ShieldCheck size={13} color="#3B82F6" />
-                            <Text style={styles.adminPortalText}>Admin Dashboard</Text>
-                            <ExternalLink size={11} color="#3B82F6" />
-                        </TouchableOpacity>
-
-                        <View style={styles.topDivider} />
-
-                        {/* Language Switcher */}
-                        <View style={{ position: 'relative' }}>
-                            <TouchableOpacity style={styles.langBtn} onPress={() => setShowLangMenu(!showLangMenu)}>
-                                <Text style={styles.langBtnText}>{language.toUpperCase()}</Text>
-                                <ChevronDown size={13} color="#94A3B8" />
-                            </TouchableOpacity>
-                            {showLangMenu && (
-                                <View style={styles.langDropdown}>
-                                    {[
-                                        { code: 'en', label: '🇬🇧 English' },
-                                        { code: 'fr', label: '🇫🇷 Français' },
-                                        { code: 'rw', label: '🇷🇼 Kinyarwanda' },
-                                    ].map((item) => (
-                                        <TouchableOpacity
-                                            key={item.code}
-                                            style={styles.langOption}
-                                            onPress={() => {
-                                                changeLanguage(item.code);
-                                                setShowLangMenu(false);
-                                            }}
-                                        >
-                                            <Text style={[styles.langOptionText, language === item.code && styles.langOptionActive]}>
-                                                {item.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            )}
-                        </View>
-                    </View>
-                </View>
-            </View>
-
-            {/* ─── 2. Main Brand Header ────────────────────────────────────── */}
+            {/* ─── 1. Main Brand Header ────────────────────────────────────── */}
             <View style={styles.mainHeader}>
                 <View style={styles.mainHeaderInner}>
                     {/* Logo */}
@@ -153,6 +127,36 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
 
                     {/* Header Action Icons */}
                     <View style={styles.actionRow}>
+                        {/* Language Switcher */}
+                        <View style={{ position: 'relative', zIndex: 50, marginRight: 8 }}>
+                            <TouchableOpacity style={[styles.langBtn, { paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#F8FAFC', borderRadius: 8, borderWidth: 1, borderColor: '#E2E8F0', height: 42, justifyContent: 'center' }]} onPress={() => setShowLangMenu(!showLangMenu)}>
+                                <Text style={[styles.langBtnText, { color: '#0F172A', fontWeight: '700' }]}>{language.toUpperCase()}</Text>
+                                <ChevronDown size={13} color="#0F172A" />
+                            </TouchableOpacity>
+                            {showLangMenu && (
+                                <View style={[styles.langDropdown, { top: 50 }]}>
+                                    {[
+                                        { code: 'en', label: '🇬🇧 English' },
+                                        { code: 'fr', label: '🇫🇷 Français' },
+                                        { code: 'rw', label: '🇷🇼 Kinyarwanda' },
+                                    ].map((item) => (
+                                        <TouchableOpacity
+                                            key={item.code}
+                                            style={styles.langOption}
+                                            onPress={() => {
+                                                changeLanguage(item.code);
+                                                setShowLangMenu(false);
+                                            }}
+                                        >
+                                            <Text style={[styles.langOptionText, language === item.code && styles.langOptionActive]}>
+                                                {item.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
+
                         {/* Wishlist Icon */}
                         <TouchableOpacity
                             style={styles.actionItem}
@@ -220,21 +224,40 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
                 <View style={styles.categoryStripInner}>
                     {/* Main Navigation Links (Left) */}
                     <View style={styles.mainNavRow}>
+                        {(() => {
+                            const isHomeActive = routeName === 'Home';
+                            return (
+                                <TouchableOpacity
+                                    style={[styles.backHomeBtn, isHomeActive ? styles.mainNavItemActive : styles.mainNavItemInactive]}
+                                    onPress={() => {
+                                        if (onSelectCategory) onSelectCategory('all');
+                                        navigation?.navigate('Home');
+                                    }}
+                                    activeOpacity={0.85}
+                                >
+                                    <Home size={15} color={isHomeActive ? "#FFFFFF" : "#3B82F6"} strokeWidth={2.5} />
+                                    <Text style={[styles.backHomeBtnText, !isHomeActive && { color: '#94A3B8', fontWeight: '600' }]}>Back to Home</Text>
+                                </TouchableOpacity>
+                            );
+                        })()}
+
                         {[
-                            { label: 'Home', route: 'Home', icon: Home },
                             { label: 'All Products', route: 'Search', icon: Search },
                             { label: 'My Orders', route: 'Orders', icon: ListOrdered },
-                        ].map((item, idx) => (
-                            <TouchableOpacity
-                                key={idx}
-                                style={styles.mainNavItem}
-                                onPress={() => navigation?.navigate(item.route)}
-                                activeOpacity={0.8}
-                            >
-                                <item.icon size={14} color="#3B82F6" strokeWidth={2.2} />
-                                <Text style={styles.mainNavText}>{item.label}</Text>
-                            </TouchableOpacity>
-                        ))}
+                        ].map((item, idx) => {
+                            const isActive = routeName === item.route;
+                            return (
+                                <TouchableOpacity
+                                    key={idx}
+                                    style={[styles.mainNavItem, isActive ? styles.mainNavItemActive : styles.mainNavItemInactive]}
+                                    onPress={() => handleNavPress(item)}
+                                    activeOpacity={0.8}
+                                >
+                                    <item.icon size={14} color={isActive ? "#FFFFFF" : "#3B82F6"} strokeWidth={2.2} />
+                                    <Text style={[styles.mainNavText, isActive ? { color: '#FFFFFF', fontWeight: '800' } : { color: '#94A3B8', fontWeight: '600' }]}>{item.label}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
                     </View>
 
                     <View style={styles.navDivider} />
@@ -242,12 +265,12 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
                     {/* Category Filter Pills (Right) */}
                     <View style={styles.navLinksRow}>
                         {categories.map((cat) => {
-                            const isActive = activeCategory === cat.id;
+                            const isActive = effectiveCategory === cat.id.toLowerCase();
                             return (
                                 <TouchableOpacity
                                     key={cat.id}
                                     style={[styles.navLinkItem, isActive && styles.navLinkItemActive]}
-                                    onPress={() => onSelectCategory && onSelectCategory(cat.id)}
+                                    onPress={() => handleCategorySelect(cat.id)}
                                 >
                                     <Text style={[styles.navLinkText, isActive && styles.navLinkTextActive]}>
                                         {cat.label}
@@ -324,11 +347,16 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 6,
         width: 140,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 10,
-        elevation: 10,
+        ...Platform.select({
+            web: { boxShadow: '0px 4px 10px rgba(0,0,0,0.15)' },
+            default: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15,
+                shadowRadius: 10,
+                elevation: 10,
+            },
+        }),
         zIndex: 200,
         borderWidth: 1,
         borderColor: '#E2E8F0',
@@ -341,6 +369,7 @@ const styles = StyleSheet.create({
     mainHeader: {
         paddingVertical: 16,
         backgroundColor: '#FFFFFF',
+        zIndex: 50, // Prevents dropdowns from sinking behind categoryStrip
     },
     mainHeaderInner: {
         maxWidth: 1280,
@@ -474,15 +503,31 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 6,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 6,
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 8,
+    },
+    mainNavItemActive: {
+        backgroundColor: '#2563EB', // Vibrant Blue background
+    },
+    mainNavItemInactive: {
         backgroundColor: '#1E293B',
+    },
+    backHomeBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 7,
+        borderRadius: 8,
+    },
+    backHomeBtnText: {
+        fontSize: 13,
+        fontWeight: '800',
+        color: '#FFFFFF',
     },
     mainNavText: {
         fontSize: 13,
-        fontWeight: '700',
-        color: '#FFFFFF',
     },
     navBadgeDot: {
         backgroundColor: '#EF4444',
@@ -498,13 +543,13 @@ const styles = StyleSheet.create({
 
     navLinksRow: { flexDirection: 'row', alignItems: 'center', gap: 4, flexWrap: 'wrap' },
     navLinkItem: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
     },
     navLinkItemActive: {
-        backgroundColor: '#3B82F6',
+        backgroundColor: '#2563EB',
     },
-    navLinkText: { color: '#94A3B8', fontSize: 12, fontWeight: '600' },
+    navLinkText: { color: '#94A3B8', fontSize: 13, fontWeight: '600' },
     navLinkTextActive: { color: '#FFFFFF', fontWeight: '800' },
 });

@@ -3,6 +3,9 @@ import { supabase } from '../services/supabase';
 import toast from 'react-hot-toast';
 import { Lock, Mail, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react';
 
+const BASE = import.meta.env.BASE_URL || '/admin/';
+const logoUrl = `${BASE}logo.png`.replace(/\/\//g, '/');
+
 export default function LoginPage({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,7 +65,7 @@ export default function LoginPage({ onLogin }) {
 
         <div className="login-brand">
           <div className="login-brand-logo-enhanced">
-            <img src="/logo.png" alt="Gisenyi Gadgets Logo" />
+            <img src={logoUrl} alt="Gisenyi Gadgets Logo" />
           </div>
           <div className="login-brand-text">
             <span className="login-brand-name">Gisenyi Gadgets</span>
@@ -105,7 +108,7 @@ export default function LoginPage({ onLogin }) {
         <div className="login-card">
           <div className="login-card-header">
             <div className="login-logo-mobile">
-              <img src="/logo.png" alt="Gisenyi Gadgets" />
+              <img src={logoUrl} alt="Gisenyi Gadgets" />
             </div>
             <h2 className="login-title">Welcome back</h2>
             <p className="login-subtitle">Enter your credentials to access the admin dashboard</p>

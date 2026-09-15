@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import {
   BrowserRouter as Router, Routes, Route,
   NavLink, useLocation,
@@ -27,6 +27,26 @@ import NotificationsPage from './pages/NotificationsPage';
 import LoginPage from './pages/LoginPage';
 import Loader from './components/Loader';
 import { supabase } from './services/supabase';
+
+const BASE = import.meta.env.BASE_URL || '/admin/';
+const assetUrl = (path) => `${BASE}${path}`.replace(/\/\//g, '/');
+
+class ErrorBoundary extends Component {
+  constructor(props) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 40, textAlign: 'center', fontFamily: 'Inter, sans-serif' }}>
+          <h2 style={{ color: '#EF4444' }}>Something went wrong</h2>
+          <p style={{ color: '#64748B', marginTop: 8 }}>{this.state.error?.message}</p>
+          <button onClick={() => window.location.reload()} style={{ marginTop: 16, padding: '10px 24px', background: '#3B82F6', color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 700 }}>Reload</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 
 const NAV_ITEMS = [
@@ -92,7 +112,7 @@ function AppInner({ user, onLogout }) {
               overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
             }}>
               <img
-                src="/logo.png"
+                src={assetUrl('logo.png')}
                 alt="Logo"
                 style={{ width: '85%', height: '85%', objectFit: 'contain' }}
               />
@@ -280,17 +300,19 @@ export default function App() {
 
   if (!session) {
     return (
-      <>
+      <ErrorBoundary>
         <LoginPage onLogin={(s) => setSession(s)} />
         <Toaster position="top-right" />
-      </>
+      </ErrorBoundary>
     );
   }
 
   return (
-    <Router basename={import.meta.env.BASE_URL || '/admin'} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AppInner user={session.user} onLogout={handleLogout} />
-    </Router>
+    <ErrorBoundary>
+      <Router basename={BASE.replace(/\/$/, '') || '/admin'} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <AppInner user={session.user} onLogout={handleLogout} />
+      </Router>
+    </ErrorBoundary>
   );
 }
 

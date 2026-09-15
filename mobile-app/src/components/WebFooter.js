@@ -66,16 +66,16 @@ export default function WebFooter({ navigation }) {
                         </Text>
                         <View style={styles.contactGroup}>
                             <View style={styles.contactRow}>
-                                <MapPin size={13} color="#2563EB" />
+                                <MapPin size={13} color="#60A5FA" />
                                 <Text style={styles.contactText}>Gisenyi Main Market & Kigali, Rwanda</Text>
                             </View>
                             <TouchableOpacity style={styles.contactRow} onPress={() => Linking.openURL(`tel:${hotline}`)}>
-                                <Phone size={13} color="#2563EB" />
+                                <Phone size={13} color="#60A5FA" />
                                 <Text style={[styles.contactText, styles.contactLink]}>{hotline}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity style={styles.contactRow} onPress={handleWhatsApp}>
-                                <MessageCircle size={13} color="#16A34A" />
-                                <Text style={[styles.contactText, { color: '#16A34A', fontWeight: '600' }]}>WhatsApp Us</Text>
+                                <MessageCircle size={13} color="#4ADE80" />
+                                <Text style={[styles.contactText, { color: '#4ADE80', fontWeight: '600' }]}>WhatsApp Us</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -86,7 +86,7 @@ export default function WebFooter({ navigation }) {
                         <View style={styles.linkList}>
                             {quickLinks.map((link, i) => (
                                 <TouchableOpacity key={i} style={styles.linkRow} onPress={() => navigation?.navigate(link.route)}>
-                                    <ChevronRight size={12} color="#CBD5E1" />
+                                    <ChevronRight size={12} color="#334155" />
                                     <Text style={styles.linkText}>{link.label}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -99,7 +99,7 @@ export default function WebFooter({ navigation }) {
                         <View style={styles.linkList}>
                             {supportLinks.map((link, i) => (
                                 <TouchableOpacity key={i} style={styles.linkRow} onPress={() => navigation?.navigate(link.route)}>
-                                    <ChevronRight size={12} color="#CBD5E1" />
+                                    <ChevronRight size={12} color="#334155" />
                                     <Text style={styles.linkText}>{link.label}</Text>
                                 </TouchableOpacity>
                             ))}
@@ -120,9 +120,7 @@ export default function WebFooter({ navigation }) {
 const styles = StyleSheet.create({
     footerWrapper: {
         width: '100%',
-        backgroundColor: '#F8FAFC',
-        borderTopWidth: 1,
-        borderTopColor: '#E2E8F0',
+        backgroundColor: '#0B1120',
         marginTop: 40,
     },
     accentBar: {
@@ -135,49 +133,49 @@ const styles = StyleSheet.create({
         width: '100%',
         alignSelf: 'center',
         paddingHorizontal: 28,
-        paddingTop: 40,
-        paddingBottom: 20,
+        paddingTop: 44,
+        paddingBottom: 24,
     },
     grid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 40,
-        paddingBottom: 28,
+        paddingBottom: 32,
         borderBottomWidth: 1,
-        borderBottomColor: '#E2E8F0',
+        borderBottomColor: '#1E293B',
     },
     col: { flex: 1, minWidth: 160, gap: 12 },
 
     // Brand
     brandRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     logoWrap: {
-        width: 40, height: 40, borderRadius: 10,
-        backgroundColor: '#EFF6FF',
+        width: 42, height: 42, borderRadius: 10,
+        backgroundColor: '#1E293B',
         alignItems: 'center', justifyContent: 'center',
     },
-    logoImg: { width: 28, height: 28 },
-    brandTitle: { fontSize: 14, fontWeight: '800', color: '#0F172A', letterSpacing: 0.4 },
-    brandTagline: { fontSize: 10, color: '#2563EB', fontWeight: '600', marginTop: 1 },
-    aboutText: { fontSize: 12, color: '#94A3B8', lineHeight: 18 },
+    logoImg: { width: 30, height: 30 },
+    brandTitle: { fontSize: 14, fontWeight: '800', color: '#FFFFFF', letterSpacing: 0.4 },
+    brandTagline: { fontSize: 10, color: '#60A5FA', fontWeight: '600', marginTop: 1 },
+    aboutText: { fontSize: 12, color: '#64748B', lineHeight: 18 },
 
     // Contact
     contactGroup: { gap: 8 },
     contactRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
-    contactText: { fontSize: 12, color: '#64748B', fontWeight: '500' },
-    contactLink: { color: '#2563EB' },
+    contactText: { fontSize: 12, color: '#94A3B8', fontWeight: '500' },
+    contactLink: { color: '#93C5FD' },
 
     // Links
-    colTitle: { fontSize: 11, fontWeight: '800', color: '#64748B', letterSpacing: 1, textTransform: 'uppercase' },
+    colTitle: { fontSize: 11, fontWeight: '800', color: '#475569', letterSpacing: 1, textTransform: 'uppercase' },
     linkList: { gap: 7 },
     linkRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-    linkText: { fontSize: 13, color: '#475569', fontWeight: '500' },
+    linkText: { fontSize: 13, color: '#64748B', fontWeight: '500' },
 
     // Bottom
     bottomBar: {
         flexDirection: 'row', flexWrap: 'wrap',
         justifyContent: 'space-between', alignItems: 'center',
-        paddingTop: 18, gap: 10,
+        paddingTop: 20, gap: 10,
     },
-    copyright: { fontSize: 11, color: '#94A3B8' },
-    rwandaText: { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
+    copyright: { fontSize: 11, color: '#334155' },
+    rwandaText: { fontSize: 11, color: '#475569', fontWeight: '600' },
 });

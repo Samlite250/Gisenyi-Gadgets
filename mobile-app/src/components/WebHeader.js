@@ -45,7 +45,7 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
     const totalWishlistCount = wishlistItems?.length || 0;
 
     const categories = [
-        { id: 'all', label: 'All Categories', icon: Flame },
+        { id: 'all', label: 'All', icon: Flame },
         { id: 'smartphones', label: 'Smartphones', icon: Smartphone },
         { id: 'laptops', label: 'Laptops & PCs', icon: Laptop },
         { id: 'headphones', label: 'Audio & Sound', icon: Headphones },
@@ -242,7 +242,6 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
                         })()}
 
                         {[
-                            { label: 'All Products', route: 'Search', icon: Search },
                             { label: 'My Orders', route: 'Orders', icon: ListOrdered },
                         ].map((item, idx) => {
                             const isActive = routeName === item.route;

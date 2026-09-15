@@ -103,7 +103,7 @@ export default function SearchScreen({ navigation, route }) {
 
       // Text search — search name, description, brand and sku/tags if available
       if (q.trim()) {
-        qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%,model.ilike.%${q.trim()}%`);
+        qb = qb.or(`name.ilike.%${q.trim()}%,description.ilike.%${q.trim()}%,brand.ilike.%${q.trim()}%,sku.ilike.%${q.trim()}%`);
       }
 
       // Filter by category UUID if resolved. Skip filter entirely if UUID lookup failed

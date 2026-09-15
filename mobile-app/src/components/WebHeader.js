@@ -218,24 +218,29 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
 
                         {/* User Account / Sign In */}
                         <TouchableOpacity
-                            style={styles.accountCardBtn}
+                            style={[styles.accountCardBtn, !user && styles.accountCardBtnGuest]}
                             onPress={() => {
                                 if (user) navigation?.navigate('Profile');
                                 else navigation?.navigate('Login', { returnTo: 'Profile' });
                             }}
                             activeOpacity={0.85}
                         >
-                            <View style={styles.avatarCircle}>
+                            <View style={[styles.avatarCircle, !user && styles.avatarCircleGuest]}>
                                 {user && profile?.avatar_url ? (
                                     <Image source={{ uri: profile.avatar_url }} style={styles.avatarImg} />
                                 ) : (
-                                    <User size={20} color="#3B82F6" strokeWidth={2.2} />
+                                    <User size={20} color={user ? '#3B82F6' : '#FFFFFF'} strokeWidth={2.2} />
                                 )}
                             </View>
                             <View style={styles.accountTextGroup}>
-                                <Text style={styles.accountSubText}>{user ? 'Welcome back' : 'Guest Account'}</Text>
-                                <Text style={styles.accountMainText}>{user ? (profile?.full_name || 'My Account') : 'Sign In / Register'}</Text>
+                                <Text style={[styles.accountSubText, !user && { color: 'rgba(255,255,255,0.75)' }]}>
+                                    {user ? 'Welcome back' : 'Hello, Guest!'}
+                                </Text>
+                                <Text style={[styles.accountMainText, !user && { color: '#FFFFFF' }]}>
+                                    {user ? (profile?.full_name || 'My Account') : 'Sign In / Register'}
+                                </Text>
                             </View>
+                            {!user && <View style={styles.accountArrow}><Text style={styles.accountArrowText}>›</Text></View>}
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -507,6 +512,21 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E2E8F0',
     },
+    accountCardBtnGuest: {
+        background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+        backgroundColor: '#2563EB',
+        borderColor: '#1D4ED8',
+        ...Platform.select({
+            web: { boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)' },
+            default: {
+                shadowColor: '#2563EB',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.4,
+                shadowRadius: 10,
+                elevation: 6,
+            },
+        }),
+    },
     avatarCircle: {
         width: 34,
         height: 34,
@@ -516,10 +536,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         overflow: 'hidden',
     },
+    avatarCircleGuest: {
+        backgroundColor: 'rgba(255,255,255,0.2)',
+    },
     avatarImg: { width: 34, height: 34, borderRadius: 17 },
     accountTextGroup: { gap: 1 },
     accountSubText: { fontSize: 10, color: '#64748B', fontWeight: '600' },
     accountMainText: { fontSize: 12, fontWeight: '800', color: '#0F172A' },
+    accountArrow: { marginLeft: 2 },
+    accountArrowText: { fontSize: 20, color: 'rgba(255,255,255,0.9)', fontWeight: '300', lineHeight: 22 },
 
     // Category & Navbar Strip
     categoryStrip: {

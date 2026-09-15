@@ -22,7 +22,8 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
     const language = currentLanguage || 'en';
 
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCat, setSelectedCat] = useState('All');
+    const [selectedCat, setSelectedCat] = useState({ id: 'all', label: 'All' });
+    const [showCatMenu, setShowCatMenu] = useState(false);
     const [showLangMenu, setShowLangMenu] = useState(false);
 
     const isAdmin = profile?.role === 'admin' || user?.email?.toLowerCase() === 'gisenyigadgets@gmail.com';
@@ -78,10 +79,10 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
     };
 
     const handleSearchSubmit = () => {
-        if (onSearch) {
+        if (onSearch && selectedCat.id === 'all') {
             onSearch(searchQuery);
         } else if (navigation) {
-            navigation.navigate('Search', { query: searchQuery, category: selectedCat !== 'All' ? selectedCat : null });
+            navigation.navigate('Search', { query: searchQuery, category: selectedCat.id !== 'all' ? selectedCat.id : null });
         }
     };
 
@@ -107,10 +108,29 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
 
                     {/* Central Mega Search Bar */}
                     <View style={styles.megaSearchBox}>
-                        <View style={styles.searchCatSelect}>
-                            <Text style={styles.searchCatText}>{selectedCat}</Text>
+                        <TouchableOpacity style={[styles.searchCatSelect, { position: 'relative' }]} onPress={() => setShowCatMenu(!showCatMenu)} activeOpacity={0.8}>
+                            <Text style={styles.searchCatText}>{selectedCat.label}</Text>
                             <ChevronDown size={14} color="#64748B" />
-                        </View>
+                        </TouchableOpacity>
+
+                        {showCatMenu && (
+                            <View style={styles.catDropdown}>
+                                {categories.map((cat) => (
+                                    <TouchableOpacity
+                                        key={cat.id}
+                                        style={styles.catOption}
+                                        onPress={() => {
+                                            setSelectedCat({ id: cat.id, label: cat.id === 'all' ? 'All' : cat.label.split(' ')[0] });
+                                            setShowCatMenu(false);
+                                        }}
+                                    >
+                                        <Text style={[styles.catOptionText, selectedCat.id === cat.id && { color: '#2563EB', fontWeight: '700' }]}>
+                                            {cat.label}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
                         <View style={styles.searchDivider} />
                         <TextInput
                             style={styles.megaSearchInput}
@@ -399,7 +419,7 @@ const styles = StyleSheet.create({
         borderColor: '#CBD5E1',
         flexDirection: 'row',
         alignItems: 'center',
-        overflow: 'hidden',
+        zIndex: 60,
     },
     searchCatSelect: {
         flexDirection: 'row',
@@ -408,6 +428,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         height: '100%',
         backgroundColor: '#F1F5F9',
+        borderTopLeftRadius: 10,
+        borderBottomLeftRadius: 10,
     },
     searchCatText: { fontSize: 13, fontWeight: '600', color: '#334155' },
     searchDivider: { width: 1, height: 24, backgroundColor: '#CBD5E1' },
@@ -426,7 +448,30 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        borderTopRightRadius: 10,
+        borderBottomRightRadius: 10,
     },
+    catDropdown: {
+        position: 'absolute',
+        top: 52,
+        left: 0,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 8,
+        paddingVertical: 6,
+        width: 160,
+        ...Platform.select({
+            web: { boxShadow: '0px 4px 10px rgba(0,0,0,0.15)' },
+            default: {
+                shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.15, shadowRadius: 10, elevation: 10
+            },
+        }),
+        zIndex: 200,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+    },
+    catOption: { paddingHorizontal: 12, paddingVertical: 8 },
+    catOptionText: { fontSize: 13, color: '#334155', fontWeight: '500' },
     megaSearchBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
 
     // Actions

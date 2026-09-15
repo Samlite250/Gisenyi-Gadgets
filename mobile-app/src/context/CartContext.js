@@ -141,25 +141,27 @@ export function CartProvider({ children }) {
       return { success: true, message: msg };
     };
 
+    // 1. Check local fallback logic first to avoid unnecessary network requests & 406 errors
+    const STATIC_PROMOS = {
+      'WELCOME10': { discount_type: 'percent', discount_value: 10 },
+      'SAVE2000': { discount_type: 'fixed', discount_value: 2000 },
+      'GISENYI': { discount_type: 'percent', discount_value: 15 }
+    };
+
+    if (STATIC_PROMOS[cleanCode]) {
+      return applyDiscount(STATIC_PROMOS[cleanCode]);
+    }
+
     try {
-      // Validate server-side via platform_settings table
+      // Validate server-side via promo_codes table
+      // Use maybeSingle() instead of single() to avoid 406 Not Acceptable error on 0 rows
       const { data, error } = await supabase
         .from('promo_codes')
         .select('discount_type, discount_value, is_active')
         .eq('code', cleanCode)
-        .single();
+        .maybeSingle();
 
       if (error || !data || !data.is_active) {
-        // Fallback local static logic if no DB Match
-        const STATIC_PROMOS = {
-          'WELCOME10': { discount_type: 'percent', discount_value: 10 },
-          'SAVE2000': { discount_type: 'fixed', discount_value: 2000 },
-          'GISENYI': { discount_type: 'percent', discount_value: 15 }
-        };
-
-        if (STATIC_PROMOS[cleanCode]) {
-          return applyDiscount(STATIC_PROMOS[cleanCode]);
-        }
         return { success: false, message: 'Invalid or expired promo code.' };
       }
 

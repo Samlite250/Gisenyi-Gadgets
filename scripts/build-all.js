@@ -41,7 +41,7 @@ function copyDirSync(src, dest) {
 
 try {
   console.log('==================================================');
-  console.log('📦 Gisenyi Gadgets Unified Web Build');
+  console.log('📦 Gisenyi Gadgets Unified Web Build v2.0');
   console.log('==================================================');
 
   // 0. Ensure Sub-Package Dependencies on Vercel/CI

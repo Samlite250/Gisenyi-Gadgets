@@ -45,7 +45,7 @@ export default function WebHeader({ navigation, onSearch, activeCategory, onSele
     const totalWishlistCount = wishlistItems?.length || 0;
 
     const categories = [
-        { id: 'all', label: 'All', icon: Flame },
+        { id: 'all', label: 'All Products', icon: Flame },
         { id: 'smartphones', label: 'Smartphones', icon: Smartphone },
         { id: 'laptops', label: 'Laptops & PCs', icon: Laptop },
         { id: 'headphones', label: 'Audio & Sound', icon: Headphones },

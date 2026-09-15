@@ -120,11 +120,26 @@ export function CartProvider({ children }) {
     const cleanCode = code.toUpperCase().trim();
     if (!cleanCode) return { success: false, message: 'Enter a promo code.' };
 
-    // Calculate current subtotal
     const currentSubtotal = cartItems.reduce(
       (sum, item) => sum + item.price * item.quantity,
       0
     );
+
+    const applyDiscount = (discountData) => {
+      let discount = 0;
+      if (discountData.discount_type === 'percent') {
+        discount = Math.round(currentSubtotal * (discountData.discount_value / 100));
+      } else {
+        discount = discountData.discount_value;
+      }
+      discount = Math.min(discount, currentSubtotal); // never exceed subtotal
+      setPromoDiscount(discount);
+      setActivePromo(cleanCode);
+      const msg = discountData.discount_type === 'percent'
+        ? `${discountData.discount_value}% Discount Applied!`
+        : `RWF ${Number(discountData.discount_value).toLocaleString()} Discount Applied!`;
+      return { success: true, message: msg };
+    };
 
     try {
       // Validate server-side via platform_settings table
@@ -135,25 +150,28 @@ export function CartProvider({ children }) {
         .single();
 
       if (error || !data || !data.is_active) {
+        // Fallback local static logic if no DB Match
+        const STATIC_PROMOS = {
+          'WELCOME10': { discount_type: 'percent', discount_value: 10 },
+          'SAVE2000': { discount_type: 'fixed', discount_value: 2000 },
+          'GISENYI': { discount_type: 'percent', discount_value: 15 }
+        };
+
+        if (STATIC_PROMOS[cleanCode]) {
+          return applyDiscount(STATIC_PROMOS[cleanCode]);
+        }
         return { success: false, message: 'Invalid or expired promo code.' };
       }
 
-      let discount = 0;
-      if (data.discount_type === 'percent') {
-        discount = Math.round(currentSubtotal * (data.discount_value / 100));
-      } else {
-        discount = data.discount_value;
-      }
-      discount = Math.min(discount, currentSubtotal); // never exceed subtotal
-      setPromoDiscount(discount);
-      setActivePromo(cleanCode);
-      const msg = data.discount_type === 'percent'
-        ? `${data.discount_value}% Discount Applied!`
-        : `RWF ${Number(data.discount_value).toLocaleString()} Discount Applied!`;
-      return { success: true, message: msg };
+      return applyDiscount(data);
     } catch {
       return { success: false, message: 'Could not validate code. Try again.' };
     }
+  };
+
+  const removePromoCode = () => {
+    setPromoDiscount(0);
+    setActivePromo(null);
   };
 
   const isInCart = (productId) => {
@@ -186,6 +204,7 @@ export function CartProvider({ children }) {
     showToast,
     hideToast,
     applyPromoCode,
+    removePromoCode,
     addToCart,
     removeFromCart,
     updateQuantity,

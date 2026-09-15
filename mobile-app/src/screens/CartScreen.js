@@ -4,7 +4,7 @@ import {
   Image, TouchableOpacity, TextInput, ActivityIndicator, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Minus, Plus, Trash2, ShoppingBag, Ticket, CircleCheckBig } from 'lucide-react-native';
+import { Minus, Plus, Trash2, ShoppingBag, Ticket, CircleCheckBig, X } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -133,12 +133,12 @@ export default function CartScreen({ navigation }) {
               />
             </View>
             <TouchableOpacity
-              style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.primaryGreen }]}
-              onPress={handleApplyPromo}
-              disabled={!!activePromo || applyingPromo}
+              style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.error }]}
+              onPress={activePromo ? removePromoCode : handleApplyPromo}
+              disabled={(!activePromo && applyingPromo)}
             >
               {activePromo
-                ? <CircleCheckBig size={18} color="#fff" />
+                ? <X size={20} color="#fff" />
                 : applyingPromo
                   ? <ActivityIndicator size="small" color="#fff" />
                   : <Text style={styles.promoBtnText}>Apply</Text>}

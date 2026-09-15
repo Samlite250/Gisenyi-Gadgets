@@ -32,6 +32,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
   const { t } = useLanguage();
   const { width: windowWidth } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
+  const isDesktop = isWeb && windowWidth >= 768;
   // On web we constrain the gallery to the content column width; on native use full screen width
   const [galleryWidth, setGalleryWidth] = useState(isWeb ? windowWidth : staticWidth);
 
@@ -359,14 +360,14 @@ export default function ProductDetailsScreen({ route, navigation }) {
   // On web, WebLayoutWrapper's ScrollView owns all vertical scrolling;
   // use a plain View so content flows at full natural height.
   // On mobile, use ScrollView for native scroll behavior.
-  const PageContent = isWeb ? View : ScrollView;
-  const pageContentProps = isWeb
+  const PageContent = isDesktop ? View : ScrollView;
+  const pageContentProps = isDesktop
     ? { style: styles.scroll }
     : { showsVerticalScrollIndicator: false, contentContainerStyle: styles.scroll };
 
   return (
     <WebLayoutWrapper navigation={navigation}>
-      <View style={[styles.container, isWeb && styles.containerWeb]}>
+      <View style={[styles.container, isDesktop && styles.containerWeb]}>
         {/* Header - back/share/cart */}
         <View style={styles.topBar}>
           <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
@@ -554,7 +555,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
             </View>
 
             {/* Inline CTA buttons — web only, shown right after options/quantity */}
-            {isWeb && (
+            {isDesktop && (
               <View style={styles.ctaRow}>
                 <TouchableOpacity
                   style={[styles.cartBtn, styles.ctaBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
@@ -768,7 +769,7 @@ export default function ProductDetailsScreen({ route, navigation }) {
         </PageContent>
 
         {/* Action Footer — mobile only; web uses inline CTA buttons above */}
-        {!isWeb && (
+        {!isDesktop && (
           <View style={styles.footer}>
             <TouchableOpacity
               style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}

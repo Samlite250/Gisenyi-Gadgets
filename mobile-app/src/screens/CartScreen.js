@@ -1,17 +1,13 @@
 import React, { useEffect, useRef } from 'react';
 import {
-  View, Text, StyleSheet, FlatList,
+  View, Text, StyleSheet, FlatList, ScrollView,
   Image, TouchableOpacity, TextInput, ActivityIndicator, Platform,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Minus, Plus, Trash2, ShoppingBag, Ticket, CircleCheckBig, X,
-<<<<<<< HEAD
-  ArrowRight, ArrowLeft, ShieldCheck, Truck, RotateCcw
-=======
   ArrowRight, ArrowLeft, ShieldCheck, Truck, RotateCcw,
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
 } from 'lucide-react-native';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -24,11 +20,7 @@ export default function CartScreen({ navigation }) {
   const {
     cartItems, updateQuantity, removeFromCart,
     subtotal, shippingFee, total,
-<<<<<<< HEAD
-    promoDiscount, activePromo, applyPromoCode, removePromoCode
-=======
     promoDiscount, activePromo, applyPromoCode, removePromoCode,
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
   } = useCart();
   const { t } = useLanguage();
   const { width } = useWindowDimensions();
@@ -136,11 +128,7 @@ export default function CartScreen({ navigation }) {
           <Ticket size={20} color={activePromo ? COLORS.primaryGreen : COLORS.textMuted} />
           <TextInput
             style={styles.promoInput}
-<<<<<<< HEAD
-            placeholder={activePromo ? `Code ${activePromo} Active` : "Promo Code"}
-=======
             placeholder={activePromo ? `Code ${activePromo} Active` : 'Promo Code'}
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
             placeholderTextColor={COLORS.textMuted}
             value={promoInput}
             onChangeText={setPromoInput}
@@ -151,17 +139,10 @@ export default function CartScreen({ navigation }) {
         <TouchableOpacity
           style={[styles.promoBtn, activePromo && { backgroundColor: COLORS.error }]}
           onPress={activePromo ? removePromoCode : handleApplyPromo}
-<<<<<<< HEAD
-          disabled={!activePromo && applyingPromo}
-        >
-          {activePromo
-            ? <X size={18} color="#fff" />
-=======
           disabled={(!activePromo && applyingPromo)}
         >
           {activePromo
             ? <X size={20} color="#fff" />
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
             : applyingPromo
               ? <ActivityIndicator size="small" color="#fff" />
               : <Text style={styles.promoBtnText}>Apply</Text>}
@@ -202,21 +183,6 @@ export default function CartScreen({ navigation }) {
     </View>
   );
 
-<<<<<<< HEAD
-  // Content for Two Column Web Layout
-  const renderTwoColumnView = () => (
-    <View style={styles.webContainer}>
-      <View style={styles.webInner}>
-        {/* Header */}
-        <View style={styles.webHeader}>
-          <View style={styles.webHeaderTitleGroup}>
-            <Text style={styles.webHeaderTitle}>My Cart</Text>
-            {cartItems.length > 0 && (
-              <View style={styles.webBadge}>
-                <Text style={styles.webBadgeText}>
-                  {cartItems.length} {cartItems.length === 1 ? 'item' : 'items'}
-                </Text>
-=======
   // Mobile footer rendered via FlatList ListFooterComponent
   const renderFooter = () => {
     if (cartItems.length === 0) return null;
@@ -356,152 +322,14 @@ export default function CartScreen({ navigation }) {
                     </View>
                   </View>
                 </View>
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
               </View>
             )}
           </View>
-          <TouchableOpacity
-            style={styles.webContinueShopping}
-            onPress={() => navigation.navigate('Home')}
-            activeOpacity={0.7}
-          >
-            <ArrowLeft size={16} color={COLORS.primaryBlue} />
-            <Text style={styles.webContinueShoppingText}>Continue Shopping</Text>
-          </TouchableOpacity>
-        </View>
-
-<<<<<<< HEAD
-        {cartItems.length === 0 ? (
-          <EmptyCart />
-        ) : (
-          <View style={styles.webTwoColumns}>
-            {/* Left Column: Cart Items List */}
-            <View style={styles.webItemsColumn}>
-              {cartItems.map((item) => (
-                <View key={item.cartItemId} style={styles.webCartCard}>
-                  {item.images?.[0] ? (
-                    <Image source={{ uri: item.images[0] }} style={styles.webItemImage} resizeMode="cover" />
-                  ) : (
-                    <View style={[styles.webItemImage, styles.imagePlaceholder]}>
-                      <ShoppingBag size={32} color={COLORS.textMuted} />
-                    </View>
-                  )}
-                  <View style={styles.webItemDetails}>
-                    <Text style={styles.webItemName}>{item.name}</Text>
-                    {(item.selectedColor || item.selectedStorage) && (
-                      <Text style={styles.itemVariant}>
-                        {[item.selectedColor, item.selectedStorage].filter(Boolean).join(' · ')}
-                      </Text>
-                    )}
-                    <Text style={styles.webItemPrice}>{fmt(item.price)}</Text>
-
-                    <View style={styles.webItemActions}>
-                      <View style={styles.qtySelector}>
-                        <TouchableOpacity
-                          style={styles.qtyBtn}
-                          onPress={() => updateQuantity(item.cartItemId, item.quantity - 1)}
-                        >
-                          <Minus size={15} color={COLORS.textPrimary} />
-                        </TouchableOpacity>
-                        <Text style={styles.qtyText}>{item.quantity}</Text>
-                        <TouchableOpacity
-                          style={styles.qtyBtn}
-                          onPress={() => updateQuantity(item.cartItemId, item.quantity + 1)}
-                        >
-                          <Plus size={15} color={COLORS.textPrimary} />
-                        </TouchableOpacity>
-                      </View>
-                      <TouchableOpacity
-                        style={styles.webDeleteBtn}
-                        onPress={() => removeFromCart(item.cartItemId)}
-                      >
-                        <Trash2 size={16} color={COLORS.error} />
-                        <Text style={styles.webDeleteText}>Remove</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  <View style={styles.webItemTotalWrap}>
-                    <Text style={styles.webItemTotalLabel}>Total</Text>
-                    <Text style={styles.webItemTotal}>{fmt(item.price * item.quantity)}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            {/* Right Column: Order Summary Sidebar */}
-            <View style={styles.webSummaryColumn}>
-              <View style={styles.webSummaryCard}>
-                <Text style={styles.webSummaryCardTitle}>Order Summary</Text>
-
-                {renderPromoSection()}
-                {renderSummaryRows()}
-
-                <TouchableOpacity
-                  style={styles.webCheckoutBtn}
-                  onPress={handleCheckout}
-                  activeOpacity={0.85}
-                >
-                  <Text style={styles.webCheckoutBtnText}>{t('cart.checkout')}</Text>
-                  <ArrowRight size={18} color="#fff" />
-                </TouchableOpacity>
-
-                {/* Trust Badges */}
-                <View style={styles.webTrustBadges}>
-                  <View style={styles.trustItem}>
-                    <ShieldCheck size={18} color={COLORS.primaryGreen} />
-                    <Text style={styles.trustText}>Secure Checkout</Text>
-                  </View>
-                  <View style={styles.trustItem}>
-                    <Truck size={18} color={COLORS.primaryBlue} />
-                    <Text style={styles.trustText}>Fast Delivery in Rwanda</Text>
-                  </View>
-                  <View style={styles.trustItem}>
-                    <RotateCcw size={18} color={COLORS.textSecondary} />
-                    <Text style={styles.trustText}>Official Warranty & Returns</Text>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </View>
-        )}
+        </ScrollView>
       </View>
-    </View>
-  );
+    );
+  }
 
-  // Content for Single Column Mobile Layout
-  const renderMobileView = () => (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Cart</Text>
-        {cartItems.length > 0 && (
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerCount}>{cartItems.length}</Text>
-          </View>
-        )}
-      </View>
-
-      <FlatList
-        data={cartItems}
-        keyExtractor={(item) => item.cartItemId}
-        renderItem={renderItem}
-        contentContainerStyle={cartItems.length === 0 ? { flex: 1 } : styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={<EmptyCart />}
-      />
-
-      {cartItems.length > 0 && (
-        <View style={styles.footer}>
-          {renderPromoSection()}
-          {renderSummaryRows()}
-          <TouchableOpacity
-            style={styles.checkoutBtn}
-            onPress={handleCheckout}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.checkoutBtnText}>{t('cart.checkout')}</Text>
-          </TouchableOpacity>
-=======
   // ── Mobile Single-Column View ───────────────────────────────────
   return (
     <WebLayoutWrapper navigation={navigation}>
@@ -513,7 +341,6 @@ export default function CartScreen({ navigation }) {
               <Text style={styles.headerCount}>{cartItems.length}</Text>
             </View>
           )}
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
         </View>
 
         <FlatList
@@ -526,12 +353,6 @@ export default function CartScreen({ navigation }) {
           ListFooterComponent={renderFooter}
         />
       </SafeAreaView>
-    </WebLayoutWrapper>
-  );
-
-  return (
-    <WebLayoutWrapper navigation={navigation}>
-      {isTwoColumn ? renderTwoColumnView() : renderMobileView()}
     </WebLayoutWrapper>
   );
 }
@@ -580,6 +401,10 @@ const styles = StyleSheet.create({
   deleteBtn: { padding: 4 },
   itemTotal: { fontSize: 15, fontWeight: '700', color: COLORS.textPrimary },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: SIZES.md, minHeight: 400 },
+  emptyIcon: {
+    width: 100, height: 100, borderRadius: 50,
+    backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center',
+  },
   emptyTitle: { fontSize: 20, fontWeight: '800', color: COLORS.textPrimary },
   emptySub: { fontSize: 14, color: COLORS.textSecondary },
   shopBtn: { backgroundColor: COLORS.primaryBlue, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 12, marginTop: 12 },
@@ -605,33 +430,11 @@ const styles = StyleSheet.create({
   checkoutBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
   promoContainer: { marginBottom: SIZES.md },
   promoSection: {
-<<<<<<< HEAD
-    flexDirection: 'row',
-    gap: 12,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 6,
-    paddingLeft: 16,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    alignItems: 'center',
-  },
-  promoSectionActive: {
-    borderColor: COLORS.primaryGreen,
-    backgroundColor: 'rgba(52, 168, 83, 0.05)',
-  },
-  promoInputWrapper: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-=======
     flexDirection: 'row', gap: 12,
     backgroundColor: '#FFFFFF', borderRadius: 16,
     padding: 6, paddingLeft: 16,
     borderWidth: 1, borderColor: '#E2E8F0',
     alignItems: 'center', ...SHADOWS.sm,
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
   },
   promoSectionActive: { borderColor: COLORS.primaryGreen, backgroundColor: 'rgba(52, 168, 83, 0.05)' },
   promoInputWrapper: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 },
@@ -648,23 +451,10 @@ const styles = StyleSheet.create({
   promoMsgSuccess: { color: COLORS.primaryGreen },
   promoMsgError: { color: COLORS.error },
 
-<<<<<<< HEAD
-  // ── Two Column Web Styles ─────────────────────────────────────────
-  webContainer: {
-    flex: 1,
-    backgroundColor: 'transparent',
-    paddingVertical: 32,
-    paddingHorizontal: 16,
-  },
-  webInner: {
-    width: '100%',
-  },
-=======
   // ── Two-Column Web Styles ──────────────────────────────────────
   webContainer: { flex: 1, backgroundColor: 'transparent' },
   webScrollContent: { paddingVertical: 32, paddingHorizontal: 24, alignItems: 'center' },
   webInner: { width: '100%', maxWidth: 1240 },
->>>>>>> 94d1836 (feat(cart): add responsive two-column layout on web view)
   webHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 28, paddingBottom: 20,

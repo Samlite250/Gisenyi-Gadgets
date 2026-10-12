@@ -64,7 +64,7 @@ export default function CartScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <View style={styles.cartItem}>
       {item.images?.[0]
-        ? <Image source={{ uri: item.images[0] }} style={styles.itemImage} resizeMode="cover" />
+        ? <Image source={{ uri: item.images[0] }} style={styles.itemImage} resizeMode="contain" />
         : <View style={[styles.itemImage, styles.imagePlaceholder]}>
           <ShoppingBag size={28} color={COLORS.textMuted} />
         </View>
@@ -227,7 +227,7 @@ export default function CartScreen({ navigation }) {
                       {/* Image */}
                       <View style={styles.webImgWrap}>
                         {item.images?.[0]
-                          ? <Image source={{ uri: item.images[0] }} style={styles.webImg} resizeMode="cover" />
+                          ? <Image source={{ uri: item.images[0] }} style={styles.webImg} resizeMode="contain" />
                           : <View style={[styles.webImg, styles.imagePlaceholder]}>
                             <ShoppingBag size={32} color={COLORS.textMuted} />
                           </View>
@@ -495,10 +495,11 @@ const styles = StyleSheet.create({
   },
   webImgWrap: {
     width: 108, height: 108, borderRadius: 16,
-    backgroundColor: '#F4F6F9',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1, borderColor: '#EDF0F4', overflow: 'hidden', flexShrink: 0,
+    justifyContent: 'center', alignItems: 'center', padding: 4,
   },
-  webImg: { width: 108, height: 108 },
+  webImg: { width: '100%', height: '100%' },
   webCardInfo: { flex: 1, paddingLeft: 20, gap: 6 },
   webItemName: { fontSize: 16, fontWeight: '800', color: COLORS.textPrimary, lineHeight: 22, letterSpacing: -0.2 },
   variantChip: {

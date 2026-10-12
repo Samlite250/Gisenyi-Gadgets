@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
-  ChevronLeft, Heart, Share2, Star,
+  ChevronLeft, ChevronRight, Heart, Share2, Star,
   Minus, Plus, ShoppingCart, Zap, CircleCheckBig,
   Maximize2, X, Store, ChevronDown, ChevronUp,
   ShieldCheck, Truck, RefreshCw, Award,
@@ -365,430 +365,635 @@ export default function ProductDetailsScreen({ route, navigation }) {
     ? { style: styles.scroll }
     : { showsVerticalScrollIndicator: false, contentContainerStyle: styles.scroll };
 
+  // ─── Section Renderers ──────────────────────────────────────────
+  const renderTrustBadges = () => (
+    <View style={isDesktop ? styles.webBadgesCard : styles.badgesRow}>
+      {[
+        { Icon: ShieldCheck, label: t('product.warranty') },
+        { Icon: Truck, label: t('product.fastDelivery') },
+        { Icon: RefreshCw, label: t('product.easyReturns') },
+        { Icon: Award, label: t('product.genuine') },
+      ].map(({ Icon, label }) => (
+        <View key={label} style={isDesktop ? styles.webBadgeItem : styles.badge}>
+          <Icon size={18} color={COLORS.primaryBlue} strokeWidth={2} />
+          <Text style={isDesktop ? styles.webBadgeLabel : styles.badgeText}>{label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+
+  const renderSellerInfo = () => (
+    <View style={[styles.sellerSection, isDesktop && styles.webSellerSection]}>
+      <View style={styles.sellerCard}>
+        <View style={styles.sellerInfo}>
+          <View style={styles.sellerAvatar}>
+            <Store size={20} color={COLORS.primaryBlue} />
+          </View>
+          <View>
+            <Text style={styles.sellerLabel}>{t('product.soldBy')}</Text>
+            <Text style={styles.sellerName}>{supplier?.business_name || 'Gisenyi Gadgets Official'}</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.sellerWhatsappBtn}
+          onPress={handleWhatsApp}
+          activeOpacity={0.7}
+        >
+          <FontAwesome name="whatsapp" size={18} color="#fff" />
+          <Text style={styles.sellerWhatsappText}>{t('product.chat')}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderOptions = () => (
+    <>
+      {/* Colors */}
+      {product.colors?.length > 0 && (
+        <View style={styles.optionSection}>
+          <Text style={styles.optionLabel}>
+            {t('product.color')}
+            {selectedColor && <Text style={{ color: COLORS.textPrimary, fontWeight: '700' }}> · {selectedColor}</Text>}
+          </Text>
+          <View style={styles.optionRow}>
+            {product.colors.map((c) => {
+              const colorMap = { 'Titanium Black': '#222', 'Titanium Gray': '#888', 'Titanium Violet': '#4B0082', 'White': '#FFF', 'Blue': '#00F', 'Natural Titanium': '#A09383' };
+              return (
+                <TouchableOpacity
+                  key={c}
+                  style={[styles.colorDot, { backgroundColor: colorMap[c] || '#000' }, selectedColor === c && styles.colorDotActive]}
+                  onPress={() => setSelectedColor(c)}
+                />
+              );
+            })}
+          </View>
+        </View>
+      )}
+
+      {/* Storage Options */}
+      {product.storage_options?.length > 0 && (
+        <View style={styles.optionSection}>
+          <Text style={styles.optionLabel}>{t('product.storage')}</Text>
+          <View style={styles.optionRow}>
+            {product.storage_options.map((s) => (
+              <TouchableOpacity
+                key={s}
+                style={[styles.storagePill, selectedStorage === s && styles.storagePillActive]}
+                onPress={() => setSelectedStorage(s)}
+              >
+                <Text style={[styles.storagePillText, selectedStorage === s && { color: '#fff' }]}>{s}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {/* Quantity */}
+      <View style={styles.optionSection}>
+        <Text style={styles.optionLabel}>{t('product.quantity')}</Text>
+        <View style={styles.qtyRow}>
+          <TouchableOpacity
+            style={styles.qtyBtn}
+            onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+          >
+            <Minus size={16} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+          <Text style={styles.qtyText}>{quantity}</Text>
+          <TouchableOpacity
+            style={styles.qtyBtn}
+            onPress={() => setQuantity((q) => Math.min(product.stock || 99, q + 1))}
+          >
+            <Plus size={16} color={COLORS.textPrimary} />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </>
+  );
+
+  const renderDescription = () => {
+    if (!product.description) return null;
+    return (
+      <View style={[styles.descSection, isDesktop && styles.webCardSection]}>
+        <View style={styles.descHeader}>
+          <View style={styles.descHeaderAccent} />
+          <Text style={styles.descTitle}>{t('product.aboutProduct')}</Text>
+        </View>
+        <View>
+          <Text
+            style={styles.descText}
+            numberOfLines={descExpanded || isDesktop ? undefined : 4}
+            onTextLayout={(e) => {
+              if (!descExpanded) setDescOverflows(e.nativeEvent.lines.length >= 4);
+            }}
+          >
+            {product.description}
+          </Text>
+          {!isDesktop && (descOverflows || descExpanded) && (
+            <TouchableOpacity
+              style={styles.readMoreBtn}
+              onPress={() => setDescExpanded(v => !v)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.readMoreText}>
+                {descExpanded ? t('product.showLess') : t('product.readMore')}
+              </Text>
+              {descExpanded
+                ? <ChevronUp size={14} color={COLORS.primaryBlue} />
+                : <ChevronDown size={14} color={COLORS.primaryBlue} />
+              }
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const renderSpecs = () => {
+    const specs = [];
+    if (product.brand) specs.push(['Brand', product.brand]);
+    if (product.model) specs.push(['Model', product.model]);
+    if (product.storage_options?.length) specs.push(['Storage', product.storage_options.join(', ')]);
+    if (product.colors?.length) specs.push(['Colors', product.colors.join(', ')]);
+    if (product.categories?.name) specs.push(['Category', product.categories.name]);
+    if (product.sku) specs.push(['SKU', product.sku]);
+    if (product.weight) specs.push(['Weight', `${product.weight}g`]);
+    if (product.dimensions) specs.push(['Dimensions', product.dimensions]);
+    if (product.warranty) specs.push(['Warranty', product.warranty]);
+    if (specs.length === 0) return null;
+    return (
+      <View style={[styles.specsSection, isDesktop && styles.webCardSection]}>
+        <View style={styles.descHeader}>
+          <View style={styles.descHeaderAccent} />
+          <Text style={styles.descTitle}>{t('product.specifications')}</Text>
+        </View>
+        <View style={styles.specsTable}>
+          {specs.map(([label, value], i) => (
+            <View key={label} style={[styles.specRow, i % 2 === 0 && styles.specRowAlt]}>
+              <Text style={styles.specLabel}>{label}</Text>
+              <Text style={styles.specValue}>{value}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+    );
+  };
+
+  const renderReviewsSection = () => (
+    <View style={[styles.reviewsSection, isDesktop && styles.webCardSection]}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{t('product.customerReviews')}</Text>
+        {hasBought && (
+          <TouchableOpacity onPress={() => setShowReviewModal(true)}>
+            <Text style={styles.seeAll}>✏️ {t('product.writeReview')}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Rating Overview */}
+      <View style={styles.ratingOverview}>
+        <View style={styles.avgRatingBox}>
+          <Text style={styles.avgRatingText}>{product.rating || '4.5'}</Text>
+          <View style={styles.starsRow}>
+            {[1, 2, 3, 4, 5].map(s => (
+              <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
+            ))}
+          </View>
+          <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} {t('product.reviews')}</Text>
+        </View>
+        <View style={styles.ratingBars}>
+          {[5, 4, 3, 2, 1].map(r => (
+            <View key={r} style={styles.barRow}>
+              <Text style={styles.barLabel}>{r} ★</Text>
+              <View style={styles.barBg}>
+                <View style={[styles.barFill, { width: `${getRatingPer(r)}%` }]} />
+              </View>
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Review List */}
+      {loadingReviews ? (
+        <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 16 }} />
+      ) : reviews.length === 0 ? (
+        <View style={styles.noReviews}>
+          <Text style={styles.noReviewsText}>{t('product.noReviews')}</Text>
+        </View>
+      ) : (
+        (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
+          <ReviewCard key={rev.id} rev={rev} />
+        ))
+      )}
+
+      {reviews.length > 3 && (
+        <TouchableOpacity style={styles.viewMoreReviews} onPress={() => setShowAllReviews(v => !v)}>
+          <Text style={styles.viewMoreText}>
+            {showAllReviews ? t('product.showLess') : `${t('product.viewAll')} ${reviews.length} ${t('product.reviews')}`}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  const renderRelatedSection = () => (
+    <View style={[styles.relatedSection, isDesktop && styles.webCardSection]}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{t('product.relatedProducts')}</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Search', { category: product.category_id })}>
+          <Text style={styles.seeAll}>{t('product.seeAll')}</Text>
+        </TouchableOpacity>
+      </View>
+      {loadingRelated ? (
+        <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 20 }} />
+      ) : (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
+          {relatedProducts.length > 0 ? relatedProducts.map((p) => (
+            <TouchableOpacity
+              key={p.id}
+              style={styles.relatedCard}
+              onPress={() => navigation.push('ProductDetails', { product: p })}
+            >
+              <Image source={{ uri: p.images[0] }} style={styles.relatedImage} resizeMode="contain" />
+              <Text style={styles.relatedName} numberOfLines={1}>{p.name}</Text>
+              <Text style={styles.relatedPrice}>RWF {Number(p.price).toLocaleString()}</Text>
+            </TouchableOpacity>
+          )) : (
+            <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>{t('product.noRelatedProducts')}</Text>
+          )}
+        </ScrollView>
+      )}
+    </View>
+  );
+
   return (
     <WebLayoutWrapper navigation={navigation}>
       <View style={[styles.container, isDesktop && styles.containerWeb]}>
-        {/* Header - back/share/cart */}
-        <View style={styles.topBar}>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
-            <ChevronLeft size={24} color={COLORS.textPrimary} />
-          </TouchableOpacity>
-          <View style={styles.topBarRight}>
-            <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
-              <Share2 size={20} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
-              <ShoppingCart size={22} color={COLORS.textPrimary} />
-            </TouchableOpacity>
-          </View>
-        </View>
 
-        <PageContent {...pageContentProps}>
-          {/* Image Gallery */}
-          <View
-            style={styles.galleryWrap}
-            onLayout={(e) => setGalleryWidth(e.nativeEvent.layout.width)}
-          >
-            <ScrollView
-              ref={scrollRef}
-              horizontal pagingEnabled showsHorizontalScrollIndicator={false}
-              onMomentumScrollEnd={(e) =>
-                setActiveImage(Math.round(e.nativeEvent.contentOffset.x / galleryWidth))
-              }
-            >
-              {images.map((img, i) => (
+        {/* ── Desktop Two-Column Layout ── */}
+        {isDesktop ? (
+          <PageContent {...pageContentProps}>
+            <View style={styles.webInnerContainer}>
+
+              {/* Breadcrumb / Back Bar */}
+              <View style={styles.webBreadcrumbBar}>
                 <TouchableOpacity
-                  key={i}
-                  activeOpacity={0.9}
-                  onPress={() => setIsZoomVisible(true)}
-                  style={{ width: galleryWidth }}
-                >
-                  <Image source={{ uri: img }} style={[styles.heroImage, { width: galleryWidth }]} resizeMode="cover" />
-                  <View style={styles.zoomHint}>
-                    <Maximize2 size={16} color="#fff" />
-                    <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-
-            {/* Dots overlay */}
-            {images.length > 1 && (
-              <View style={styles.dots}>
-                {images.map((_, i) => (
-                  <View key={i} style={[styles.dot, i === activeImage && styles.dotActive]} />
-                ))}
-              </View>
-            )}
-
-            {/* Wishlist + Discount */}
-            <TouchableOpacity
-              style={styles.wishlistBtn}
-              onPress={() => toggleWishlist(product)}
-            >
-              <Heart
-                size={20}
-                color={wishlisted ? COLORS.error : COLORS.textSecondary}
-                fill={wishlisted ? COLORS.error : 'none'}
-              />
-            </TouchableOpacity>
-
-            {discount > 0 && (
-              <View style={styles.discountBadge}>
-                <Text style={styles.discountText}>-{discount}%</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Thumbnail Navigation Strip */}
-          {images.length > 1 && (
-            <View style={styles.thumbnailContainer}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailScroll}>
-                {images.map((img, i) => (
-                  <TouchableOpacity
-                    key={i}
-                    style={[styles.thumbnailWrap, i === activeImage && styles.thumbnailActive]}
-                    onPress={() => {
-                      setActiveImage(i);
-                      scrollRef.current?.scrollTo({ x: i * galleryWidth, animated: true });
-                    }}
-                  >
-                    <Image source={{ uri: img }} style={styles.thumbnail} resizeMode="cover" />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Details */}
-          <View style={styles.details}>
-            {!!product.brand && (
-              <Text style={styles.brand}>{product.brand}</Text>
-            )}
-            <Text style={styles.name}>{product.name}</Text>
-
-            {/* Rating */}
-            <View style={styles.ratingRow}>
-              <Star size={14} color="#FBBC04" fill="#FBBC04" />
-              <Text style={styles.ratingText}>
-                {product.rating} ({product.review_count} {t('product.reviews')})
-              </Text>
-              <View style={styles.stockPill}>
-                <Text style={styles.stockText}>
-                  {product.stock > 0 ? `${product.stock} ${t('product.inStock')}` : t('product.outOfStock')}
-                </Text>
-              </View>
-            </View>
-
-            {/* Recent Purchases Badge */}
-            {recentPurchases > 0 && (
-              <View style={styles.recentPurchasesBadge}>
-                <Text style={styles.recentPurchasesText}>
-                  🔥 {recentPurchases} {recentPurchases === 1 ? t('product.personBought') : t('product.peopleBought')}
-                </Text>
-              </View>
-            )}
-
-            {/* Price */}
-            <View style={styles.priceRow}>
-              <Text style={styles.price}>{fmt(product.price)}</Text>
-              {!!product.compare_price && (
-                <Text style={styles.comparePrice}>{fmt(product.compare_price)}</Text>
-              )}
-            </View>
-
-            {/* Colors */}
-            {product.colors?.length > 0 && (
-              <View style={styles.optionSection}>
-                <Text style={styles.optionLabel}>{t('product.color')}</Text>
-                <View style={styles.optionRow}>
-                  {product.colors.map((c) => {
-                    const colorMap = { 'Titanium Black': '#222', 'Titanium Gray': '#888', 'Titanium Violet': '#4B0082', 'White': '#FFF', 'Blue': '#00F', 'Natural Titanium': '#A09383' };
-                    return (
-                      <TouchableOpacity
-                        key={c}
-                        style={[styles.colorDot, { backgroundColor: colorMap[c] || '#000' }, selectedColor === c && styles.colorDotActive]}
-                        onPress={() => setSelectedColor(c)}
-                      />
-                    );
-                  })}
-                </View>
-              </View>
-            )}
-
-            {/* Storage Options */}
-            {product.storage_options?.length > 0 && (
-              <View style={styles.optionSection}>
-                <Text style={styles.optionLabel}>{t('product.storage')}</Text>
-                <View style={styles.optionRow}>
-                  {product.storage_options.map((s) => (
-                    <TouchableOpacity
-                      key={s}
-                      style={[styles.storagePill, selectedStorage === s && styles.storagePillActive]}
-                      onPress={() => setSelectedStorage(s)}
-                    >
-                      <Text style={[styles.storagePillText, selectedStorage === s && { color: '#fff' }]}>{s}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-            )}
-
-            {/* Quantity */}
-            <View style={styles.optionSection}>
-              <Text style={styles.optionLabel}>{t('product.quantity')}</Text>
-              <View style={styles.qtyRow}>
-                <TouchableOpacity
-                  style={styles.qtyBtn}
-                  onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-                >
-                  <Minus size={16} color={COLORS.textPrimary} />
-                </TouchableOpacity>
-                <Text style={styles.qtyText}>{quantity}</Text>
-                <TouchableOpacity
-                  style={styles.qtyBtn}
-                  onPress={() => setQuantity((q) => Math.min(product.stock || 99, q + 1))}
-                >
-                  <Plus size={16} color={COLORS.textPrimary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Inline CTA buttons — web only, shown right after options/quantity */}
-            {isDesktop && (
-              <View style={styles.ctaRow}>
-                <TouchableOpacity
-                  style={[styles.cartBtn, styles.ctaBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
-                  onPress={handleAddToCart}
+                  style={styles.webBackBtn}
+                  onPress={() => navigation.goBack()}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
+                  <ChevronLeft size={18} color={COLORS.primaryBlue} />
+                  <Text style={styles.webBackBtnText}>{t('common.back', 'Back to Products')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.buyBtn, styles.ctaBtn]}
-                  onPress={handleBuyNow}
-                  disabled={product.stock === 0}
-                  activeOpacity={0.8}
-                >
-                  <Zap size={18} color="#fff" fill="#fff" />
-                  <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
+                <TouchableOpacity style={styles.webShareBtn} onPress={handleShare} activeOpacity={0.7}>
+                  <Share2 size={16} color={COLORS.textSecondary} />
+                  <Text style={styles.webShareBtnText}>{t('product.share', 'Share')}</Text>
                 </TouchableOpacity>
               </View>
-            )}
 
-            {/* Trust Badges */}
-            <View style={styles.badgesRow}>
-              {[
-                { Icon: ShieldCheck, label: t('product.warranty') },
-                { Icon: Truck, label: t('product.fastDelivery') },
-                { Icon: RefreshCw, label: t('product.easyReturns') },
-                { Icon: Award, label: t('product.genuine') },
-              ].map(({ Icon, label }) => (
-                <View key={label} style={styles.badge}>
-                  <Icon size={18} color={COLORS.primaryBlue} strokeWidth={2} />
-                  <Text style={styles.badgeText}>{label}</Text>
-                </View>
-              ))}
-            </View>
+              {/* Top Two Columns: Gallery (Left) + Buy Box (Right) */}
+              <View style={styles.webTopSection}>
 
-            {/* Description */}
-            {!!product.description && (
-              <View style={styles.descSection}>
-                <View style={styles.descHeader}>
-                  <View style={styles.descHeaderAccent} />
-                  <Text style={styles.descTitle}>{t('product.aboutProduct')}</Text>
-                </View>
-                <View>
-                  <Text
-                    style={styles.descText}
-                    numberOfLines={descExpanded ? undefined : 4}
-                    onTextLayout={(e) => {
-                      if (!descExpanded) setDescOverflows(e.nativeEvent.lines.length >= 4);
-                    }}
-                  >
-                    {product.description}
-                  </Text>
-                  {(descOverflows || descExpanded) && (
+                {/* Left Column: Image Gallery Card */}
+                <View style={styles.webGalleryCol}>
+                  <View style={styles.webMainCard}>
                     <TouchableOpacity
-                      style={styles.readMoreBtn}
-                      onPress={() => setDescExpanded(v => !v)}
-                      activeOpacity={0.7}
+                      activeOpacity={0.95}
+                      onPress={() => setIsZoomVisible(true)}
+                      style={styles.webMainImageWrap}
                     >
-                      <Text style={styles.readMoreText}>
-                        {descExpanded ? t('product.showLess') : t('product.readMore')}
-                      </Text>
-                      {descExpanded
-                        ? <ChevronUp size={14} color={COLORS.primaryBlue} />
-                        : <ChevronDown size={14} color={COLORS.primaryBlue} />
-                      }
+                      <Image
+                        source={{ uri: images[activeImage] || images[0] }}
+                        style={styles.webMainImage}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.zoomHint}>
+                        <Maximize2 size={15} color="#fff" />
+                        <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
+                      </View>
                     </TouchableOpacity>
+
+                    {/* Left & Right Arrow Controls */}
+                    {images.length > 1 && (
+                      <>
+                        <TouchableOpacity
+                          style={[styles.webArrowBtn, styles.webArrowLeft]}
+                          onPress={() => setActiveImage(prev => (prev > 0 ? prev - 1 : images.length - 1))}
+                          activeOpacity={0.8}
+                        >
+                          <ChevronLeft size={20} color={COLORS.textPrimary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.webArrowBtn, styles.webArrowRight]}
+                          onPress={() => setActiveImage(prev => (prev < images.length - 1 ? prev + 1 : 0))}
+                          activeOpacity={0.8}
+                        >
+                          <ChevronRight size={20} color={COLORS.textPrimary} />
+                        </TouchableOpacity>
+                      </>
+                    )}
+
+                    {/* Wishlist Button */}
+                    <TouchableOpacity
+                      style={styles.webWishlistBtn}
+                      onPress={() => toggleWishlist(product)}
+                    >
+                      <Heart
+                        size={20}
+                        color={wishlisted ? COLORS.error : COLORS.textSecondary}
+                        fill={wishlisted ? COLORS.error : 'none'}
+                      />
+                    </TouchableOpacity>
+
+                    {/* Discount Badge */}
+                    {discount > 0 && (
+                      <View style={styles.webDiscountBadge}>
+                        <Text style={styles.discountText}>-{discount}%</Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {/* Thumbnail Strip */}
+                  {images.length > 1 && (
+                    <View style={styles.webThumbRow}>
+                      {images.map((img, i) => (
+                        <TouchableOpacity
+                          key={i}
+                          style={[styles.webThumbWrap, i === activeImage && styles.webThumbActive]}
+                          onPress={() => setActiveImage(i)}
+                          activeOpacity={0.8}
+                        >
+                          <Image source={{ uri: img }} style={styles.webThumbImg} resizeMode="contain" />
+                        </TouchableOpacity>
+                      ))}
+                    </View>
                   )}
                 </View>
-              </View>
-            )}
 
-            {/* Specs Table */}
-            {(() => {
-              const specs = [];
-              if (product.brand) specs.push(['Brand', product.brand]);
-              if (product.model) specs.push(['Model', product.model]);
-              if (product.storage_options?.length) specs.push(['Storage', product.storage_options.join(', ')]);
-              if (product.colors?.length) specs.push(['Colors', product.colors.join(', ')]);
-              if (product.categories?.name) specs.push(['Category', product.categories.name]);
-              if (product.sku) specs.push(['SKU', product.sku]);
-              if (product.weight) specs.push(['Weight', `${product.weight}g`]);
-              if (product.dimensions) specs.push(['Dimensions', product.dimensions]);
-              if (product.warranty) specs.push(['Warranty', product.warranty]);
-              if (specs.length === 0) return null;
-              return (
-                <View style={styles.specsSection}>
-                  <View style={styles.descHeader}>
-                    <View style={styles.descHeaderAccent} />
-                    <Text style={styles.descTitle}>{t('product.specifications')}</Text>
+                {/* Right Column: Buying Box & Product Info */}
+                <View style={styles.webBuyBoxCol}>
+                  {!!product.brand && (
+                    <Text style={styles.webBrand}>{product.brand}</Text>
+                  )}
+                  <Text style={styles.webProductName}>{product.name}</Text>
+
+                  {/* Rating & Stock */}
+                  <View style={styles.ratingRow}>
+                    <Star size={16} color="#FBBC04" fill="#FBBC04" />
+                    <Text style={styles.webRatingText}>
+                      {product.rating} ({product.review_count} {t('product.reviews')})
+                    </Text>
+                    <View style={styles.stockPill}>
+                      <Text style={styles.stockText}>
+                        {product.stock > 0 ? `${product.stock} ${t('product.inStock')}` : t('product.outOfStock')}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={styles.specsTable}>
-                    {specs.map(([label, value], i) => (
-                      <View key={label} style={[styles.specRow, i % 2 === 0 && styles.specRowAlt]}>
-                        <Text style={styles.specLabel}>{label}</Text>
-                        <Text style={styles.specValue}>{value}</Text>
+
+                  {/* Recent Purchases */}
+                  {recentPurchases > 0 && (
+                    <View style={styles.recentPurchasesBadge}>
+                      <Text style={styles.recentPurchasesText}>
+                        🔥 {recentPurchases} {recentPurchases === 1 ? t('product.personBought') : t('product.peopleBought')}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Price Box */}
+                  <View style={styles.webPriceBox}>
+                    <Text style={styles.webPriceVal}>{fmt(product.price)}</Text>
+                    {!!product.compare_price && (
+                      <Text style={styles.webComparePrice}>{fmt(product.compare_price)}</Text>
+                    )}
+                    {discount > 0 && (
+                      <View style={styles.webSavePill}>
+                        <Text style={styles.webSaveText}>Save {discount}%</Text>
                       </View>
-                    ))}
+                    )}
                   </View>
-                </View>
-              );
-            })()}
 
-            {/* Seller Information Section */}
-            <View style={styles.sellerSection}>
-              <View style={styles.sellerCard}>
-                <View style={styles.sellerInfo}>
-                  <View style={styles.sellerAvatar}>
-                    <Store size={20} color={COLORS.primaryBlue} />
+                  {/* Options (Color, Storage, Quantity) */}
+                  {renderOptions()}
+
+                  {/* CTA Buttons */}
+                  <View style={styles.webCtaRow}>
+                    <TouchableOpacity
+                      style={[styles.webCartBtn, inCart && styles.webCartBtnInCart]}
+                      onPress={handleAddToCart}
+                      activeOpacity={0.8}
+                    >
+                      <ShoppingCart size={18} color="#fff" />
+                      <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.webBuyBtn}
+                      onPress={handleBuyNow}
+                      disabled={product.stock === 0}
+                      activeOpacity={0.85}
+                    >
+                      <Zap size={18} color="#fff" fill="#fff" />
+                      <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
+                    </TouchableOpacity>
                   </View>
-                  <View>
-                    <Text style={styles.sellerLabel}>{t('product.soldBy')}</Text>
-                    <Text style={styles.sellerName}>{supplier?.business_name || 'Gisenyi Gadgets Official'}</Text>
-                  </View>
+
+                  {/* Trust Badges */}
+                  {renderTrustBadges()}
+
+                  {/* Seller Info */}
+                  {renderSellerInfo()}
                 </View>
-                <TouchableOpacity
-                  style={styles.sellerWhatsappBtn}
-                  onPress={handleWhatsApp}
-                  activeOpacity={0.7}
-                >
-                  <FontAwesome name="whatsapp" size={18} color="#fff" />
-                  <Text style={styles.sellerWhatsappText}>{t('product.chat')}</Text>
+
+              </View>
+
+              {/* Bottom Full-Width Sections */}
+              <View style={styles.webBottomSection}>
+                {renderDescription()}
+                {renderSpecs()}
+                {renderReviewsSection()}
+                {renderRelatedSection()}
+              </View>
+
+            </View>
+          </PageContent>
+        ) : (
+          /* ── Mobile Single-Column Layout ── */
+          <>
+            {/* Mobile Header Bar */}
+            <View style={styles.topBar}>
+              <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.goBack()}>
+                <ChevronLeft size={24} color={COLORS.textPrimary} />
+              </TouchableOpacity>
+              <View style={styles.topBarRight}>
+                <TouchableOpacity style={styles.iconBtn} onPress={handleShare}>
+                  <Share2 size={20} color={COLORS.textPrimary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Cart')}>
+                  <ShoppingCart size={22} color={COLORS.textPrimary} />
                 </TouchableOpacity>
               </View>
             </View>
 
-            {/* Reviews Section */}
-            <View style={styles.reviewsSection}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{t('product.customerReviews')}</Text>
-                {hasBought && (
-                  <TouchableOpacity onPress={() => setShowReviewModal(true)}>
-                    <Text style={styles.seeAll}>✏️ {t('product.writeReview')}</Text>
-                  </TouchableOpacity>
+            <PageContent {...pageContentProps}>
+              {/* Image Gallery */}
+              <View
+                style={styles.galleryWrap}
+                onLayout={(e) => setGalleryWidth(e.nativeEvent.layout.width)}
+              >
+                <ScrollView
+                  ref={scrollRef}
+                  horizontal pagingEnabled showsHorizontalScrollIndicator={false}
+                  onMomentumScrollEnd={(e) =>
+                    setActiveImage(Math.round(e.nativeEvent.contentOffset.x / galleryWidth))
+                  }
+                >
+                  {images.map((img, i) => (
+                    <TouchableOpacity
+                      key={i}
+                      activeOpacity={0.9}
+                      onPress={() => setIsZoomVisible(true)}
+                      style={{ width: galleryWidth }}
+                    >
+                      <Image
+                        source={{ uri: img }}
+                        style={[styles.heroImage, { width: galleryWidth }]}
+                        resizeMode="contain"
+                      />
+                      <View style={styles.zoomHint}>
+                        <Maximize2 size={16} color="#fff" />
+                        <Text style={styles.zoomHintText}>{t('product.tapToZoom')}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                {/* Dots overlay */}
+                {images.length > 1 && (
+                  <View style={styles.dots}>
+                    {images.map((_, i) => (
+                      <View key={i} style={[styles.dot, i === activeImage && styles.dotActive]} />
+                    ))}
+                  </View>
+                )}
+
+                {/* Wishlist + Discount */}
+                <TouchableOpacity
+                  style={styles.wishlistBtn}
+                  onPress={() => toggleWishlist(product)}
+                >
+                  <Heart
+                    size={20}
+                    color={wishlisted ? COLORS.error : COLORS.textSecondary}
+                    fill={wishlisted ? COLORS.error : 'none'}
+                  />
+                </TouchableOpacity>
+
+                {discount > 0 && (
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountText}>-{discount}%</Text>
+                  </View>
                 )}
               </View>
 
-              {/* Rating Overview */}
-              <View style={styles.ratingOverview}>
-                <View style={styles.avgRatingBox}>
-                  <Text style={styles.avgRatingText}>{product.rating || '4.5'}</Text>
-                  <View style={styles.starsRow}>
-                    {[1, 2, 3, 4, 5].map(s => (
-                      <Star key={s} size={12} color={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : '#E5E7EB'} fill={s <= Math.round(product.rating || 4.5) ? '#FBBC04' : 'none'} />
+              {/* Thumbnail Navigation Strip */}
+              {images.length > 1 && (
+                <View style={styles.thumbnailContainer}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.thumbnailScroll}>
+                    {images.map((img, i) => (
+                      <TouchableOpacity
+                        key={i}
+                        style={[styles.thumbnailWrap, i === activeImage && styles.thumbnailActive]}
+                        onPress={() => {
+                          setActiveImage(i);
+                          scrollRef.current?.scrollTo({ x: i * galleryWidth, animated: true });
+                        }}
+                      >
+                        <Image source={{ uri: img }} style={styles.thumbnail} resizeMode="contain" />
+                      </TouchableOpacity>
                     ))}
-                  </View>
-                  <Text style={styles.totalReviewsText}>{product.review_count || reviews.length} {t('product.reviews')}</Text>
+                  </ScrollView>
                 </View>
-                <View style={styles.ratingBars}>
-                  {[5, 4, 3, 2, 1].map(r => (
-                    <View key={r} style={styles.barRow}>
-                      <Text style={styles.barLabel}>{r} ★</Text>
-                      <View style={styles.barBg}>
-                        <View style={[styles.barFill, { width: `${getRatingPer(r)}%` }]} />
-                      </View>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              {/* Review List */}
-              {loadingReviews ? (
-                <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 16 }} />
-              ) : reviews.length === 0 ? (
-                <View style={styles.noReviews}>
-                  <Text style={styles.noReviewsText}>{t('product.noReviews')}</Text>
-                </View>
-              ) : (
-                (showAllReviews ? reviews : reviews.slice(0, 3)).map((rev) => (
-                  <ReviewCard key={rev.id} rev={rev} />
-                ))
               )}
 
-              {reviews.length > 3 && (
-                <TouchableOpacity style={styles.viewMoreReviews} onPress={() => setShowAllReviews(v => !v)}>
-                  <Text style={styles.viewMoreText}>
-                    {showAllReviews ? t('product.showLess') : `${t('product.viewAll')} ${reviews.length} ${t('product.reviews')}`}
+              {/* Mobile Details */}
+              <View style={styles.details}>
+                {!!product.brand && (
+                  <Text style={styles.brand}>{product.brand}</Text>
+                )}
+                <Text style={styles.name}>{product.name}</Text>
+
+                {/* Rating */}
+                <View style={styles.ratingRow}>
+                  <Star size={14} color="#FBBC04" fill="#FBBC04" />
+                  <Text style={styles.ratingText}>
+                    {product.rating} ({product.review_count} {t('product.reviews')})
                   </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+                  <View style={styles.stockPill}>
+                    <Text style={styles.stockText}>
+                      {product.stock > 0 ? `${product.stock} ${t('product.inStock')}` : t('product.outOfStock')}
+                    </Text>
+                  </View>
+                </View>
 
-            {/* Related Products Section */}
-            <View style={styles.relatedSection}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>{t('product.relatedProducts')}</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Search', { category: product.category_id })}>
-                  <Text style={styles.seeAll}>{t('product.seeAll')}</Text>
-                </TouchableOpacity>
-              </View>
-              {loadingRelated ? (
-                <ActivityIndicator size="small" color={COLORS.primaryBlue} style={{ marginVertical: 20 }} />
-              ) : (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.relatedScroll}>
-                  {relatedProducts.length > 0 ? relatedProducts.map((p) => (
-                    <TouchableOpacity
-                      key={p.id}
-                      style={styles.relatedCard}
-                      onPress={() => navigation.push('ProductDetails', { product: p })}
-                    >
-                      <Image source={{ uri: p.images[0] }} style={styles.relatedImage} />
-                      <Text style={styles.relatedName} numberOfLines={1}>{p.name}</Text>
-                      <Text style={styles.relatedPrice}>RWF {Number(p.price).toLocaleString()}</Text>
-                    </TouchableOpacity>
-                  )) : (
-                    <Text style={{ color: COLORS.textMuted, paddingVertical: 16 }}>{t('product.noRelatedProducts')}</Text>
+                {/* Recent Purchases */}
+                {recentPurchases > 0 && (
+                  <View style={styles.recentPurchasesBadge}>
+                    <Text style={styles.recentPurchasesText}>
+                      🔥 {recentPurchases} {recentPurchases === 1 ? t('product.personBought') : t('product.peopleBought')}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Price */}
+                <View style={styles.priceRow}>
+                  <Text style={styles.price}>{fmt(product.price)}</Text>
+                  {!!product.compare_price && (
+                    <Text style={styles.comparePrice}>{fmt(product.compare_price)}</Text>
                   )}
-                </ScrollView>
-              )}
+                </View>
+
+                {/* Options */}
+                {renderOptions()}
+
+                {/* Trust Badges */}
+                {renderTrustBadges()}
+
+                {/* Description */}
+                {renderDescription()}
+
+                {/* Specs */}
+                {renderSpecs()}
+
+                {/* Seller Info */}
+                {renderSellerInfo()}
+
+                {/* Reviews */}
+                {renderReviewsSection()}
+
+                {/* Related Products */}
+                {renderRelatedSection()}
+              </View>
+            </PageContent>
+
+            {/* Action Footer — mobile only */}
+            <View style={styles.footer}>
+              <TouchableOpacity
+                style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
+                onPress={handleAddToCart}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.buyBtn}
+                onPress={handleBuyNow}
+                disabled={product.stock === 0}
+                activeOpacity={0.8}
+              >
+                <Zap size={18} color="#fff" fill="#fff" />
+                <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
+              </TouchableOpacity>
             </View>
-          </View>
-        </PageContent>
-
-        {/* Action Footer — mobile only; web uses inline CTA buttons above */}
-        {!isDesktop && (
-          <View style={styles.footer}>
-            <TouchableOpacity
-              style={[styles.cartBtn, inCart && { backgroundColor: '#34A853', borderWidth: 0 }]}
-              onPress={handleAddToCart}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.cartBtnText}>{inCart ? t('product.inCart') : t('product.addToCart')}</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.buyBtn}
-              onPress={handleBuyNow}
-              disabled={product.stock === 0}
-              activeOpacity={0.8}
-            >
-              <Zap size={18} color="#fff" fill="#fff" />
-              <Text style={styles.buyBtnText}>{t('product.buyNow')}</Text>
-            </TouchableOpacity>
-          </View>
+          </>
         )}
 
         {/* Full Screen Zoom Modal */}
@@ -803,20 +1008,20 @@ export default function ProductDetailsScreen({ route, navigation }) {
 
             <ScrollView
               horizontal pagingEnabled showsHorizontalScrollIndicator={false}
-              contentOffset={{ x: activeImage * staticWidth, y: 0 }}
-              onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / staticWidth))}
+              contentOffset={{ x: activeImage * windowWidth, y: 0 }}
+              onMomentumScrollEnd={(e) => setActiveImage(Math.round(e.nativeEvent.contentOffset.x / windowWidth))}
               style={styles.zoomScroll}
             >
               {images.map((img, i) => (
-                <View key={i} style={{ width: staticWidth, height: '100%', justifyContent: 'center' }}>
+                <View key={i} style={{ width: windowWidth, height: '100%', justifyContent: 'center', alignItems: 'center' }}>
                   <ScrollView
                     maximumZoomScale={3}
                     minimumZoomScale={1}
                     showsHorizontalScrollIndicator={false}
                     showsVerticalScrollIndicator={false}
-                    contentContainerStyle={{ flex: 1, justifyContent: 'center' }}
+                    contentContainerStyle={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
                   >
-                    <Image source={{ uri: img }} style={{ width: '100%', height: '80%' }} resizeMode="contain" />
+                    <Image source={{ uri: img }} style={{ width: Math.min(windowWidth * 0.9, 1000), height: '80%' }} resizeMode="contain" />
                   </ScrollView>
                 </View>
               ))}
@@ -854,18 +1059,32 @@ const styles = StyleSheet.create({
     borderRadius: 21, justifyContent: 'center', alignItems: 'center', ...SHADOWS.sm,
   },
   scroll: { paddingBottom: Platform.OS === 'web' ? 40 : 120 },
-  galleryWrap: { position: 'relative', width: '100%', overflow: 'hidden' },
-  heroImage: { width: staticWidth, height: 320 },
+
+  // Mobile Gallery
+  galleryWrap: {
+    position: 'relative',
+    width: '100%',
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F2F5',
+  },
+  heroImage: {
+    height: 360,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+  },
   dots: {
     position: 'absolute', bottom: SIZES.sm, left: 0, right: 0,
     flexDirection: 'row', justifyContent: 'center', gap: SIZES.xs,
   },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.4)' },
-  dotActive: { backgroundColor: '#fff', width: 16 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(0,0,0,0.2)' },
+  dotActive: { backgroundColor: COLORS.primaryBlue, width: 18 },
   wishlistBtn: {
     position: 'absolute', top: SIZES.sm, right: SIZES.md,
-    width: 40, height: 40, backgroundColor: 'rgba(30,41,59,0.85)',
+    width: 40, height: 40, backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 20, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: '#E2E8F0', ...SHADOWS.sm,
   },
   discountBadge: {
     position: 'absolute', top: SIZES.sm, left: SIZES.md,
@@ -951,11 +1170,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#f3f4f6',
     ...SHADOWS.lg,
   },
-  footerWeb: {
-    marginTop: 24,
-    borderRadius: 16,
-    marginHorizontal: 0,
-  },
   storagePill: {
     paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 20, borderWidth: 1.5,
@@ -981,6 +1195,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     overflow: 'hidden',
     backgroundColor: '#f9f9f9',
+    padding: 4,
   },
   thumbnailActive: {
     borderColor: COLORS.primaryBlue,
@@ -1011,16 +1226,281 @@ const styles = StyleSheet.create({
   },
   cartBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   buyBtnText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  // Inline CTA row shown on web inside the details section
-  ctaRow: {
+
+  // ── Desktop Two-Column Styles ──
+  webInnerContainer: {
+    maxWidth: 1240,
+    width: '100%',
+    alignSelf: 'center',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 48,
+  },
+  webBreadcrumbBar: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  webBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+  },
+  webBackBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: COLORS.primaryBlue,
+  },
+  webShareBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  webShareBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+  },
+  webTopSection: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 40,
+    marginBottom: 40,
+  },
+  webGalleryCol: {
+    width: 480,
+    maxWidth: '48%',
+  },
+  webMainCard: {
+    width: '100%',
+    height: 480,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...SHADOWS.sm,
+  },
+  webMainImageWrap: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  webMainImage: {
+    width: '100%',
+    height: '100%',
+  },
+  webArrowBtn: {
+    position: 'absolute',
+    top: '50%',
+    marginTop: -22,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    ...SHADOWS.md,
+  },
+  webArrowLeft: {
+    left: 12,
+  },
+  webArrowRight: {
+    right: 12,
+  },
+  webWishlistBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+    ...SHADOWS.sm,
+  },
+  webDiscountBadge: {
+    position: 'absolute',
+    top: 14,
+    left: 14,
+    backgroundColor: COLORS.error,
+    borderRadius: SIZES.radiusFull,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    zIndex: 10,
+  },
+  webThumbRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
-    marginTop: SIZES.md,
-    marginBottom: SIZES.sm,
+    marginTop: 16,
   },
-  ctaBtn: {
-    height: 54,
+  webThumbWrap: {
+    width: 74,
+    height: 74,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
+  webThumbActive: {
+    borderColor: COLORS.primaryBlue,
+    ...SHADOWS.sm,
+  },
+  webThumbImg: {
+    width: '100%',
+    height: '100%',
+  },
+  webBuyBoxCol: {
+    flex: 1,
+    gap: 16,
+  },
+  webBrand: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.primaryBlue,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  webProductName: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+    lineHeight: 34,
+  },
+  webRatingText: {
+    fontSize: 14,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  webPriceBox: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  webPriceVal: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: COLORS.primaryGreen,
+  },
+  webComparePrice: {
+    fontSize: 16,
+    color: COLORS.textMuted,
+    textDecorationLine: 'line-through',
+  },
+  webSavePill: {
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  webSaveText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#16A34A',
+  },
+  webCtaRow: {
+    flexDirection: 'row',
+    gap: 14,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  webCartBtn: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#0F172A',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...SHADOWS.md,
+  },
+  webCartBtnInCart: {
+    backgroundColor: '#16A34A',
+  },
+  webBuyBtn: {
+    flex: 1,
+    height: 52,
+    backgroundColor: '#2563EB',
+    borderRadius: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    ...SHADOWS.md,
+  },
+  webBadgesCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  webBadgeItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 6,
+  },
+  webBadgeLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+  },
+  webSellerSection: {
+    marginTop: 0,
+    borderTopWidth: 0,
+    paddingTop: 0,
+  },
+  webBottomSection: {
+    width: '100%',
+    gap: 24,
+  },
+  webCardSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginTop: 0,
+    ...SHADOWS.sm,
+  },
+
+  // Seller Section
   sellerSection: {
     marginTop: SIZES.lg,
     paddingTop: SIZES.md,
@@ -1076,24 +1556,33 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
+  // Related Section
   relatedSection: { marginTop: SIZES.lg, gap: SIZES.sm },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: SIZES.sm },
   sectionTitle: { fontSize: SIZES.fontMd, fontWeight: '700', color: COLORS.textPrimary },
   seeAll: { fontSize: SIZES.fontSm, color: COLORS.primaryBlue, fontWeight: '600' },
   relatedScroll: { gap: 16, paddingBottom: 8 },
   relatedCard: {
-    width: 130,
-    gap: 6,
+    width: 140,
+    gap: 8,
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    padding: 8,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#F1F5F9',
     ...SHADOWS.sm,
   },
-  relatedImage: { width: 114, height: 114, borderRadius: 12, backgroundColor: '#f9f9f9' },
+  relatedImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    alignSelf: 'center',
+  },
   relatedName: { fontSize: 12, fontWeight: '700', color: COLORS.textPrimary },
   relatedPrice: { fontSize: 11, fontWeight: '800', color: COLORS.primaryBlue },
+
+  // Reviews Section
   reviewsSection: { marginTop: SIZES.lg, borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: SIZES.lg },
   ratingOverview: { flexDirection: 'row', gap: 24, marginBottom: 20, alignItems: 'center' },
   avgRatingBox: { alignItems: 'center', gap: 4 },
@@ -1133,10 +1622,11 @@ const styles = StyleSheet.create({
   zoomFooter: { position: 'absolute', bottom: 40, left: 0, right: 0, alignItems: 'center' },
   zoomInstruction: { color: 'rgba(255,255,255,0.6)', fontSize: 12, fontWeight: '600' },
   zoomHint: {
-    position: 'absolute', bottom: 20, right: 20,
-    backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 20,
+    position: 'absolute', bottom: 16, right: 16,
+    backgroundColor: 'rgba(15, 23, 42, 0.75)', borderRadius: 20,
     paddingHorizontal: 12, paddingVertical: 6,
-    flexDirection: 'row', alignItems: 'center', gap: 6
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backdropFilter: 'blur(4px)',
   },
   zoomHintText: { color: '#fff', fontSize: 11, fontWeight: '700' }
 });
